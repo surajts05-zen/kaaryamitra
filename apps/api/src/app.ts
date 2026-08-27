@@ -15,6 +15,7 @@ import { employeesRouter } from './modules/employees/employees.router.js';
 import { essRouter } from './modules/ess/ess.router.js';
 import { leaveRouter, essLeaveRouter, leaveApprovalsRouter } from './modules/leave/leave.router.js';
 import { workflowRouter } from './modules/workflows/workflow.router.js';
+import { rolesRouter } from './modules/roles/roles.router.js';
 import { requireAuth, requireSuperAdmin, resolveTenant } from './middleware/auth.js';
 
 export function createApp() {
@@ -100,6 +101,10 @@ export function createApp() {
   // Tenant-scoped Workflow routes
   app.use('/api/v1/workflows', requireAuth, resolveTenant, workflowRouter);
   app.use('/api/v1/t/:slug/workflows', requireAuth, resolveTenant, workflowRouter);
+
+  // Tenant-scoped Roles / RBAC routes
+  app.use('/api/v1/roles', requireAuth, resolveTenant, rolesRouter);
+  app.use('/api/v1/t/:slug/roles', requireAuth, resolveTenant, rolesRouter);
 
   // Tenant-scoped routes — all under /api/v1/t/:slug/
   // Modules are registered as they are built in each phase:

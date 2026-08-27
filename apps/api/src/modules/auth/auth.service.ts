@@ -46,7 +46,10 @@ export class AuthService {
     const normalizedEmail = input.email.toLowerCase().trim();
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
-      include: { tenant: { select: { slug: true } } },
+      include: {
+        tenant: { select: { slug: true } },
+        userRoles: { include: { role: true } },
+      },
     });
     if (!user || !user.passwordHash) throw AppError.invalidCredentials();
     if (user.status === 'INACTIVE') throw AppError.forbidden('Account is deactivated');
@@ -172,6 +175,7 @@ export class AuthService {
   }
 
   private static sanitizeUser(user: any) {
+    const roles: string[] = (user.userRoles ?? []).map((ur: any) => ur.role?.name).filter(Boolean);
     return {
       id: user.id,
       email: user.email,
@@ -182,6 +186,7 @@ export class AuthService {
       isSuperAdmin: user.isSuperAdmin,
       tenantId: user.tenantId,
       tenantSlug: user.tenant?.slug ?? null,
+      roles,
     };
   }
 }

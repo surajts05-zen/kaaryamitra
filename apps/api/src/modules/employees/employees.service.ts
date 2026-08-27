@@ -4,22 +4,50 @@ import { UserStatus } from '@prisma/client';
 
 export class EmployeesService {
   static async listEmployees(tenantId: string) {
-    return prisma.employee.findMany({
+    const employees = await prisma.employee.findMany({
       where: { tenantId },
       include: {
         department: true,
         designation: true,
         location: true,
+        user: { select: { id: true, email: true } },
         manager: {
           select: { id: true, firstName: true, lastName: true },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    // Also include tenant users who don't have an explicit Employee record yet (e.g. Tenant Admin)
+    const employeeUserIds = employees.map((e) => e.userId);
+    const nonEmployeeUsers = await prisma.user.findMany({
+      where: {
+        tenantId,
+        id: { notIn: employeeUserIds },
+      },
+    });
+
+    const adminVirtualEmployees = nonEmployeeUsers.map((u) => ({
+      id: u.id,
+      tenantId,
+      userId: u.id,
+      employeeCode: 'ADMIN',
+      firstName: u.firstName,
+      lastName: u.lastName,
+      workEmail: u.email,
+      joiningDate: u.createdAt,
+      user: { id: u.id, email: u.email },
+      department: null,
+      designation: { id: 'admin', name: 'Tenant Admin', tenantId, level: 'Executive' },
+      location: null,
+      manager: null,
+    }));
+
+    return [...employees, ...adminVirtualEmployees];
   }
 
   static async getEmployee(tenantId: string, employeeId: string) {
-    const employee = await prisma.employee.findUnique({
+    const employee = await prisma.employee.findFirst({
       where: { id: employeeId, tenantId },
       include: {
         department: true,
@@ -37,6 +65,31 @@ export class EmployeesService {
     });
 
     if (!employee) {
+      // Check if this is a non-employee Tenant Admin user
+      const user = await prisma.user.findFirst({
+        where: { id: employeeId, tenantId },
+      });
+
+      if (user) {
+        return {
+          id: user.id,
+          tenantId,
+          userId: user.id,
+          employeeCode: 'ADMIN',
+          firstName: user.firstName,
+          lastName: user.lastName,
+          workEmail: user.email,
+          joiningDate: user.createdAt,
+          user: { email: user.email, status: user.status, lastLoginAt: user.lastLoginAt },
+          department: null,
+          designation: { id: 'admin', name: 'Tenant Admin', tenantId, level: 'Executive' },
+          location: null,
+          manager: null,
+          employmentType: 'FULL_TIME',
+          employmentStatus: 'ACTIVE',
+        };
+      }
+
       throw new Error('Employee not found');
     }
 
@@ -79,6 +132,11 @@ export class EmployeesService {
           status: UserStatus.ACTIVE,
         },
       });
+    } else if (!user.tenantId) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { tenantId },
+      });
     }
 
     // Check if employee already exists for this user in this tenant
@@ -113,10 +171,17 @@ export class EmployeesService {
       joiningDate,
       confirmationDate,
       probationEndDate,
+      firstName,
+      lastName,
+      workEmail,
       ...rest
     } = data;
 
     const updateData: any = { ...rest };
+    if (firstName !== undefined) updateData.firstName = firstName;
+    if (lastName !== undefined) updateData.lastName = lastName;
+    if (workEmail !== undefined) updateData.workEmail = workEmail;
+
     Object.keys(updateData).forEach(key => {
       if (updateData[key] === '' || updateData[key] === 'none') {
         updateData[key] = null;
@@ -128,21 +193,60 @@ export class EmployeesService {
     if (confirmationDate !== undefined) updateData.confirmationDate = confirmationDate ? new Date(confirmationDate) : null;
     if (probationEndDate !== undefined) updateData.probationEndDate = probationEndDate ? new Date(probationEndDate) : null;
 
-    if (updateData.workEmail) {
-      const currentEmp = await prisma.employee.findUnique({
+    let existingEmp = await prisma.employee.findFirst({
+      where: { OR: [{ id: employeeId }, { userId: employeeId }], tenantId },
+    });
+
+    if (!existingEmp) {
+      // Check if user exists (e.g. Tenant Admin without an employee record yet)
+      const user = await prisma.user.findFirst({
         where: { id: employeeId, tenantId },
-        select: { userId: true, workEmail: true },
       });
-      if (currentEmp?.userId && currentEmp.workEmail !== updateData.workEmail) {
-        await prisma.user.update({
-          where: { id: currentEmp.userId },
-          data: { email: updateData.workEmail },
+
+      if (user) {
+        // Instantiate official Employee record for this user
+        existingEmp = await prisma.employee.create({
+          data: {
+            tenantId,
+            userId: user.id,
+            firstName: firstName ?? user.firstName,
+            lastName: lastName ?? user.lastName,
+            workEmail: workEmail ?? user.email,
+            joiningDate: joiningDate ? new Date(joiningDate) : user.createdAt,
+            ...updateData,
+          },
         });
+
+        if (firstName || lastName || workEmail) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              ...(firstName && { firstName }),
+              ...(lastName && { lastName }),
+              ...(workEmail && { email: workEmail }),
+            },
+          });
+        }
+
+        return existingEmp;
       }
+
+      throw new Error('Employee record not found');
+    }
+
+    if (existingEmp.userId && (firstName || lastName || workEmail)) {
+      await prisma.user.update({
+        where: { id: existingEmp.userId },
+        data: {
+          ...(firstName && { firstName }),
+          ...(lastName && { lastName }),
+          ...(workEmail && { email: workEmail }),
+        },
+      });
     }
 
     return prisma.employee.update({
-      where: { id: employeeId, tenantId },
+      where: { id: existingEmp.id },
       data: updateData,
     });
   }

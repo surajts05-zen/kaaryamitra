@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useCreateEmployee } from '@/features/company/hooks/use-employee-queries';
+import { useCreateEmployee, useEmployees } from '@/features/company/hooks/use-employee-queries';
 import { useDepartments, useLocations, useDesignations } from '@/features/company/hooks/use-org-queries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,7 @@ const schema = z.object({
   departmentId: z.string().optional(),
   designationId: z.string().optional(),
   locationId: z.string().optional(),
+  managerId: z.string().optional(),
   joiningDate: z.string().min(1, 'Joining date is required'),
 });
 
@@ -35,6 +36,7 @@ export function AddEmployeePage() {
   const { data: departments } = useDepartments();
   const { data: locations } = useLocations();
   const { data: designations } = useDesignations();
+  const { data: employees } = useEmployees();
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -168,6 +170,21 @@ export function AddEmployeePage() {
                   <SelectItem value="none">None</SelectItem>
                   {locations?.map((l: any) => (
                     <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Reporting Manager</Label>
+              <Select onValueChange={(val) => setValue('managerId', val)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Manager" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {employees?.map((e: any) => (
+                    <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

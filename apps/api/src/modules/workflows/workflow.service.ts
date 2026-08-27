@@ -128,40 +128,63 @@ export async function getCurrentStep(instanceId: string): Promise<WorkflowStepDe
 }
 
 /**
- * Get the actor userId for the current step given the entity context.
- * For MANAGER → fetch employee's manager
- * For DEPARTMENT_HEAD → fetch department head
- * For HR → caller must provide the HR admin's userId
- * For SPECIFIC_USER → return the assigneeId directly
+ * Check whether a specific user is authorized to action the given workflow step.
  */
-export async function resolveStepActor(
+export async function isUserStepApprover(
   step: WorkflowStepDef,
   employeeId: string,
-): Promise<string | null> {
-  if (step.assigneeType === 'SPECIFIC_USER' || step.assigneeType === 'ROLE') {
-    return step.assigneeId ?? null;
+  userId: string,
+  tenantId: string,
+): Promise<boolean> {
+  if (step.assigneeType === 'SPECIFIC_USER') {
+    return step.assigneeId === userId;
+  }
+
+  if (step.assigneeType === 'ROLE') {
+    if (!step.assigneeId) return false;
+    const userRole = await prisma.userRole.findFirst({
+      where: {
+        userId,
+        roleId: step.assigneeId,
+      },
+    });
+    return userRole !== null;
   }
 
   const employee = await prisma.employee.findUnique({
     where: { id: employeeId },
     include: {
-      manager: { include: { user: true } },
-      department: { include: { head: { include: { user: true } } } },
+      manager: true,
+      department: { include: { head: true } },
     },
   });
 
-  if (!employee) return null;
+  if (!employee) return false;
 
   if (step.assigneeType === 'MANAGER') {
-    return employee.manager?.user?.id ?? null;
+    return employee.manager?.userId === userId;
   }
 
   if (step.assigneeType === 'DEPARTMENT_HEAD') {
-    return employee.department?.head?.user?.id ?? null;
+    return employee.department?.head?.userId === userId;
   }
 
-  return null;
+  if (step.assigneeType === 'HR') {
+    const hrRole = await prisma.userRole.findFirst({
+      where: {
+        userId,
+        role: {
+          tenantId,
+          name: { in: ['HR Manager', 'Company Admin'] },
+        },
+      },
+    });
+    return hrRole !== null;
+  }
+
+  return false;
 }
+
 
 /**
  * Process an action (APPROVED / REJECTED) on the current step.
@@ -249,12 +272,16 @@ export async function getPendingActionsForUser(tenantId: string, userId: string)
   for (const instance of instances) {
     const steps = instance.template.steps as WorkflowStepDef[];
     const currentStep = steps[instance.currentStepIndex];
-    if (!currentStep) continue;
+    if (!currentStep || !instance.leaveApplication) continue;
 
-    if (!instance.leaveApplication) continue;
+    const isApprover = await isUserStepApprover(
+      currentStep,
+      instance.leaveApplication.employeeId,
+      userId,
+      tenantId,
+    );
 
-    const actorId = await resolveStepActor(currentStep, instance.leaveApplication.employeeId);
-    if (actorId === userId) {
+    if (isApprover) {
       pending.push({ instance, currentStep });
     }
   }

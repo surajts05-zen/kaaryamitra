@@ -12,6 +12,7 @@ export type User = {
   isSuperAdmin: boolean;
   tenantId: string | null;
   tenantSlug?: string | null;
+  roles: string[];
 };
 
 interface AuthState {
@@ -51,26 +52,30 @@ export const useAuthStore = create<AuthState>()(
           set({ user: null, isAuthenticated: false, isLoading: false });
           return;
         }
-        
-        // If not authenticated yet, set loading true for initial load screen
+
+        // If already authenticated (persisted state), skip loading flash
         const current = get();
-        if (!current.isAuthenticated) {
-          set({ isLoading: true });
+        if (current.isAuthenticated && current.user) {
+          set({ isLoading: false });
+          return;
         }
+
+        set({ isLoading: true });
 
         try {
           const res = await apiClient.get('/auth/me');
           if (res.data.success) {
-            set({ user: res.data.data, isAuthenticated: true });
+            set({ user: res.data.data, isAuthenticated: true, isLoading: false });
           }
         } catch (e: any) {
-          // Only invalidate and clear session if API explicitly returns 401 Unauthorized
+          // ONLY clear session on explicit 401 — not on 500, network errors, etc.
           if (e.response?.status === 401) {
             localStorage.removeItem('km_access_token');
-            set({ user: null, isAuthenticated: false });
+            set({ user: null, isAuthenticated: false, isLoading: false });
+          } else {
+            // Keep the user logged in if it was a server/network error
+            set({ isLoading: false });
           }
-        } finally {
-          set({ isLoading: false });
         }
       },
     }),

@@ -6,7 +6,6 @@ import {
   Users,
   Calendar,
   Clock,
-  FileText,
   Settings,
   Menu,
   Sun,
@@ -14,39 +13,59 @@ import {
   LogOut,
   Bell,
   Search,
-  Sparkles,
   Building2,
   MapPin,
   Briefcase,
   GitBranch,
   Inbox,
+  Shield,
+  CalendarDays,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/button';
 
-const navItems = [
+// ─── Role constants ────────────────────────────────────────────────────────────
+const ADMIN_ROLES = ['Company Admin'];
+const HR_ROLES = ['Company Admin', 'HR Manager'];
+const APPROVER_ROLES = ['Company Admin', 'HR Manager', 'Manager'];
+
+interface NavItem {
+  icon: React.ElementType;
+  label: string;
+  path: string;
+  /** If omitted, item is visible to ALL authenticated tenant users */
+  allowedRoles?: string[];
+}
+
+const navItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', path: 'dashboard' },
-  { icon: Building2, label: 'Departments', path: 'departments' },
-  { icon: MapPin, label: 'Locations', path: 'locations' },
-  { icon: Briefcase, label: 'Designations', path: 'designations' },
-  { icon: Users, label: 'Directory', path: 'directory' },
-  { icon: Inbox, label: 'Approvals Inbox', path: 'approvals' },
-  { icon: Calendar, label: 'Leave Settings', path: 'settings/leave' },
-  { icon: GitBranch, label: 'Workflows', path: 'settings/workflows' },
-  { icon: Clock, label: 'Attendance', path: 'attendance' },
-  { icon: Settings, label: 'Settings', path: 'settings' },
+
+  // ESS – visible to everyone
+  { icon: CalendarDays, label: 'My Leaves', path: 'me/leave' },
+
+  // HR / Admin
+  { icon: Users,     label: 'Directory',     path: 'directory',         allowedRoles: HR_ROLES },
+  { icon: Building2, label: 'Departments',   path: 'departments',       allowedRoles: HR_ROLES },
+  { icon: MapPin,    label: 'Locations',     path: 'locations',         allowedRoles: HR_ROLES },
+  { icon: Briefcase, label: 'Designations',  path: 'designations',      allowedRoles: HR_ROLES },
+
+  // Approvers
+  { icon: Inbox,     label: 'Approvals Inbox', path: 'approvals',       allowedRoles: APPROVER_ROLES },
+
+  // Admin-only configuration
+  { icon: Calendar,  label: 'Leave Settings',  path: 'settings/leave',  allowedRoles: HR_ROLES },
+  { icon: GitBranch, label: 'Workflows',        path: 'settings/workflows', allowedRoles: ADMIN_ROLES },
+  { icon: Shield,    label: 'Roles & Permissions', path: 'settings/roles', allowedRoles: ADMIN_ROLES },
+
+  // General
+  { icon: Clock,     label: 'Attendance',    path: 'attendance' },
+  { icon: Settings,  label: 'Settings',      path: 'settings',          allowedRoles: ADMIN_ROLES },
 ];
 
-const adminNavItems = [
+const adminNavItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Platform Dashboard', path: '/admin' },
-  { icon: Building2, label: 'Workspaces', path: '/admin/tenants' },
-  { icon: Settings, label: 'Platform Config', path: '/admin/settings' },
-];
-
-const employeeNavItems = [
-  { icon: LayoutDashboard, label: 'My Dashboard', path: 'me/dashboard' },
-  { icon: Users, label: 'My Profile', path: 'me/profile' },
-  { icon: Calendar, label: 'My Leaves', path: 'me/leave' },
+  { icon: Building2,       label: 'Workspaces',         path: '/admin/tenants' },
+  { icon: Settings,        label: 'Platform Config',    path: '/admin/settings' },
 ];
 
 export function AppShell() {
@@ -57,8 +76,23 @@ export function AppShell() {
   const { user, logout } = useAuthStore();
   
   const slug = pathSlug || user?.tenantSlug;
-  const isEss = location.pathname.includes('/me/');
-  const currentNavItems = user?.isSuperAdmin ? adminNavItems : (isEss ? employeeNavItems : navItems);
+  const userRoles = user?.roles ?? [];
+
+  // For super-admins use the platform nav
+  // For tenant users, filter by allowedRoles — if a user has no roles assigned yet
+  // (e.g. a brand-new Tenant Admin), show everything so they're never locked out.
+  const currentNavItems = React.useMemo(() => {
+    if (user?.isSuperAdmin) return adminNavItems;
+
+    const hasNoRoles = userRoles.length === 0;
+
+    return navItems.filter((item) => {
+      if (!item.allowedRoles) return true; // visible to all
+      if (hasNoRoles) return true;         // no roles assigned yet → show everything
+      return item.allowedRoles.some((r) => userRoles.includes(r));
+    });
+  }, [user?.isSuperAdmin, userRoles]);
+
   const initials = user ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() : 'U';
   const tenantName = user?.isSuperAdmin ? 'Platform Admin' : 'Workspace';
 

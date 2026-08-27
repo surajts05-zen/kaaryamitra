@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Navigate, Outlet, useLocation, useParams } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth.store';
 import { Loader2 } from 'lucide-react';
@@ -6,10 +6,15 @@ import { Loader2 } from 'lucide-react';
 export function ProtectedRoute() {
   const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
   const location = useLocation();
+  const hasChecked = useRef(false);
 
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    // Only run checkAuth once per mount — never re-run on re-renders
+    if (!hasChecked.current) {
+      hasChecked.current = true;
+      checkAuth();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isLoading) {
     return (

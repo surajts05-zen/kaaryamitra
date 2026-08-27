@@ -29,6 +29,9 @@ import { EssLeavePage } from '@/pages/ess/leave';
 import { WorkflowsPage } from '@/pages/company/settings/workflows';
 import { ApprovalsInboxPage } from '@/pages/company/approvals';
 
+// RBAC
+import { RolesPage } from '@/pages/company/settings/roles';
+
 /**
  * KaaryaMitra App Router
  */
@@ -64,6 +67,9 @@ export function App() {
             {/* Phase 8 - Workflow Engine */}
             <Route path="settings/workflows" element={<WorkflowsPage />} />
             <Route path="approvals" element={<ApprovalsInboxPage />} />
+
+            {/* RBAC */}
+            <Route path="settings/roles" element={<RolesPage />} />
 
             {/* Catch-all for /t/:slug */}
             {/* Phase 5 - Core HR */}

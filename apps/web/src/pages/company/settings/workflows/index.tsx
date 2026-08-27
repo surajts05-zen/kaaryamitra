@@ -8,6 +8,8 @@ import {
   useUpdateWorkflowTemplate,
   type WorkflowTemplate,
 } from '@/features/company/hooks/use-workflow-queries';
+import { useEmployees } from '@/features/company/hooks/use-employee-queries';
+import { useRoles } from '@/features/company/hooks/use-role-queries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -102,6 +104,8 @@ function WorkflowFormDialog({
 }) {
   const createMutation = useCreateWorkflowTemplate();
   const updateMutation = useUpdateWorkflowTemplate();
+  const { data: employees } = useEmployees();
+  const { data: roles } = useRoles();
 
   const {
     register,
@@ -306,24 +310,50 @@ function WorkflowFormDialog({
                         </Select>
                       </div>
 
-                      {/* Show assigneeId field for ROLE or SPECIFIC_USER */}
-                      {(watchedSteps[index]?.assigneeType === 'ROLE' ||
-                        watchedSteps[index]?.assigneeType === 'SPECIFIC_USER') && (
+                      {/* Select Dropdown for ROLE */}
+                      {watchedSteps[index]?.assigneeType === 'ROLE' && (
                         <div className="space-y-1.5 md:col-span-2">
-                          <Label className="text-xs">
-                            {watchedSteps[index]?.assigneeType === 'ROLE'
-                              ? 'Role ID / Name'
-                              : 'User ID / Email'}
-                          </Label>
-                          <Input
-                            placeholder={
-                              watchedSteps[index]?.assigneeType === 'ROLE'
-                                ? 'Enter role name'
-                                : 'Enter user ID'
-                            }
-                            {...register(`steps.${index}.assigneeId`)}
-                            className="h-8 text-sm"
-                          />
+                          <Label className="text-xs">Select Role</Label>
+                          <Select
+                            value={watchedSteps[index]?.assigneeId || ''}
+                            onValueChange={(val) => setValue(`steps.${index}.assigneeId`, val)}
+                          >
+                            <SelectTrigger className="h-8 text-sm">
+                              <SelectValue placeholder="Choose a role..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {roles?.map((r) => (
+                                <SelectItem key={r.id} value={r.id}>
+                                  {r.name} {r.description ? `(${r.description})` : ''}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      {/* Select Dropdown for SPECIFIC_USER */}
+                      {watchedSteps[index]?.assigneeType === 'SPECIFIC_USER' && (
+                        <div className="space-y-1.5 md:col-span-2">
+                          <Label className="text-xs">Select Employee / User</Label>
+                          <Select
+                            value={watchedSteps[index]?.assigneeId || ''}
+                            onValueChange={(val) => setValue(`steps.${index}.assigneeId`, val)}
+                          >
+                            <SelectTrigger className="h-8 text-sm">
+                              <SelectValue placeholder="Choose an employee..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {employees?.map((e: any) => {
+                                const targetUserId = e.userId || e.user?.id || e.id;
+                                return (
+                                  <SelectItem key={e.id} value={targetUserId}>
+                                    {e.firstName} {e.lastName} ({e.workEmail || e.user?.email})
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
                         </div>
                       )}
                     </div>
