@@ -450,6 +450,7 @@ model Employee {
   departmentHeads   Department[]       @relation("DepartmentHead")
   teamLeads         Team[]             @relation("TeamLead")
   leaveApplications LeaveApplication[]
+  leaveBalances     LeaveBalance[]
   attendanceRecords AttendanceRecord[]
   notifications     Notification[]     @relation("EmployeeNotifications")
 
@@ -463,20 +464,26 @@ model Employee {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model LeaveType {
-  id          String  @id @default(cuid())
-  tenantId    String
-  name        String
-  code        String
-  color       String? @default("#4CAF50")
-  isPaid      Boolean @default(true)
-  isActive    Boolean @default(true)
-  description String?
+  id                    String  @id @default(cuid())
+  tenantId              String
+  name                  String
+  code                  String
+  color                 String? @default("#4CAF50")
+  isPaid                Boolean @default(true)
+  isActive              Boolean @default(true)
+  description           String?
+
+  daysPerYear           Float   @default(0)
+  accrualFrequency      String  @default("YEARLY") // 'YEARLY' | 'MONTHLY'
+  isCarryForwardAllowed Boolean @default(false)
+  maxCarryForward       Float   @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   tenant       Tenant             @relation(fields: [tenantId], references: [id])
   applications LeaveApplication[]
+  balances     LeaveBalance[]
 
   @@unique([tenantId, code])
   @@map("leave_types")
@@ -495,6 +502,7 @@ model LeaveApplication {
   reason        String?
   status        LeaveApplicationStatus @default(PENDING)
   approverNote  String?
+  managerNote   String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -505,6 +513,28 @@ model LeaveApplication {
 
   @@index([tenantId, employeeId])
   @@map("leave_applications")
+}
+
+model LeaveBalance {
+  id           String   @id @default(cuid())
+  tenantId     String
+  employeeId   String
+  leaveTypeId  String
+  year         Int
+  
+  totalAccrued Float    @default(0)
+  used         Float    @default(0)
+  available    Float    @default(0)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  employee     Employee  @relation(fields: [employeeId], references: [id])
+  leaveType    LeaveType @relation(fields: [leaveTypeId], references: [id])
+
+  @@unique([tenantId, employeeId, leaveTypeId, year])
+  @@index([tenantId, employeeId])
+  @@map("leave_balances")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

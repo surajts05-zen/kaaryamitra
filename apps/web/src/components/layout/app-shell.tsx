@@ -28,7 +28,8 @@ const navItems = [
   { icon: MapPin, label: 'Locations', path: 'locations' },
   { icon: Briefcase, label: 'Designations', path: 'designations' },
   { icon: Users, label: 'Directory', path: 'directory' },
-  { icon: Calendar, label: 'Leave', path: 'leave' },
+  { icon: Calendar, label: 'Leave Approvals', path: 'approvals/leave' },
+  { icon: Calendar, label: 'Leave Settings', path: 'settings/leave' },
   { icon: Clock, label: 'Attendance', path: 'attendance' },
   { icon: Settings, label: 'Settings', path: 'settings' },
 ];
@@ -42,6 +43,7 @@ const adminNavItems = [
 const employeeNavItems = [
   { icon: LayoutDashboard, label: 'My Dashboard', path: 'me/dashboard' },
   { icon: Users, label: 'My Profile', path: 'me/profile' },
+  { icon: Calendar, label: 'My Leaves', path: 'me/leave' },
 ];
 
 export function AppShell() {

@@ -17,10 +17,13 @@ import { DirectoryPage } from '@/pages/company/employees/directory';
 import { AddEmployeePage } from '@/pages/company/employees/add';
 import { EmployeeProfilePage } from '@/pages/company/employees/profile';
 import { EditEmployeePage } from '@/pages/company/employees/edit';
+import { LeaveApprovalsPage } from '@/pages/company/approvals/leave';
 
 // Phase 6 - Employee Self Service
+import { LeaveTypesPage } from '@/pages/company/leave-types';
 import { EssDashboardPage } from '@/pages/ess/dashboard';
 import { EssProfilePage } from '@/pages/ess/my-profile';
+import { EssLeavePage } from '@/pages/ess/leave';
 
 /**
  * KaaryaMitra App Router
@@ -49,7 +52,12 @@ export function App() {
             <Route path="locations" element={<LocationsPage />} />
             <Route path="designations" element={<DesignationsPage />} />
             <Route path="settings" element={<CompanySettingsPage />} />
+            <Route path="settings/leave" element={<LeaveTypesPage />} />
 
+            {/* Phase 7 - Leave Management */}
+            <Route path="approvals/leave" element={<LeaveApprovalsPage />} />
+
+            {/* Catch-all for /t/:slug */}
             {/* Phase 5 - Core HR */}
             <Route path="directory" element={<DirectoryPage />} />
             <Route path="directory/new" element={<AddEmployeePage />} />
@@ -59,6 +67,7 @@ export function App() {
             {/* Phase 6 - ESS */}
             <Route path="me/dashboard" element={<EssDashboardPage />} />
             <Route path="me/profile" element={<EssProfilePage />} />
+            <Route path="me/leave" element={<EssLeavePage />} />
           </Route>
         </Route>
         

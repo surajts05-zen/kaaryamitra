@@ -13,6 +13,7 @@ import { adminRouter } from './modules/admin/admin.router.js';
 import { orgRouter } from './modules/org/org.router.js';
 import { employeesRouter } from './modules/employees/employees.router.js';
 import { essRouter } from './modules/ess/ess.router.js';
+import { leaveRouter, essLeaveRouter, leaveApprovalsRouter } from './modules/leave/leave.router.js';
 import { requireAuth, requireSuperAdmin, resolveTenant } from './middleware/auth.js';
 
 export function createApp() {
@@ -83,6 +84,17 @@ export function createApp() {
   // Tenant-scoped Employee Self-Service (ESS) routes
   app.use('/api/v1/me', requireAuth, resolveTenant, essRouter);
   app.use('/api/v1/t/:slug/me', requireAuth, resolveTenant, essRouter);
+  
+  app.use('/api/v1/me/leave', requireAuth, resolveTenant, essLeaveRouter);
+  app.use('/api/v1/t/:slug/me/leave', requireAuth, resolveTenant, essLeaveRouter);
+
+  // Tenant-scoped Leave Admin routes
+  app.use('/api/v1/leave', requireAuth, resolveTenant, leaveRouter);
+  app.use('/api/v1/t/:slug/leave', requireAuth, resolveTenant, leaveRouter);
+
+  // Tenant-scoped Approvals routes
+  app.use('/api/v1/approvals/leave', requireAuth, resolveTenant, leaveApprovalsRouter);
+  app.use('/api/v1/t/:slug/approvals/leave', requireAuth, resolveTenant, leaveApprovalsRouter);
 
   // Tenant-scoped routes — all under /api/v1/t/:slug/
   // Modules are registered as they are built in each phase:
