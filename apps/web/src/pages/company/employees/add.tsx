@@ -135,6 +135,7 @@ export function AddEmployeePage() {
                   <SelectValue placeholder="Select Department" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
                   {departments?.map((d: any) => (
                     <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                   ))}
@@ -149,6 +150,7 @@ export function AddEmployeePage() {
                   <SelectValue placeholder="Select Designation" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
                   {designations?.map((d: any) => (
                     <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                   ))}
@@ -163,6 +165,7 @@ export function AddEmployeePage() {
                   <SelectValue placeholder="Select Location" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
                   {locations?.map((l: any) => (
                     <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
                   ))}

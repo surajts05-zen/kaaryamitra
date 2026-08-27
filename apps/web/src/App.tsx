@@ -25,6 +25,10 @@ import { EssDashboardPage } from '@/pages/ess/dashboard';
 import { EssProfilePage } from '@/pages/ess/my-profile';
 import { EssLeavePage } from '@/pages/ess/leave';
 
+// Phase 8 - Workflow Engine
+import { WorkflowsPage } from '@/pages/company/settings/workflows';
+import { ApprovalsInboxPage } from '@/pages/company/approvals';
+
 /**
  * KaaryaMitra App Router
  */
@@ -56,6 +60,10 @@ export function App() {
 
             {/* Phase 7 - Leave Management */}
             <Route path="approvals/leave" element={<LeaveApprovalsPage />} />
+
+            {/* Phase 8 - Workflow Engine */}
+            <Route path="settings/workflows" element={<WorkflowsPage />} />
+            <Route path="approvals" element={<ApprovalsInboxPage />} />
 
             {/* Catch-all for /t/:slug */}
             {/* Phase 5 - Core HR */}

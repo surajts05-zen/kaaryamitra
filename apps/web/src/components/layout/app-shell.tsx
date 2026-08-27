@@ -17,7 +17,9 @@ import {
   Sparkles,
   Building2,
   MapPin,
-  Briefcase
+  Briefcase,
+  GitBranch,
+  Inbox,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/button';
@@ -28,8 +30,9 @@ const navItems = [
   { icon: MapPin, label: 'Locations', path: 'locations' },
   { icon: Briefcase, label: 'Designations', path: 'designations' },
   { icon: Users, label: 'Directory', path: 'directory' },
-  { icon: Calendar, label: 'Leave Approvals', path: 'approvals/leave' },
+  { icon: Inbox, label: 'Approvals Inbox', path: 'approvals' },
   { icon: Calendar, label: 'Leave Settings', path: 'settings/leave' },
+  { icon: GitBranch, label: 'Workflows', path: 'settings/workflows' },
   { icon: Clock, label: 'Attendance', path: 'attendance' },
   { icon: Settings, label: 'Settings', path: 'settings' },
 ];

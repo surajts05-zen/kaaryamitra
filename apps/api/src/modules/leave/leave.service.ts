@@ -7,6 +7,7 @@ import {
   ReviewLeaveApplicationSchema
 } from './leave.schema.js';
 import { AppError } from '../../lib/errors.js';
+import { getTemplateByTrigger } from '../workflows/workflow.service.js';
 
 export async function getLeaveTypes(tenantId: string) {
   return prisma.leaveType.findMany({
@@ -174,7 +175,8 @@ export async function applyForLeave(tenantId: string, employeeId: string, data: 
         totalDays,
         reason: data.reason ?? null,
         status: 'PENDING'
-      }
+      },
+      include: { leaveType: true }
     });
 
     await tx.leaveBalance.update({
@@ -183,6 +185,22 @@ export async function applyForLeave(tenantId: string, employeeId: string, data: 
         available: balance.available - totalDays
       }
     });
+
+    // Start a workflow instance if a LEAVE_REQUEST template is configured
+    const template = await getTemplateByTrigger(tenantId, 'LEAVE_REQUEST');
+    if (template && template.isActive) {
+      const instance = await tx.workflowInstance.create({
+        data: {
+          tenantId,
+          templateId: template.id,
+          entityType: 'LeaveApplication',
+          entityId: application.id,
+          status: 'IN_PROGRESS',
+          currentStepIndex: 0,
+          leaveApplicationId: application.id,
+        },
+      });
+    }
 
     return application;
   });

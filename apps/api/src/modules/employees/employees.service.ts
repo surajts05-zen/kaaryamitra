@@ -57,7 +57,7 @@ export class EmployeesService {
 
     // Convert empty strings to null to avoid foreign key constraints failing
     Object.keys(rest).forEach(key => {
-      if (rest[key] === '') rest[key] = null;
+      if (rest[key] === '' || rest[key] === 'none') rest[key] = null;
     });
 
     // Ensure user exists for this email
@@ -66,13 +66,17 @@ export class EmployeesService {
     });
 
     if (!user) {
+      const { hashPassword } = await import('../../lib/auth.js');
+      const defaultPasswordHash = await hashPassword('Password@123');
+
       user = await prisma.user.create({
         data: {
           email: workEmail,
           firstName,
           lastName,
           tenantId,
-          status: UserStatus.PENDING_SETUP,
+          passwordHash: defaultPasswordHash,
+          status: UserStatus.ACTIVE,
         },
       });
     }
@@ -114,7 +118,7 @@ export class EmployeesService {
 
     const updateData: any = { ...rest };
     Object.keys(updateData).forEach(key => {
-      if (updateData[key] === '') {
+      if (updateData[key] === '' || updateData[key] === 'none') {
         updateData[key] = null;
       }
     });

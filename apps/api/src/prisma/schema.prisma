@@ -99,6 +99,22 @@ enum WorkflowStatus {
   ESCALATED
 }
 
+enum WorkflowTriggerType {
+  LEAVE_REQUEST
+  EXPENSE_REQUEST
+  OFFBOARDING_REQUEST
+  DOCUMENT_REQUEST
+  CUSTOM
+}
+
+enum WorkflowAssigneeType {
+  MANAGER
+  DEPARTMENT_HEAD
+  ROLE
+  SPECIFIC_USER
+  HR
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // TENANT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -595,12 +611,15 @@ model AttendanceRecord {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model WorkflowTemplate {
-  id         String  @id @default(cuid())
-  tenantId   String
-  name       String
-  entityType String // e.g. 'LeaveApplication'
-  isActive   Boolean @default(true)
-  steps      Json // Array of WorkflowStepDef
+  id          String               @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  triggerType WorkflowTriggerType  @default(CUSTOM)
+  entityType  String               // e.g. 'LeaveApplication'
+  isActive    Boolean              @default(true)
+  // JSON array of WorkflowStepDef: [{stepOrder, assigneeType, assigneeId?, label}]
+  steps       Json
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -608,6 +627,7 @@ model WorkflowTemplate {
   tenant    Tenant             @relation(fields: [tenantId], references: [id])
   instances WorkflowInstance[]
 
+  @@unique([tenantId, triggerType])
   @@map("workflow_templates")
 }
 

@@ -51,9 +51,9 @@ export function EditEmployeePage() {
         workEmail: employee.workEmail,
         personalEmail: employee.personalEmail || '',
         phone: employee.phone || '',
-        departmentId: employee.departmentId || '',
-        designationId: employee.designationId || '',
-        locationId: employee.locationId || '',
+        departmentId: employee.departmentId || 'none',
+        designationId: employee.designationId || 'none',
+        locationId: employee.locationId || 'none',
         joiningDate: (employee.joiningDate ? new Date(employee.joiningDate).toISOString().split('T')[0] : '') as string,
       } as Partial<FormValues>);
     }
@@ -154,12 +154,12 @@ export function EditEmployeePage() {
 
             <div className="space-y-2">
               <Label>Department</Label>
-              <Select defaultValue={employee.departmentId || ''} onValueChange={(val) => setValue('departmentId', val)}>
+              <Select defaultValue={employee.departmentId || 'none'} onValueChange={(val) => setValue('departmentId', val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Department" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {departments?.map((d: any) => (
                     <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                   ))}
@@ -169,12 +169,12 @@ export function EditEmployeePage() {
 
             <div className="space-y-2">
               <Label>Designation</Label>
-              <Select defaultValue={employee.designationId || ''} onValueChange={(val) => setValue('designationId', val)}>
+              <Select defaultValue={employee.designationId || 'none'} onValueChange={(val) => setValue('designationId', val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Designation" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {designations?.map((d: any) => (
                     <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                   ))}
@@ -184,12 +184,12 @@ export function EditEmployeePage() {
 
             <div className="space-y-2">
               <Label>Location</Label>
-              <Select defaultValue={employee.locationId || ''} onValueChange={(val) => setValue('locationId', val)}>
+              <Select defaultValue={employee.locationId || 'none'} onValueChange={(val) => setValue('locationId', val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Location" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {locations?.map((l: any) => (
                     <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
                   ))}
