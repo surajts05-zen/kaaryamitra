@@ -94,15 +94,19 @@ export async function createRole(tenantId: string, name: string, description?: s
 export async function updateRole(
   tenantId: string,
   roleId: string,
-  data: { name?: string; description?: string },
+  data: { name?: string | undefined; description?: string | undefined },
 ) {
   const role = await prisma.role.findFirst({ where: { id: roleId, tenantId } });
   if (!role) throw AppError.notFound('Role');
   if (role.isSystem && data.name) throw AppError.badRequest('System role names cannot be changed');
 
+  const updateData: { name?: string; description?: string } = {};
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.description !== undefined) updateData.description = data.description;
+
   return prisma.role.update({
     where: { id: roleId },
-    data: { name: data.name, description: data.description },
+    data: updateData,
   });
 }
 

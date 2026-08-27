@@ -104,6 +104,7 @@ enum WorkflowTriggerType {
   EXPENSE_REQUEST
   OFFBOARDING_REQUEST
   DOCUMENT_REQUEST
+  ATTENDANCE_REGULARIZATION
   CUSTOM
 }
 
@@ -402,8 +403,10 @@ model CompanySettings {
   workingDays    Json   @default("[1,2,3,4,5]") // array of 0-6 (Sun-Sat)
   workHoursStart String @default("09:00")
   workHoursEnd   String @default("18:00")
-  probationDays  Int    @default(90)
-  timezone       String @default("Asia/Kolkata")
+  probationDays         Int     @default(90)
+  timezone              String  @default("Asia/Kolkata")
+  isAttendanceEnabled   Boolean @default(true)
+  isGeolocationEnforced Boolean @default(false)
 
   updatedAt DateTime @updatedAt
 
@@ -570,6 +573,14 @@ model AttendanceQrCode {
   @@map("attendance_qr_codes")
 }
 
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  WFH
+  ON_DUTY
+}
+
 model AttendanceRecord {
   id            String                  @id @default(cuid())
   tenantId      String
@@ -577,19 +588,25 @@ model AttendanceRecord {
   date          DateTime                @db.Date
   captureSource AttendanceCaptureSource @default(WEB_BUTTON)
 
+  status           AttendanceStatus @default(PRESENT)
+
   punchInTime       DateTime?
   punchInLat        Float?
   punchInLon        Float?
+  punchInIp         String?
   punchInImageUrl   String?
   punchInLocationId String?
 
   punchOutTime       DateTime?
   punchOutLat        Float?
   punchOutLon        Float?
+  punchOutIp         String?
   punchOutImageUrl   String?
   punchOutLocationId String?
 
   totalMinutes Int?
+  totalBreakMinutes Int @default(0)
+  
   isWfh        Boolean @default(false)
   isOnDuty     Boolean @default(false)
   isLate       Boolean @default(false)
@@ -600,11 +617,50 @@ model AttendanceRecord {
   updatedAt DateTime @updatedAt
 
   employee Employee @relation(fields: [employeeId], references: [id])
+  breaks   AttendanceBreak[]
+  corrections AttendanceCorrection[]
 
   @@unique([tenantId, employeeId, date])
   @@index([tenantId, date])
   @@map("attendance_records")
 }
+
+model AttendanceBreak {
+  id                 String   @id @default(cuid())
+  attendanceRecordId String
+  startAt            DateTime
+  endAt              DateTime?
+  durationMinutes    Int      @default(0)
+  type               String   @default("BREAK") // e.g. LUNCH, TEA, OTHER
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  record AttendanceRecord @relation(fields: [attendanceRecordId], references: [id], onDelete: Cascade)
+
+  @@index([attendanceRecordId])
+  @@map("attendance_breaks")
+}
+
+model AttendanceCorrection {
+  id                 String   @id @default(cuid())
+  attendanceRecordId String
+  requestedCheckIn   DateTime?
+  requestedCheckOut  DateTime?
+  reason             String
+  status             String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  workflowInstanceId String?  @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  record           AttendanceRecord  @relation(fields: [attendanceRecordId], references: [id], onDelete: Cascade)
+  workflowInstance WorkflowInstance?
+
+  @@index([attendanceRecordId])
+  @@map("attendance_corrections")
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WORKFLOW ENGINE
@@ -638,16 +694,18 @@ model WorkflowInstance {
   entityType         String
   entityId           String
   status             WorkflowStatus @default(PENDING)
-  currentStepIndex   Int            @default(0)
-  completedAt        DateTime?
-  leaveApplicationId String?        @unique
+  currentStepIndex     Int            @default(0)
+  completedAt          DateTime?
+  leaveApplicationId   String?        @unique
+  attendanceCorrectionId String?      @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  template         WorkflowTemplate  @relation(fields: [templateId], references: [id])
-  leaveApplication LeaveApplication? @relation(fields: [leaveApplicationId], references: [id])
-  actions          WorkflowAction[]
+  template             WorkflowTemplate      @relation(fields: [templateId], references: [id])
+  leaveApplication     LeaveApplication?     @relation(fields: [leaveApplicationId], references: [id])
+  attendanceCorrection AttendanceCorrection? @relation(fields: [attendanceCorrectionId], references: [id])
+  actions              WorkflowAction[]
 
   @@map("workflow_instances")
 }

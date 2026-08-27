@@ -25,8 +25,8 @@ export async function listRolesHandler(req: Request, res: Response) {
 
 export async function getRoleHandler(req: Request, res: Response) {
   const tenantId = req.tenantId!;
-  const { id } = req.params;
-  const role = await getRole(tenantId, id!);
+  const id = req.params['id'] as string;
+  const role = await getRole(tenantId, id);
   res.json({ data: role });
 }
 
@@ -41,18 +41,18 @@ export async function createRoleHandler(req: Request, res: Response) {
 
 export async function updateRoleHandler(req: Request, res: Response) {
   const tenantId = req.tenantId!;
-  const { id } = req.params;
+  const id = req.params['id'] as string;
   const data = z
     .object({ name: z.string().min(1).optional(), description: z.string().optional() })
     .parse(req.body);
-  const role = await updateRole(tenantId, id!, data);
+  const role = await updateRole(tenantId, id, data);
   res.json({ data: role, message: 'Role updated' });
 }
 
 export async function deleteRoleHandler(req: Request, res: Response) {
   const tenantId = req.tenantId!;
-  const { id } = req.params;
-  await deleteRole(tenantId, id!);
+  const id = req.params['id'] as string;
+  await deleteRole(tenantId, id);
   res.json({ message: 'Role deleted' });
 }
 
@@ -66,7 +66,7 @@ export async function listEmployeesWithRolesHandler(req: Request, res: Response)
 
 export async function assignRoleHandler(req: Request, res: Response) {
   const tenantId = req.tenantId!;
-  const { userId } = req.params;
+  const userId = req.params['userId'] as string;
   const { roleId } = z.object({ roleId: z.string() }).parse(req.body);
   if (!userId) throw new AppError(400, 'VALIDATION_ERROR', 'userId is required');
   await assignRole(tenantId, userId, roleId);
@@ -75,7 +75,8 @@ export async function assignRoleHandler(req: Request, res: Response) {
 
 export async function revokeRoleHandler(req: Request, res: Response) {
   const tenantId = req.tenantId!;
-  const { userId, roleId } = req.params;
+  const userId = req.params['userId'] as string;
+  const roleId = req.params['roleId'] as string;
   if (!userId || !roleId) throw new AppError(400, 'VALIDATION_ERROR', 'userId and roleId are required');
   await revokeRole(tenantId, userId, roleId);
   res.json({ message: 'Role revoked' });

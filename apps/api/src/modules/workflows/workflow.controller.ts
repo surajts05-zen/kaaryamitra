@@ -24,41 +24,41 @@ export async function listWorkflowTemplatesHandler(req: Request, res: Response) 
 }
 
 export async function getWorkflowTemplateHandler(req: Request, res: Response) {
-  const tenantId = req.tenantId!;
-  const { id } = req.params;
-  const template = await getWorkflowTemplate(tenantId, id!);
+  const tenantId = req.tenantId as string;
+  const id = req.params['id'] as string;
+  const template = await getWorkflowTemplate(tenantId, id);
   res.json({ data: template });
 }
 
 export async function createWorkflowTemplateHandler(req: Request, res: Response) {
-  const tenantId = req.tenantId!;
+  const tenantId = req.tenantId as string;
   const data = CreateWorkflowTemplateSchema.parse(req.body);
   const template = await createWorkflowTemplate(tenantId, data);
   res.status(201).json({ data: template, message: 'Workflow created successfully' });
 }
 
 export async function updateWorkflowTemplateHandler(req: Request, res: Response) {
-  const tenantId = req.tenantId!;
-  const { id } = req.params;
+  const tenantId = req.tenantId as string;
+  const id = req.params['id'] as string;
   const data = UpdateWorkflowTemplateSchema.parse(req.body);
-  const template = await updateWorkflowTemplate(tenantId, id!, data);
+  const template = await updateWorkflowTemplate(tenantId, id, data);
   res.json({ data: template, message: 'Workflow updated successfully' });
 }
 
 // ─── Approvals Inbox ──────────────────────────────────────────────────────────
 
 export async function listMyPendingApprovalsHandler(req: Request, res: Response) {
-  const tenantId = req.tenantId!;
-  const userId = req.auth!.userId;
+  const tenantId = req.tenantId as string;
+  const userId = req.auth!.userId as string;
 
   const pending = await getPendingActionsForUser(tenantId, userId);
   res.json({ data: pending });
 }
 
 export async function processWorkflowActionHandler(req: Request, res: Response) {
-  const tenantId = req.tenantId!;
-  const userId = req.auth!.userId;
-  const { instanceId } = req.params;
+  const tenantId = req.tenantId as string;
+  const userId = req.auth!.userId as string;
+  const instanceId = req.params['instanceId'] as string;
   const { action, comment } = WorkflowActionSchema.parse(req.body);
 
   if (!instanceId) throw new AppError(400, 'VALIDATION_ERROR', 'instanceId is required');

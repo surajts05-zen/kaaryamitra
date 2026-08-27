@@ -47,11 +47,20 @@ function ActionDialog({
   if (!approval || !action) return null;
 
   const app = approval.instance.leaveApplication;
-  if (!app) return null;
+  const correction = approval.instance.attendanceCorrection;
+  if (!app && !correction) return null;
 
   const handleConfirm = () => {
+    const payload: { instanceId: string; action: 'APPROVED' | 'REJECTED'; comment?: string } = {
+      instanceId: approval.instance.id,
+      action,
+    };
+    if (comment) {
+      payload.comment = comment;
+    }
+
     processMutation.mutate(
-      { instanceId: approval.instance.id, action, comment: comment || undefined },
+      payload,
       {
         onSuccess: () => {
           toast.success(action === 'APPROVED' ? 'Application approved ✅' : 'Application rejected');
@@ -77,30 +86,56 @@ function ActionDialog({
             ) : (
               <XCircle className="h-5 w-5" />
             )}
-            {isApproving ? 'Approve Leave Request' : 'Reject Leave Request'}
+            {isApproving ? 'Approve Request' : 'Reject Request'}
           </DialogTitle>
           <DialogDescription>
             {isApproving
               ? 'Approving this request will advance it to the next step (or complete it if this is the last step).'
-              : 'Rejecting this request will terminate the workflow and restore the employee\'s leave balance.'}
+              : 'Rejecting this request will terminate the workflow.'}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="rounded-lg border p-3 bg-muted/30 space-y-1 text-sm">
-            <p className="font-medium">
-              {app.employee.firstName} {app.employee.lastName}
-            </p>
-            <p className="text-muted-foreground">
-              {app.leaveType.name} · {app.totalDays} day{app.totalDays !== 1 ? 's' : ''}
-            </p>
-            <p className="text-muted-foreground">
-              {format(new Date(app.startDate), 'MMM d')} – {format(new Date(app.endDate), 'MMM d, yyyy')}
-            </p>
-            {app.reason && (
-              <p className="text-muted-foreground italic">"{app.reason}"</p>
-            )}
-          </div>
+          {app && (
+            <div className="rounded-lg border p-3 bg-muted/30 space-y-1 text-sm">
+              <p className="font-medium">
+                {app.employee.firstName} {app.employee.lastName}
+              </p>
+              <p className="text-muted-foreground">
+                {app.leaveType.name} · {app.totalDays} day{app.totalDays !== 1 ? 's' : ''}
+              </p>
+              <p className="text-muted-foreground">
+                {format(new Date(app.startDate), 'MMM d')} – {format(new Date(app.endDate), 'MMM d, yyyy')}
+              </p>
+              {app.reason && (
+                <p className="text-muted-foreground italic">"{app.reason}"</p>
+              )}
+            </div>
+          )}
+          {correction && (
+            <div className="rounded-lg border p-3 bg-muted/30 space-y-1 text-sm">
+              <p className="font-medium">
+                {correction.record.employee.firstName} {correction.record.employee.lastName}
+              </p>
+              <p className="text-muted-foreground font-semibold">Attendance Regularization</p>
+              <p className="text-muted-foreground">
+                Date: {format(new Date(correction.record.date), 'MMM d, yyyy')}
+              </p>
+              {correction.requestedCheckIn && (
+                <p className="text-muted-foreground">
+                  Check In: {format(new Date(correction.requestedCheckIn), 'hh:mm a')}
+                </p>
+              )}
+              {correction.requestedCheckOut && (
+                <p className="text-muted-foreground">
+                  Check Out: {format(new Date(correction.requestedCheckOut), 'hh:mm a')}
+                </p>
+              )}
+              {correction.reason && (
+                <p className="text-muted-foreground italic mt-2">"{correction.reason}"</p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>{isApproving ? 'Comment (Optional)' : 'Reason for Rejection'}</Label>
@@ -147,13 +182,14 @@ function ApprovalCard({
   onReject: () => void;
 }) {
   const app = approval.instance.leaveApplication;
-  if (!app) return null;
+  const correction = approval.instance.attendanceCorrection;
+  if (!app && !correction) return null;
 
-  const employee = app.employee;
+  const employee = app ? app.employee : correction!.record.employee;
   const initials = `${employee.firstName[0]}${employee.lastName[0]}`.toUpperCase();
   const stepLabel = approval.currentStep.label;
   const stepIndex = approval.instance.currentStepIndex + 1;
-  const leaveColor = app.leaveType.color ?? '#4CAF50';
+  const leaveColor = app?.leaveType?.color ?? '#4CAF50';
 
   return (
     <Card className="hover:shadow-md transition-all group">
@@ -188,40 +224,62 @@ function ApprovalCard({
                   )}
                 </div>
               </div>
-              {/* Leave Type Badge */}
+              {/* Badge */}
               <Badge
                 variant="secondary"
                 className="text-xs flex-shrink-0"
-                style={{ backgroundColor: `${leaveColor}20`, color: leaveColor }}
+                style={{ backgroundColor: `${app ? leaveColor : '#ff9800'}20`, color: app ? leaveColor : '#ff9800' }}
               >
-                {app.leaveType.name}
+                {app ? app.leaveType.name : 'Attendance Regularization'}
               </Badge>
             </div>
 
-            {/* Leave Details */}
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div className="flex items-center gap-1.5 text-sm">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span>
-                  {format(new Date(app.startDate), 'MMM d')}
-                  {app.startDate !== app.endDate &&
-                    ` – ${format(new Date(app.endDate), 'MMM d, yyyy')}`}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 text-sm">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span>
-                  {app.totalDays} day{app.totalDays !== 1 ? 's' : ''}
-                  {app.isHalfDay && ' (half-day)'}
-                </span>
-              </div>
-            </div>
+            {app ? (
+              <>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      {format(new Date(app.startDate), 'MMM d')}
+                      {app.startDate !== app.endDate &&
+                        ` – ${format(new Date(app.endDate), 'MMM d, yyyy')}`}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      {app.totalDays} day{app.totalDays !== 1 ? 's' : ''}
+                      {app.isHalfDay && ' (half-day)'}
+                    </span>
+                  </div>
+                </div>
 
-            {app.reason && (
-              <p className="text-sm text-muted-foreground italic mb-3 truncate">
-                "{app.reason}"
-              </p>
-            )}
+                {app.reason && (
+                  <p className="text-sm text-muted-foreground italic mb-3 truncate">
+                    "{app.reason}"
+                  </p>
+                )}
+              </>
+            ) : correction ? (
+              <>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>{format(new Date(correction.record.date), 'MMM d, yyyy')}</span>
+                  </div>
+                  <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                    {correction.requestedCheckIn && <span>In: {format(new Date(correction.requestedCheckIn), 'hh:mm a')}</span>}
+                    {correction.requestedCheckOut && <span>Out: {format(new Date(correction.requestedCheckOut), 'hh:mm a')}</span>}
+                  </div>
+                </div>
+
+                {correction.reason && (
+                  <p className="text-sm text-muted-foreground italic mb-3 truncate">
+                    "{correction.reason}"
+                  </p>
+                )}
+              </>
+            ) : null}
 
             {/* Current Step */}
             <div className="flex items-center justify-between">

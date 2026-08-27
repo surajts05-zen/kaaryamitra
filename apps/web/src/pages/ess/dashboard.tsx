@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/store/auth.store';
 import { Calendar, Clock, FileText, Bell } from 'lucide-react';
+import { AttendanceWidget } from '@/features/attendance/components/AttendanceWidget';
 
 export function EssDashboardPage() {
   const { user } = useAuthStore();
@@ -9,6 +10,10 @@ export function EssDashboardPage() {
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Welcome, {user?.firstName}</h2>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <AttendanceWidget />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

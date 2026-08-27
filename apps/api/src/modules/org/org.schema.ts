@@ -53,5 +53,7 @@ export const updateCompanySettingsSchema = z.object({
     workHoursEnd: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/).optional(),
     probationDays: z.number().min(0).optional(),
     timezone: z.string().optional(),
+    isAttendanceEnabled: z.boolean().optional(),
+    isGeolocationEnforced: z.boolean().optional(),
   }),
 });

@@ -24,6 +24,7 @@ import { LeaveTypesPage } from '@/pages/company/leave-types';
 import { EssDashboardPage } from '@/pages/ess/dashboard';
 import { EssProfilePage } from '@/pages/ess/my-profile';
 import { EssLeavePage } from '@/pages/ess/leave';
+import { MyAttendancePage } from '@/pages/ess/attendance';
 
 // Phase 8 - Workflow Engine
 import { WorkflowsPage } from '@/pages/company/settings/workflows';
@@ -79,9 +80,12 @@ export function App() {
             <Route path="directory/:id/edit" element={<EditEmployeePage />} />
 
             {/* Phase 6 - ESS */}
-            <Route path="me/dashboard" element={<EssDashboardPage />} />
-            <Route path="me/profile" element={<EssProfilePage />} />
-            <Route path="me/leave" element={<EssLeavePage />} />
+            <Route path="me">
+              <Route index element={<EssDashboardPage />} />
+              <Route path="profile" element={<EssProfilePage />} />
+              <Route path="attendance" element={<MyAttendancePage />} />
+              <Route path="leave" element={<EssLeavePage />} />
+            </Route>
           </Route>
         </Route>
         

@@ -6,6 +6,7 @@ import { useCompanySettings, useUpdateCompanySettings } from '@/features/company
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { toast } from 'sonner';
 
@@ -14,6 +15,8 @@ const schema = z.object({
   workHoursEnd: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format (HH:MM)'),
   probationDays: z.number().min(0),
   timezone: z.string().min(2),
+  isAttendanceEnabled: z.boolean().optional(),
+  isGeolocationEnforced: z.boolean().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -22,7 +25,7 @@ export function CompanySettingsPage() {
   const { data: settings, isLoading } = useCompanySettings();
   const updateMutation = useUpdateCompanySettings();
 
-  const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm<FormValues>({
+  const { register, control, handleSubmit, reset, formState: { errors, isDirty } } = useForm<FormValues>({
     resolver: zodResolver(schema),
   });
 
@@ -34,6 +37,8 @@ export function CompanySettingsPage() {
         workHoursEnd: settings.workHoursEnd,
         probationDays: settings.probationDays,
         timezone: settings.timezone,
+        isAttendanceEnabled: settings.isAttendanceEnabled,
+        isGeolocationEnforced: settings.isGeolocationEnforced,
       });
     }
   }, [settings, reset]);
@@ -87,6 +92,40 @@ export function CompanySettingsPage() {
               <Label>Company Default Timezone</Label>
               <Input {...register('timezone')} />
               {errors.timezone && <p className="text-xs text-destructive">{errors.timezone.message}</p>}
+            </div>
+
+            <div className="pt-4 border-t space-y-4">
+              <h3 className="text-lg font-medium">Attendance Settings</h3>
+              
+              <div className="flex items-center space-x-2">
+                <Controller
+                  control={control}
+                  name="isAttendanceEnabled"
+                  render={({ field }) => (
+                    <Checkbox
+                      id="isAttendanceEnabled"
+                      checked={field.value ?? false}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
+                <Label htmlFor="isAttendanceEnabled" className="cursor-pointer">Enable Attendance Tracking</Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Controller
+                  control={control}
+                  name="isGeolocationEnforced"
+                  render={({ field }) => (
+                    <Checkbox
+                      id="isGeolocationEnforced"
+                      checked={field.value ?? false}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
+                <Label htmlFor="isGeolocationEnforced" className="cursor-pointer">Enforce Geolocation (Location required for check-in/out)</Label>
+              </div>
             </div>
           </CardContent>
           <CardFooter>

@@ -59,7 +59,7 @@ const navItems: NavItem[] = [
   { icon: Shield,    label: 'Roles & Permissions', path: 'settings/roles', allowedRoles: ADMIN_ROLES },
 
   // General
-  { icon: Clock,     label: 'Attendance',    path: 'attendance' },
+  { icon: Clock,     label: 'My Attendance',    path: 'me/attendance' },
   { icon: Settings,  label: 'Settings',      path: 'settings',          allowedRoles: ADMIN_ROLES },
 ];
 

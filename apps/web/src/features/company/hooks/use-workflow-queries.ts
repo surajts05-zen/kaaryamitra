@@ -47,6 +47,26 @@ export type PendingApproval = {
         designation?: { name: string };
       };
     } | null;
+    attendanceCorrection: {
+      id: string;
+      requestedCheckIn?: string;
+      requestedCheckOut?: string;
+      reason?: string;
+      status: string;
+      record: {
+        id: string;
+        date: string;
+        employee: {
+          id: string;
+          firstName: string;
+          lastName: string;
+          employeeCode?: string;
+          avatarUrl?: string;
+          department?: { name: string };
+          designation?: { name: string };
+        };
+      };
+    } | null;
   };
   currentStep: WorkflowStepDef;
 };

@@ -247,6 +247,24 @@ export async function processWorkflowAction(
           email: app.employee.user.email,
         }).catch(() => {});
       }
+    } else if (instance.attendanceCorrectionId) {
+      const correction = await prisma.attendanceCorrection.update({
+        where: { id: instance.attendanceCorrectionId },
+        data: { status: 'REJECTED' },
+        include: { record: { include: { employee: { include: { user: true } } } } }
+      });
+      if (correction?.record?.employee?.user) {
+        const tenantSlug = (await prisma.tenant.findUnique({ where: { id: tenantId }, select: { slug: true } }))?.slug;
+        createNotification({
+          tenantId,
+          userId: correction.record.employee.user.id,
+          type: 'workflow.rejected',
+          title: 'Attendance Correction Rejected ❌',
+          body: `Your attendance regularization request was rejected${comment ? `: "${comment}"` : '.'}`,
+          link: tenantSlug ? `/t/${tenantSlug}/me/attendance` : undefined,
+          email: correction.record.employee.user.email,
+        }).catch(() => {});
+      }
     }
 
     return rejected;
@@ -284,6 +302,43 @@ export async function processWorkflowAction(
         email: app.employee.user.email,
       }).catch(() => {});
     }
+  } else if (isComplete && instance.attendanceCorrectionId) {
+    const correction = await prisma.attendanceCorrection.update({
+      where: { id: instance.attendanceCorrectionId },
+      data: { status: 'APPROVED' },
+      include: { record: { include: { employee: { include: { user: true } } } } }
+    });
+    
+    // Apply the correction to the AttendanceRecord
+    const updateData: any = {};
+    if (correction.requestedCheckIn) updateData.punchInTime = correction.requestedCheckIn;
+    if (correction.requestedCheckOut) updateData.punchOutTime = correction.requestedCheckOut;
+    
+    // Recalculate total minutes if both exist
+    const finalIn = correction.requestedCheckIn || correction.record.punchInTime;
+    const finalOut = correction.requestedCheckOut || correction.record.punchOutTime;
+    if (finalIn && finalOut) {
+      updateData.totalMinutes = Math.floor((finalOut.getTime() - finalIn.getTime()) / 60000) - correction.record.totalBreakMinutes;
+    }
+
+    updateData.status = 'PRESENT';
+
+    await prisma.attendanceRecord.update({
+      where: { id: correction.attendanceRecordId },
+      data: updateData
+    });
+
+    if (correction?.record?.employee?.user) {
+      createNotification({
+        tenantId,
+        userId: correction.record.employee.user.id,
+        type: 'workflow.completed',
+        title: 'Attendance Correction Approved ✅',
+        body: 'Your attendance regularization request has been approved.',
+        link: tenantSlug ? `/t/${tenantSlug}/me/attendance` : undefined,
+        email: correction.record.employee.user.email,
+      }).catch(() => {});
+    }
   }
 
   return updated;
@@ -297,7 +352,6 @@ export async function getPendingActionsForUser(tenantId: string, userId: string)
     where: {
       tenantId,
       status: 'IN_PROGRESS',
-      leaveApplicationId: { not: null },
     },
     include: {
       template: true,
@@ -305,6 +359,15 @@ export async function getPendingActionsForUser(tenantId: string, userId: string)
         include: {
           employee: { include: { user: true, department: true, designation: true } },
           leaveType: true,
+        },
+      },
+      attendanceCorrection: {
+        include: {
+          record: {
+            include: {
+              employee: { include: { user: true, department: true, designation: true } },
+            },
+          },
         },
       },
     },
@@ -315,11 +378,14 @@ export async function getPendingActionsForUser(tenantId: string, userId: string)
   for (const instance of instances) {
     const steps = instance.template.steps as WorkflowStepDef[];
     const currentStep = steps[instance.currentStepIndex];
-    if (!currentStep || !instance.leaveApplication) continue;
+    if (!currentStep) continue;
+
+    const employeeId = instance.leaveApplication?.employeeId || instance.attendanceCorrection?.record.employeeId;
+    if (!employeeId) continue;
 
     const isApprover = await isUserStepApprover(
       currentStep,
-      instance.leaveApplication.employeeId,
+      employeeId,
       userId,
       tenantId,
     );
