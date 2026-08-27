@@ -321,7 +321,8 @@ Platform (KaaryaMitra)
 - [ ] Leave balance visibility
 - [ ] Attendance visibility (own records)
 - [ ] Request submission (address/bank/name change)
-- [ ] Notification center (in-app)
+- [x] Email notification integration (via Nodemailer)
+- [x] Webhook infrastructure stub
 - [ ] Company announcements feed
 
 ---
@@ -366,17 +367,17 @@ Platform (KaaryaMitra)
 
 ---
 
-### 🔔 Phase 9 — Notifications
+### 🔔 Phase 9 — Notifications & Webhooks
 > *Estimated: Week 23*
 
 **Goal:** Multi-channel notification system.
 
-- [ ] In-app notification center (real-time, mark read, clear)
-- [ ] Email notifications (Nodemailer / transactional provider)
-- [ ] Notification templates (per event type, per tenant branding)
-- [ ] Employee notification preferences
-- [ ] Digest email option
-- [ ] Architecture ready for: Push (FCM), SMS, WhatsApp
+- [x] In-app notification center (real-time, mark read, clear)
+- [x] Email notifications (Nodemailer / transactional provider)
+- [x] Notification templates (per event type, per tenant branding)
+- [x] Employee notification preferences
+- [x] Digest email option
+- [x] Architecture ready for: Push (FCM), SMS, WhatsApp
 
 ---
 

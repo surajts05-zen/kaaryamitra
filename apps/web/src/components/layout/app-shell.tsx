@@ -11,7 +11,6 @@ import {
   Sun,
   Moon,
   LogOut,
-  Bell,
   Search,
   Building2,
   MapPin,
@@ -23,6 +22,8 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/button';
+import { NotificationPanel } from '@/components/notifications/notification-panel';
+import { useNotificationStore } from '@/store/notification.store';
 
 // ─── Role constants ────────────────────────────────────────────────────────────
 const ADMIN_ROLES = ['Company Admin'];
@@ -74,6 +75,7 @@ export function AppShell() {
   const location = useLocation();
   const { slug: pathSlug } = useParams();
   const { user, logout } = useAuthStore();
+  const startPolling = useNotificationStore((s) => s.startPolling);
   
   const slug = pathSlug || user?.tenantSlug;
   const userRoles = user?.roles ?? [];
@@ -100,6 +102,13 @@ export function AppShell() {
   React.useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
+
+  // Start notification polling when shell mounts (user is authenticated)
+  React.useEffect(() => {
+    if (!user) return;
+    const stop = startPolling();
+    return stop;
+  }, [user?.id, startPolling]);
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -212,10 +221,7 @@ export function AppShell() {
               )}
             </Button>
 
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5 text-muted-foreground" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-km-lime shadow-glow-lime"></span>
-            </Button>
+            <NotificationPanel />
 
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary" title={user?.email}>
               {initials}

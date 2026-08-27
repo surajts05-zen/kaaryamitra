@@ -8,6 +8,7 @@ import {
 } from './leave.schema.js';
 import { AppError } from '../../lib/errors.js';
 import { getTemplateByTrigger } from '../workflows/workflow.service.js';
+import { createNotification } from '../notifications/notification.service.js';
 
 export async function getLeaveTypes(tenantId: string) {
   return prisma.leaveType.findMany({
@@ -162,7 +163,7 @@ export async function applyForLeave(tenantId: string, employeeId: string, data: 
     throw AppError.badRequest('Insufficient leave balance');
   }
 
-  return prisma.$transaction(async (tx) => {
+  const application = await prisma.$transaction(async (tx) => {
     const application = await tx.leaveApplication.create({
       data: {
         tenantId,
@@ -189,7 +190,7 @@ export async function applyForLeave(tenantId: string, employeeId: string, data: 
     // Start a workflow instance if a LEAVE_REQUEST template is configured
     const template = await getTemplateByTrigger(tenantId, 'LEAVE_REQUEST');
     if (template && template.isActive) {
-      const instance = await tx.workflowInstance.create({
+      await tx.workflowInstance.create({
         data: {
           tenantId,
           templateId: template.id,
@@ -204,6 +205,28 @@ export async function applyForLeave(tenantId: string, employeeId: string, data: 
 
     return application;
   });
+
+  // Notify the manager (reporting manager) — fire-and-forget after transaction
+  const employee = await prisma.employee.findUnique({
+    where: { id: employeeId },
+    include: { manager: { include: { user: true } } },
+  });
+
+  if (employee?.manager?.user?.id) {
+    const empName = `${employee.firstName} ${employee.lastName}`;
+    const leaveName = application.leaveType?.name ?? 'Leave';
+    createNotification({
+      tenantId,
+      userId: employee.manager.user.id,
+      type: 'leave.applied',
+      title: `New Leave Request from ${empName}`,
+      body: `${empName} has applied for ${application.totalDays} day(s) of ${leaveName}.`,
+      link: `/t/${(await prisma.tenant.findUnique({ where: { id: tenantId }, select: { slug: true } }))?.slug}/approvals`,
+      email: employee.manager.user.email,
+    }).catch(() => {});
+  }
+
+  return application;
 }
 
 export async function getPendingApprovals(tenantId: string, managerEmployeeId: string) {
@@ -256,7 +279,7 @@ export async function reviewLeaveApplication(tenantId: string, managerEmployeeId
     throw AppError.badRequest(`Application is already ${application.status}`);
   }
 
-  return prisma.$transaction(async (tx) => {
+  const updated = await prisma.$transaction(async (tx) => {
     const updated = await tx.leaveApplication.update({
       where: { id: applicationId },
       data: {
@@ -311,4 +334,28 @@ export async function reviewLeaveApplication(tenantId: string, managerEmployeeId
 
     return updated;
   });
+
+  // Notify the employee — fire-and-forget after transaction
+  const employee = await prisma.employee.findUnique({
+    where: { id: application.employeeId },
+    include: { user: true },
+  });
+
+  if (employee?.user?.id) {
+    const isApproved = data.status === 'APPROVED';
+    const tenantSlug = (await prisma.tenant.findUnique({ where: { id: tenantId }, select: { slug: true } }))?.slug;
+    createNotification({
+      tenantId,
+      userId: employee.user.id,
+      type: isApproved ? 'leave.approved' : 'leave.rejected',
+      title: isApproved ? 'Your Leave has been Approved ✅' : 'Your Leave has been Rejected ❌',
+      body: isApproved
+        ? `Your leave request has been approved${data.managerNote ? `: "${data.managerNote}"` : '.'}`
+        : `Your leave request was rejected${data.managerNote ? `: "${data.managerNote}"` : '.'}`,
+      link: tenantSlug ? `/t/${tenantSlug}/me/leave` : undefined,
+      email: employee.user.email,
+    }).catch(() => {});
+  }
+
+  return updated;
 }

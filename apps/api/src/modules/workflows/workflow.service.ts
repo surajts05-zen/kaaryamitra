@@ -3,6 +3,7 @@ import { AppError } from '../../lib/errors.js';
 import type { WorkflowStepDef } from './workflow.schema.js';
 import type { z } from 'zod';
 import type { CreateWorkflowTemplateSchema, UpdateWorkflowTemplateSchema } from './workflow.schema.js';
+import { createNotification } from '../notifications/notification.service.js';
 
 // ─── Template Management ───────────────────────────────────────────────────────
 
@@ -223,20 +224,39 @@ export async function processWorkflowAction(
 
   if (action === 'REJECTED') {
     // Reject terminates the entire workflow
-    return prisma.workflowInstance.update({
+    const rejected = await prisma.workflowInstance.update({
       where: { id: instanceId },
-      data: {
-        status: 'REJECTED',
-        completedAt: new Date(),
-      },
+      data: { status: 'REJECTED', completedAt: new Date() },
     });
+
+    // Notify initiating employee
+    if (instance.leaveApplicationId) {
+      const app = await prisma.leaveApplication.findUnique({
+        where: { id: instance.leaveApplicationId },
+        include: { employee: { include: { user: true } } },
+      });
+      if (app?.employee?.user) {
+        const tenantSlug = (await prisma.tenant.findUnique({ where: { id: tenantId }, select: { slug: true } }))?.slug;
+        createNotification({
+          tenantId,
+          userId: app.employee.user.id,
+          type: 'workflow.rejected',
+          title: 'Your request has been Rejected ❌',
+          body: `Your leave request was rejected${comment ? `: "${comment}"` : '.'}`,
+          link: tenantSlug ? `/t/${tenantSlug}/me/leave` : undefined,
+          email: app.employee.user.email,
+        }).catch(() => {});
+      }
+    }
+
+    return rejected;
   }
 
   // APPROVED — advance to next step
   const nextStepIndex = instance.currentStepIndex + 1;
   const isComplete = nextStepIndex >= steps.length;
 
-  return prisma.workflowInstance.update({
+  const updated = await prisma.workflowInstance.update({
     where: { id: instanceId },
     data: {
       currentStepIndex: isComplete ? instance.currentStepIndex : nextStepIndex,
@@ -244,6 +264,29 @@ export async function processWorkflowAction(
       completedAt: isComplete ? new Date() : null,
     },
   });
+
+  const tenantSlug = (await prisma.tenant.findUnique({ where: { id: tenantId }, select: { slug: true } }))?.slug;
+
+  if (isComplete && instance.leaveApplicationId) {
+    // Notify employee that their request completed
+    const app = await prisma.leaveApplication.findUnique({
+      where: { id: instance.leaveApplicationId },
+      include: { employee: { include: { user: true } } },
+    });
+    if (app?.employee?.user) {
+      createNotification({
+        tenantId,
+        userId: app.employee.user.id,
+        type: 'workflow.completed',
+        title: 'Your Leave Request is Approved ✅',
+        body: 'All approval steps have been completed. Your leave is confirmed.',
+        link: tenantSlug ? `/t/${tenantSlug}/me/leave` : undefined,
+        email: app.employee.user.email,
+      }).catch(() => {});
+    }
+  }
+
+  return updated;
 }
 
 /**
