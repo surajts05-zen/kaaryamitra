@@ -1,0 +1,670 @@
+// KaaryaMitra HRMS — Prisma Schema
+// Multi-tenant SaaS: every business entity carries tenantId
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  TRIAL
+  CANCELLED
+}
+
+enum TenantPlan {
+  FREE
+  STARTER
+  GROWTH
+  ENTERPRISE
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING_SETUP
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+  CONSULTANT
+}
+
+enum EmploymentStatus {
+  ACTIVE
+  PROBATION
+  NOTICE_PERIOD
+  OFFBOARDED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum LeaveApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  WITHDRAWN
+}
+
+enum AttendanceCaptureSource {
+  WEB_QR
+  WEB_BUTTON
+  MOBILE_QR
+  API_PUSH
+  BIOMETRIC
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  PUSH
+  SMS
+}
+
+enum WorkflowStepType {
+  APPROVAL
+  NOTIFICATION
+  ACTION
+}
+
+enum WorkflowStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+  CANCELLED
+  ESCALATED
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TENANT
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Tenant {
+  id     String       @id @default(cuid())
+  name   String
+  slug   String       @unique // /t/{slug}/ routing
+  status TenantStatus @default(TRIAL)
+  plan   TenantPlan   @default(FREE)
+
+  // Branding
+  logoUrl      String?
+  logoUrlDark  String?
+  faviconUrl   String?
+  primaryColor String? // hex e.g. #A8E600
+  accentColor  String?
+
+  // Domain
+  domain String? @unique
+
+  // Billing
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  trialEndsAt          DateTime?
+  planExpiresAt        DateTime?
+
+  // Feature flags (JSON map: featureName -> boolean)
+  featureFlags Json @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  users             User[]
+  departments       Department[]
+  teams             Team[]
+  locations         Location[]
+  designations      Designation[]
+  employees         Employee[]
+  leaveTypes        LeaveType[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  roles             Role[]
+  workflowTemplates WorkflowTemplate[]
+  jobLevels         JobLevel[]
+  holidays          Holiday[]
+  companySettings   CompanySettings?
+
+  @@map("tenants")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USER & AUTH
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String       @id @default(cuid())
+  tenantId     String? // null = Super Admin (platform-level)
+  email        String       @unique
+  firstName    String
+  lastName     String
+  avatarUrl    String?
+  status       UserStatus   @default(PENDING_SETUP)
+  authProvider AuthProvider @default(LOCAL)
+  isSuperAdmin Boolean      @default(false)
+
+  // LOCAL auth
+  passwordHash           String?
+  passwordResetToken     String?
+  passwordResetExpiresAt DateTime?
+
+  // GOOGLE auth
+  googleId String? @unique
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastLoginAt DateTime?
+
+  // Relations
+  tenant        Tenant?        @relation(fields: [tenantId], references: [id])
+  employee      Employee? // 1-to-1: user <-> employee record
+  sessions      Session[]
+  userRoles     UserRole[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+
+  @@index([tenantId])
+  @@map("users")
+}
+
+model Session {
+  id           String    @id @default(cuid())
+  userId       String
+  refreshToken String    @unique
+  userAgent    String?
+  ipAddress    String?
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RBAC
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Role {
+  id          String  @id @default(cuid())
+  tenantId    String? // null = platform-level role (Super Admin)
+  name        String
+  description String?
+  isSystem    Boolean @default(false) // System roles cannot be deleted
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant          Tenant?          @relation(fields: [tenantId], references: [id])
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@unique([tenantId, name])
+  @@map("roles")
+}
+
+model Permission {
+  id          String @id @default(cuid())
+  action      String @unique // e.g. 'employee:create'
+  description String
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model UserRole {
+  userId    String
+  roleId    String
+  grantedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ORGANIZATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Department {
+  id       String  @id @default(cuid())
+  tenantId String
+  name     String
+  code     String?
+  headId   String? // Employee FK added after Employee model
+  parentId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant    Tenant       @relation(fields: [tenantId], references: [id])
+  parent    Department?  @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  head      Employee?    @relation("DepartmentHead", fields: [headId], references: [id])
+  children  Department[] @relation("DepartmentHierarchy")
+  employees Employee[]
+  teams     Team[]
+
+  @@unique([tenantId, name])
+  @@map("departments")
+}
+
+model Team {
+  id           String  @id @default(cuid())
+  tenantId     String
+  departmentId String?
+  name         String
+  leadId       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  department Department? @relation(fields: [departmentId], references: [id])
+  lead       Employee?   @relation("TeamLead", fields: [leadId], references: [id])
+  employees  Employee[]
+
+  @@unique([tenantId, name])
+  @@map("teams")
+}
+
+model Location {
+  id       String  @id @default(cuid())
+  tenantId String
+  name     String
+  address  String?
+  city     String?
+  state    String?
+  country  String?
+  timezone String  @default("Asia/Kolkata")
+  // Geofencing
+  lat      Float?
+  lon      Float?
+  radius   Int?    @default(200) // metres
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant    Tenant             @relation(fields: [tenantId], references: [id])
+  employees Employee[]
+  qrCodes   AttendanceQrCode[]
+  holidays  Holiday[]
+
+  @@map("locations")
+}
+
+model Designation {
+  id       String  @id @default(cuid())
+  tenantId String
+  name     String
+  level    String? // e.g. L3, Senior, Principal
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
+  employees Employee[]
+
+  @@unique([tenantId, name])
+  @@map("designations")
+}
+
+model JobLevel {
+  id       String @id @default(cuid())
+  tenantId String
+  name     String // e.g. "L1", "Manager", "Director"
+  rank     Int? // for sorting, e.g. 10 for L1, 20 for L2
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
+  employees Employee[]
+
+  @@unique([tenantId, name])
+  @@map("job_levels")
+}
+
+model Holiday {
+  id         String   @id @default(cuid())
+  tenantId   String
+  locationId String? // if null, applies to all locations
+  name       String
+  date       DateTime @db.Date
+  type       String // e.g. "PUBLIC", "OPTIONAL"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  location Location? @relation(fields: [locationId], references: [id])
+
+  @@map("holidays")
+}
+
+model CompanySettings {
+  id             String @id @default(cuid())
+  tenantId       String @unique
+  workingDays    Json   @default("[1,2,3,4,5]") // array of 0-6 (Sun-Sat)
+  workHoursStart String @default("09:00")
+  workHoursEnd   String @default("18:00")
+  probationDays  Int    @default(90)
+  timezone       String @default("Asia/Kolkata")
+
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("company_settings")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EMPLOYEE
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Employee {
+  id           String  @id @default(cuid())
+  tenantId     String
+  userId       String  @unique
+  employeeCode String?
+
+  // Personal
+  firstName     String
+  lastName      String
+  dateOfBirth   DateTime?
+  gender        Gender?
+  nationality   String?
+  maritalStatus String?
+  personalEmail String?
+  phone         String?
+
+  // Work
+  workEmail        String
+  departmentId     String?
+  teamId           String?
+  locationId       String?
+  designationId    String?
+  managerId        String? // Self-referential FK
+  employmentType   EmploymentType   @default(FULL_TIME)
+  employmentStatus EmploymentStatus @default(PROBATION)
+  joiningDate      DateTime
+  confirmationDate DateTime?
+  probationEndDate DateTime?
+  exitDate         DateTime?
+
+  // Avatar
+  avatarUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  tenant            Tenant             @relation(fields: [tenantId], references: [id])
+  user              User               @relation(fields: [userId], references: [id])
+  department        Department?        @relation(fields: [departmentId], references: [id])
+  team              Team?              @relation(fields: [teamId], references: [id])
+  location          Location?          @relation(fields: [locationId], references: [id])
+  designation       Designation?       @relation(fields: [designationId], references: [id])
+  jobLevelId        String?
+  jobLevel          JobLevel?          @relation(fields: [jobLevelId], references: [id])
+  manager           Employee?          @relation("ManagerReportees", fields: [managerId], references: [id])
+  reportees         Employee[]         @relation("ManagerReportees")
+  departmentHeads   Department[]       @relation("DepartmentHead")
+  teamLeads         Team[]             @relation("TeamLead")
+  leaveApplications LeaveApplication[]
+  attendanceRecords AttendanceRecord[]
+  notifications     Notification[]     @relation("EmployeeNotifications")
+
+  @@index([tenantId])
+  @@index([managerId])
+  @@map("employees")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LEAVE
+// ─────────────────────────────────────────────────────────────────────────────
+
+model LeaveType {
+  id          String  @id @default(cuid())
+  tenantId    String
+  name        String
+  code        String
+  color       String? @default("#4CAF50")
+  isPaid      Boolean @default(true)
+  isActive    Boolean @default(true)
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant       Tenant             @relation(fields: [tenantId], references: [id])
+  applications LeaveApplication[]
+
+  @@unique([tenantId, code])
+  @@map("leave_types")
+}
+
+model LeaveApplication {
+  id            String                 @id @default(cuid())
+  tenantId      String
+  employeeId    String
+  leaveTypeId   String
+  startDate     DateTime
+  endDate       DateTime
+  isHalfDay     Boolean                @default(false)
+  halfDayPeriod String? // 'FIRST_HALF' | 'SECOND_HALF'
+  totalDays     Float
+  reason        String?
+  status        LeaveApplicationStatus @default(PENDING)
+  approverNote  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee         Employee          @relation(fields: [employeeId], references: [id])
+  leaveType        LeaveType         @relation(fields: [leaveTypeId], references: [id])
+  workflowInstance WorkflowInstance?
+
+  @@index([tenantId, employeeId])
+  @@map("leave_applications")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ATTENDANCE
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AttendanceQrCode {
+  id         String    @id @default(cuid())
+  locationId String
+  token      String    @unique @default(cuid())
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+
+  location Location @relation(fields: [locationId], references: [id])
+
+  @@map("attendance_qr_codes")
+}
+
+model AttendanceRecord {
+  id            String                  @id @default(cuid())
+  tenantId      String
+  employeeId    String
+  date          DateTime                @db.Date
+  captureSource AttendanceCaptureSource @default(WEB_BUTTON)
+
+  punchInTime       DateTime?
+  punchInLat        Float?
+  punchInLon        Float?
+  punchInImageUrl   String?
+  punchInLocationId String?
+
+  punchOutTime       DateTime?
+  punchOutLat        Float?
+  punchOutLon        Float?
+  punchOutImageUrl   String?
+  punchOutLocationId String?
+
+  totalMinutes Int?
+  isWfh        Boolean @default(false)
+  isOnDuty     Boolean @default(false)
+  isLate       Boolean @default(false)
+  isEarlyExit  Boolean @default(false)
+  notes        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([tenantId, employeeId, date])
+  @@index([tenantId, date])
+  @@map("attendance_records")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WORKFLOW ENGINE
+// ─────────────────────────────────────────────────────────────────────────────
+
+model WorkflowTemplate {
+  id         String  @id @default(cuid())
+  tenantId   String
+  name       String
+  entityType String // e.g. 'LeaveApplication'
+  isActive   Boolean @default(true)
+  steps      Json // Array of WorkflowStepDef
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant    Tenant             @relation(fields: [tenantId], references: [id])
+  instances WorkflowInstance[]
+
+  @@map("workflow_templates")
+}
+
+model WorkflowInstance {
+  id                 String         @id @default(cuid())
+  tenantId           String
+  templateId         String
+  entityType         String
+  entityId           String
+  status             WorkflowStatus @default(PENDING)
+  currentStepIndex   Int            @default(0)
+  completedAt        DateTime?
+  leaveApplicationId String?        @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  template         WorkflowTemplate  @relation(fields: [templateId], references: [id])
+  leaveApplication LeaveApplication? @relation(fields: [leaveApplicationId], references: [id])
+  actions          WorkflowAction[]
+
+  @@map("workflow_instances")
+}
+
+model WorkflowAction {
+  id         String   @id @default(cuid())
+  instanceId String
+  stepIndex  Int
+  actorId    String
+  action     String // 'approved' | 'rejected' | 'delegated'
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  instance WorkflowInstance @relation(fields: [instanceId], references: [id])
+
+  @@map("workflow_actions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Notification {
+  id         String              @id @default(cuid())
+  tenantId   String
+  userId     String
+  employeeId String?
+  type       String // e.g. 'leave.approved'
+  title      String
+  body       String
+  link       String?
+  channel    NotificationChannel @default(IN_APP)
+  readAt     DateTime?
+  createdAt  DateTime            @default(now())
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  user     User      @relation(fields: [userId], references: [id])
+  employee Employee? @relation("EmployeeNotifications", fields: [employeeId], references: [id])
+
+  @@index([userId, readAt])
+  @@index([tenantId])
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  tenantId   String?
+  actorId    String
+  actorEmail String
+  action     String // e.g. 'employee.created'
+  entityType String // e.g. 'Employee'
+  entityId   String
+  before     Json?
+  after      Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+  actor  User    @relation(fields: [actorId], references: [id])
+
+  @@index([tenantId, createdAt])
+  @@index([actorId])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
