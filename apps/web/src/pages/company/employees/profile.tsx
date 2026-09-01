@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ArrowLeft, Mail, Phone, Building2, MapPin, Briefcase, Calendar, CheckCircle2, UserCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { EmployeeDocumentsTab } from './employee-documents-tab';
 
 export function EmployeeProfilePage() {
   const { id } = useParams();
@@ -102,9 +104,16 @@ export function EmployeeProfilePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column: Summary */}
-        <div className="space-y-6 md:col-span-1">
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Left Column: Summary */}
+            <div className="space-y-6 md:col-span-1">
           <Card className="text-center">
             <CardContent className="pt-6">
               <div className="mx-auto h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-3xl mb-4">
@@ -233,6 +242,12 @@ export function EmployeeProfilePage() {
           </Card>
         </div>
       </div>
+        </TabsContent>
+
+        <TabsContent value="documents">
+          <EmployeeDocumentsTab employeeId={id as string} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

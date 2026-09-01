@@ -35,6 +35,7 @@ import { ApprovalsInboxPage } from '@/pages/company/approvals';
 
 // RBAC
 import { RolesPage } from '@/pages/company/settings/roles';
+import { DocumentSettings } from '@/pages/company/settings/documents';
 
 /**
  * KaaryaMitra App Router
@@ -65,12 +66,14 @@ export function App() {
             <Route path="settings" element={<CompanySettingsPage />} />
             <Route path="settings/leave" element={<LeaveTypesPage />} />
             <Route path="settings/shifts" element={<AdminShiftsPage />} />
+            <Route path="settings/workflows" element={<WorkflowsPage />} />
+            <Route path="settings/roles" element={<RolesPage />} />
+            <Route path="settings/documents" element={<DocumentSettings />} />
 
             {/* Phase 7 - Leave Management */}
             <Route path="approvals/leave" element={<LeaveApprovalsPage />} />
 
             {/* Phase 8 - Workflow Engine */}
-            <Route path="settings/workflows" element={<WorkflowsPage />} />
             <Route path="approvals" element={<ApprovalsInboxPage />} />
 
             {/* RBAC */}

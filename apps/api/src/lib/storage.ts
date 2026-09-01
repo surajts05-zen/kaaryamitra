@@ -1,43 +1,71 @@
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { logger } from './logger.js';
+import { env } from '../config/env.js';
+
+const s3Client = new S3Client({
+  endpoint: process.env.S3_ENDPOINT || 'http://localhost:9000',
+  region: process.env.S3_REGION || 'ap-south-1',
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY_ID || 'minioadmin',
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || 'minioadmin',
+  },
+  forcePathStyle: true, // Required for MinIO
+});
+
+const BUCKET = process.env.S3_BUCKET || 'kaaryamitra-dev';
 
 /**
  * StorageService — S3-compatible storage abstraction.
- * Swap the implementation (AWS S3, MinIO, local) without changing call sites.
  */
 export class StorageService {
   /**
    * Upload a file buffer to S3-compatible storage.
-   * Returns the public URL or S3 key.
+   * Returns the S3 key.
    */
   static async upload(options: {
-    key: string;          // e.g. 'tenants/{tenantId}/avatars/{userId}.jpg'
+    key: string;          
     body: Buffer;
     contentType: string;
     isPublic?: boolean;
   }): Promise<string> {
-    // TODO Phase 0 completion: Wire up @aws-sdk/client-s3
-    // import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-    // const client = new S3Client({ ... });
-    // await client.send(new PutObjectCommand({ Bucket: env.S3_BUCKET, Key: key, Body: body, ... }));
-    logger.debug({ key: options.key }, '[STUB] StorageService.upload called');
-    return `https://storage.kaaryamitra.com/${options.key}`;
+    const command = new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: options.key,
+      Body: options.body,
+      ContentType: options.contentType,
+      // For local MinIO, ACL might not be supported without configuration,
+      // so we rely on presigned URLs or bucket policies for access control.
+    });
+
+    await s3Client.send(command);
+    logger.debug({ key: options.key }, 'StorageService.upload completed');
+    return options.key;
   }
 
   /**
    * Generate a pre-signed URL for secure private file access.
    */
   static async getSignedUrl(key: string, expiresInSeconds = 3600): Promise<string> {
-    // TODO: Implement getSignedUrl with @aws-sdk/s3-request-presigner
-    logger.debug({ key, expiresInSeconds }, '[STUB] StorageService.getSignedUrl called');
-    return `https://storage.kaaryamitra.com/${key}?signed=stub&expires=${expiresInSeconds}`;
+    const command = new GetObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+    });
+    const url = await getSignedUrl(s3Client, command, { expiresIn: expiresInSeconds });
+    logger.debug({ key, expiresInSeconds }, 'StorageService.getSignedUrl completed');
+    return url;
   }
 
   /**
    * Delete a file from storage.
    */
   static async delete(key: string): Promise<void> {
-    // TODO: Implement DeleteObjectCommand
-    logger.debug({ key }, '[STUB] StorageService.delete called');
+    const command = new DeleteObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+    });
+    await s3Client.send(command);
+    logger.debug({ key }, 'StorageService.delete completed');
   }
 
   /**

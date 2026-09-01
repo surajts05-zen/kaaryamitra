@@ -22,6 +22,7 @@ import { aiRouter } from './modules/ai/ai.router.js';
 import { shiftsRouter } from './modules/shifts/shifts.router.js';
 import { shiftSwapsRouter } from './modules/shifts/shift-swaps.router.js';
 import { timesheetsRouter } from './modules/timesheets/timesheets.router.js';
+import { documentsRouter } from './modules/documents/documents.router.js';
 import { requireAuth, requireSuperAdmin, resolveTenant } from './middleware/auth.js';
 
 export function createApp() {
@@ -127,6 +128,10 @@ export function createApp() {
   app.use('/api/v1/t/:slug/shifts', requireAuth, resolveTenant, shiftsRouter);
   app.use('/api/v1/shift-swaps', requireAuth, resolveTenant, shiftSwapsRouter);
   app.use('/api/v1/t/:slug/shift-swaps', requireAuth, resolveTenant, shiftSwapsRouter);
+
+  // Tenant-scoped Documents routes
+  app.use('/api/v1/documents', requireAuth, resolveTenant, documentsRouter);
+  app.use('/api/v1/t/:slug/documents', requireAuth, resolveTenant, documentsRouter);
 
   // Notifications (user-scoped, no tenant resolution needed — userId from JWT is enough)
   app.use('/api/v1/notifications', requireAuth, notificationsRouter);

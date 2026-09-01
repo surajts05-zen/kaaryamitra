@@ -48,6 +48,13 @@ export class AdminService {
           slug: input.slug,
           plan: input.plan,
           status: 'ACTIVE',
+          documentCategories: {
+            create: [
+              { name: 'Id Proof', description: 'Government issued ID card', isRequired: true },
+              { name: 'Address Proof', description: 'Utility bill, passport, or rent agreement', isRequired: true },
+              { name: 'Nationality proof / passport', description: 'Passport or Citizenship document', isRequired: false }
+            ]
+          }
         },
       });
 

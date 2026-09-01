@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
+import { FileText, Calendar, CalendarClock } from 'lucide-react';
 
 const schema = z.object({
   workHoursStart: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format (HH:MM)'),
@@ -135,6 +137,38 @@ export function CompanySettingsPage() {
           </CardFooter>
         </Card>
       </form>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <Link to="documents">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+            <CardHeader>
+              <FileText className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Document Settings</CardTitle>
+              <CardDescription>Manage required document categories and compliance settings</CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link to="leave">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+            <CardHeader>
+              <Calendar className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Leave Settings</CardTitle>
+              <CardDescription>Configure leave types, policies, and holiday calendars</CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link to="shifts">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+            <CardHeader>
+              <CalendarClock className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Shifts Config</CardTitle>
+              <CardDescription>Define shift timings, rotating schedules, and rules</CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+      </div>
     </div>
   );
 }

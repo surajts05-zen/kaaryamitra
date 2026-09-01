@@ -20,7 +20,8 @@ import {
   Shield,
   CalendarDays,
   CalendarClock,
-  Timer
+  Timer,
+  FileText
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/button';
@@ -59,8 +60,6 @@ const navItems: NavItem[] = [
   { icon: Inbox,     label: 'Approvals Inbox', path: 'approvals',       allowedRoles: APPROVER_ROLES },
 
   // Admin-only configuration
-  { icon: Calendar,  label: 'Leave Settings',  path: 'settings/leave',  allowedRoles: HR_ROLES },
-  { icon: CalendarClock, label: 'Shifts Config', path: 'settings/shifts', allowedRoles: HR_ROLES },
   { icon: GitBranch, label: 'Workflows',        path: 'settings/workflows', allowedRoles: ADMIN_ROLES },
   { icon: Shield,    label: 'Roles & Permissions', path: 'settings/roles', allowedRoles: ADMIN_ROLES },
 
@@ -102,7 +101,6 @@ export function AppShell() {
   }, [user?.isSuperAdmin, userRoles]);
 
   const initials = user ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() : 'U';
-  const tenantName = user?.isSuperAdmin ? 'Platform Admin' : 'Workspace';
 
   // Close mobile menu on route change
   React.useEffect(() => {
@@ -140,10 +138,6 @@ export function AppShell() {
         </div>
 
         <div className="p-4">
-          <div className="mb-4 rounded-xl bg-sidebar-accent p-3">
-            <p className="font-medium text-sm truncate">{tenantName}</p>
-          </div>
-
           <nav className="space-y-1">
             {currentNavItems.map((item) => {
               const to = item.path.startsWith('/')
