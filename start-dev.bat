@@ -1,0 +1,3 @@
+@echo off
+echo Starting KaaryaMitra Frontend and Backend...
+npm run dev

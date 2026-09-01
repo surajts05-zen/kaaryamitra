@@ -16,6 +16,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@google/genai": "^2.20.0",
     "@kaaryamitra/shared-types": "*",
     "@prisma/client": "^5.18.0",
     "bcryptjs": "^2.4.3",

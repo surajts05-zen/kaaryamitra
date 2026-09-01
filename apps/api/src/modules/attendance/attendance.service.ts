@@ -57,6 +57,7 @@ export async function checkIn(tenantId: string, employeeId: string, locationData
         punchInIp: locationData.ipAddress ?? null,
         punchInLat: locationData.latitude ?? null,
         punchInLon: locationData.longitude ?? null,
+        isLate,
       }
     });
   }
@@ -71,6 +72,7 @@ export async function checkIn(tenantId: string, employeeId: string, locationData
       punchInLat: locationData.latitude ?? null,
       punchInLon: locationData.longitude ?? null,
       status: 'PRESENT',
+      isLate,
     }
   });
 }
@@ -134,6 +136,7 @@ export async function checkOut(tenantId: string, employeeId: string, locationDat
       punchOutLat: locationData.latitude ?? null,
       punchOutLon: locationData.longitude ?? null,
       totalMinutes: totalWorkMinutes,
+      isEarlyExit: isEarlyDeparture,
     }
   });
 }

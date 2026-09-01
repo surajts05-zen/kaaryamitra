@@ -24,6 +24,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/button';
 import { NotificationPanel } from '@/components/notifications/notification-panel';
 import { useNotificationStore } from '@/store/notification.store';
+import { AiChatWidget } from '@/features/ai/components/ai-chat-widget';
 
 // ─── Role constants ────────────────────────────────────────────────────────────
 const ADMIN_ROLES = ['Company Admin'];
@@ -229,13 +230,14 @@ export function AppShell() {
           </div>
         </header>
 
-        {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-6 bg-muted/30">
           <div className="mx-auto max-w-6xl animate-fade-in">
             <Outlet />
           </div>
         </main>
       </div>
+
+      <AiChatWidget />
     </div>
   );
 }

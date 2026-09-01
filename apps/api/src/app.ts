@@ -18,6 +18,7 @@ import { workflowRouter } from './modules/workflows/workflow.router.js';
 import { rolesRouter } from './modules/roles/roles.router.js';
 import { notificationsRouter } from './modules/notifications/notification.router.js';
 import { meAttendanceRouter } from './modules/attendance/attendance.router.js';
+import { aiRouter } from './modules/ai/ai.router.js';
 import { requireAuth, requireSuperAdmin, resolveTenant } from './middleware/auth.js';
 
 export function createApp() {
@@ -110,6 +111,10 @@ export function createApp() {
   // Tenant-scoped Roles / RBAC routes
   app.use('/api/v1/roles', requireAuth, resolveTenant, rolesRouter);
   app.use('/api/v1/t/:slug/roles', requireAuth, resolveTenant, rolesRouter);
+
+  // Tenant-scoped AI routes
+  app.use('/api/v1/ai', requireAuth, resolveTenant, aiRouter);
+  app.use('/api/v1/t/:slug/ai', requireAuth, resolveTenant, aiRouter);
 
   // Notifications (user-scoped, no tenant resolution needed — userId from JWT is enough)
   app.use('/api/v1/notifications', requireAuth, notificationsRouter);
