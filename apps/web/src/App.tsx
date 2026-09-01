@@ -36,6 +36,12 @@ import { ApprovalsInboxPage } from '@/pages/company/approvals';
 // RBAC
 import { RolesPage } from '@/pages/company/settings/roles';
 import { DocumentSettings } from '@/pages/company/settings/documents';
+import { AssetSettings } from '@/pages/company/settings/assets';
+import { ChecklistSettings } from '@/pages/company/settings/checklists';
+
+// Phase 13 - Resignations
+import { ResignationsPage } from '@/pages/company/resignations';
+import { MyResignationPage } from '@/pages/ess/resignation';
 
 /**
  * KaaryaMitra App Router
@@ -69,12 +75,17 @@ export function App() {
             <Route path="settings/workflows" element={<WorkflowsPage />} />
             <Route path="settings/roles" element={<RolesPage />} />
             <Route path="settings/documents" element={<DocumentSettings />} />
+            <Route path="settings/assets" element={<AssetSettings />} />
+            <Route path="settings/checklists" element={<ChecklistSettings />} />
 
             {/* Phase 7 - Leave Management */}
             <Route path="approvals/leave" element={<LeaveApprovalsPage />} />
 
             {/* Phase 8 - Workflow Engine */}
             <Route path="approvals" element={<ApprovalsInboxPage />} />
+
+            {/* Phase 13 - Resignations */}
+            <Route path="resignations" element={<ResignationsPage />} />
 
             {/* RBAC */}
             <Route path="settings/roles" element={<RolesPage />} />
@@ -94,6 +105,7 @@ export function App() {
               <Route path="leave" element={<EssLeavePage />} />
               <Route path="shifts" element={<MyShiftsPage />} />
               <Route path="timesheets" element={<MyTimesheetsPage />} />
+              <Route path="resignation" element={<MyResignationPage />} />
             </Route>
           </Route>
         </Route>

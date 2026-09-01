@@ -9,6 +9,8 @@ import {
   resetPasswordHandler
 } from './employees.controller.js';
 import { employeeDocumentsRouter } from '../documents/documents.router.js';
+import { employeeAssetsRouter } from '../assets/assets.router.js';
+import { employeeChecklistsRouter } from '../checklists/checklists.router.js';
 
 export const employeesRouter = Router({ mergeParams: true });
 
@@ -20,3 +22,5 @@ employeesRouter.post('/:id/reset-password', requirePermission('employee:update')
 
 // Sub-router for employee documents
 employeesRouter.use('/:employeeId/documents', employeeDocumentsRouter);
+employeesRouter.use('/:employeeId/assets', employeeAssetsRouter);
+employeesRouter.use('/:employeeId/checklists', employeeChecklistsRouter);

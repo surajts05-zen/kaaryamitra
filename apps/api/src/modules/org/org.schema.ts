@@ -55,5 +55,6 @@ export const updateCompanySettingsSchema = z.object({
     timezone: z.string().optional(),
     isAttendanceEnabled: z.boolean().optional(),
     isGeolocationEnforced: z.boolean().optional(),
+    clearanceMode: z.enum(['SIMPLE', 'CHECKLIST']).optional(),
   }),
 });

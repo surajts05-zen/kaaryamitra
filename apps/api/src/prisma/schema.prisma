@@ -137,6 +137,37 @@ enum DocumentStatus {
   ARCHIVED
 }
 
+enum ClearanceMode {
+  SIMPLE
+  CHECKLIST
+}
+
+enum AssetStatus {
+  AVAILABLE
+  ASSIGNED
+  MAINTENANCE
+  LOST
+  RETIRED
+}
+
+enum TaskType {
+  ONBOARDING
+  OFFBOARDING
+}
+
+enum TaskStatus {
+  PENDING
+  COMPLETED
+  NOT_APPLICABLE
+}
+
+enum ResignationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // TENANT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -188,6 +219,11 @@ model Tenant {
   shifts            Shift[]
   documentCategories DocumentCategory[]
   documents         Document[]
+  assetCategories   AssetCategory[]
+  assets            Asset[]
+  checklistTemplates ChecklistTemplate[]
+  employeeChecklists EmployeeChecklist[]
+  resignations      Resignation[]
 
   @@map("tenants")
 }
@@ -434,12 +470,125 @@ model CompanySettings {
   isAttendanceEnabled   Boolean @default(true)
   isGeolocationEnforced Boolean @default(false)
   isTimesheetEnabled    Boolean @default(true)
+  clearanceMode         ClearanceMode @default(SIMPLE)
 
   updatedAt DateTime @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@map("company_settings")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ASSETS (Phase 13)
+// ─────────────────────────────────────────────────────────────────────────────
+model AssetCategory {
+  id       String  @id @default(cuid())
+  tenantId String
+  name     String
+  
+  tenant   Tenant  @relation(fields: [tenantId], references: [id])
+  assets   Asset[]
+
+  @@map("asset_categories")
+}
+
+model Asset {
+  id           String      @id @default(cuid())
+  tenantId     String
+  categoryId   String
+  name         String
+  serialNumber String?
+  status       AssetStatus @default(AVAILABLE)
+  customFields Json        @default("{}")
+  
+  assignedToId String?
+  assignedAt   DateTime?
+  
+  category     AssetCategory @relation(fields: [categoryId], references: [id])
+  assignedTo   Employee?     @relation(fields: [assignedToId], references: [id])
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+
+  @@map("assets")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ONBOARDING & OFFBOARDING (Phase 13)
+// ─────────────────────────────────────────────────────────────────────────────
+model ChecklistTemplate {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  type        TaskType
+  description String?
+  
+  tasks  ChecklistTaskTemplate[]
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("checklist_templates")
+}
+
+model ChecklistTaskTemplate {
+  id           String  @id @default(cuid())
+  templateId   String
+  title        String
+  description  String?
+  assigneeRole String? // HR, IT, MANAGER, EMPLOYEE
+  
+  template ChecklistTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("checklist_task_templates")
+}
+
+model EmployeeChecklist {
+  id         String     @id @default(cuid())
+  tenantId   String
+  employeeId String
+  type       TaskType
+  status     TaskStatus @default(PENDING)
+  
+  tasks EmployeeChecklistTask[]
+  
+  employee Employee @relation(fields: [employeeId], references: [id])
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@map("employee_checklists")
+}
+
+model EmployeeChecklistTask {
+  id             String     @id @default(cuid())
+  checklistId    String
+  title          String
+  description    String?
+  assigneeRole   String? 
+  status         TaskStatus @default(PENDING)
+  completedAt    DateTime?
+  
+  checklist      EmployeeChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+
+  @@map("employee_checklist_tasks")
+}
+
+model Resignation {
+  id                     String            @id @default(cuid())
+  tenantId               String
+  employeeId             String
+  
+  status                 ResignationStatus @default(PENDING)
+  reason                 String?
+  submittedAt            DateTime          @default(now())
+  requestedLastWorkingDay DateTime
+  
+  approvedLastWorkingDay DateTime?
+  noticePeriodDays       Int?
+  
+  exitInterviewNotes     String?
+  isClearanceCompleted   Boolean           @default(false)
+  
+  employee Employee @relation(fields: [employeeId], references: [id])
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@map("resignations")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -497,6 +646,9 @@ model Employee {
   teamLeads         Team[]             @relation("TeamLead")
   leaveApplications LeaveApplication[]
   leaveBalances     LeaveBalance[]
+  assets              Asset[]
+  checklists          EmployeeChecklist[]
+  resignations        Resignation[]
   attendanceRecords AttendanceRecord[]
   notifications     Notification[]     @relation("EmployeeNotifications")
   employeeShifts    EmployeeShift[]

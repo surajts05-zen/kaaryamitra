@@ -23,6 +23,9 @@ import { shiftsRouter } from './modules/shifts/shifts.router.js';
 import { shiftSwapsRouter } from './modules/shifts/shift-swaps.router.js';
 import { timesheetsRouter } from './modules/timesheets/timesheets.router.js';
 import { documentsRouter } from './modules/documents/documents.router.js';
+import { assetsRouter, employeeAssetsRouter } from './modules/assets/assets.router.js';
+import { templatesRouter, employeeChecklistsRouter } from './modules/checklists/checklists.router.js';
+import { resignationsRouter } from './modules/resignations/resignations.router.js';
 import { requireAuth, requireSuperAdmin, resolveTenant } from './middleware/auth.js';
 
 export function createApp() {
@@ -94,6 +97,15 @@ export function createApp() {
   app.use('/api/v1/me', requireAuth, resolveTenant, essRouter);
   app.use('/api/v1/t/:slug/me', requireAuth, resolveTenant, essRouter);
   
+  app.use('/api/v1/me/assets', requireAuth, resolveTenant, employeeAssetsRouter);
+  app.use('/api/v1/t/:slug/me/assets', requireAuth, resolveTenant, employeeAssetsRouter);
+
+  app.use('/api/v1/me/checklists', requireAuth, resolveTenant, employeeChecklistsRouter);
+  app.use('/api/v1/t/:slug/me/checklists', requireAuth, resolveTenant, employeeChecklistsRouter);
+
+  app.use('/api/v1/me/resignations', requireAuth, resolveTenant, resignationsRouter);
+  app.use('/api/v1/t/:slug/me/resignations', requireAuth, resolveTenant, resignationsRouter);
+  
   app.use('/api/v1/me/leave', requireAuth, resolveTenant, essLeaveRouter);
   app.use('/api/v1/t/:slug/me/leave', requireAuth, resolveTenant, essLeaveRouter);
 
@@ -132,6 +144,18 @@ export function createApp() {
   // Tenant-scoped Documents routes
   app.use('/api/v1/documents', requireAuth, resolveTenant, documentsRouter);
   app.use('/api/v1/t/:slug/documents', requireAuth, resolveTenant, documentsRouter);
+
+  // Tenant-scoped Assets routes
+  app.use('/api/v1/assets', requireAuth, resolveTenant, assetsRouter);
+  app.use('/api/v1/t/:slug/assets', requireAuth, resolveTenant, assetsRouter);
+
+  // Tenant-scoped Checklists routes
+  app.use('/api/v1/checklists', requireAuth, resolveTenant, templatesRouter);
+  app.use('/api/v1/t/:slug/checklists', requireAuth, resolveTenant, templatesRouter);
+
+  // Tenant-scoped Resignations routes
+  app.use('/api/v1/resignations', requireAuth, resolveTenant, resignationsRouter);
+  app.use('/api/v1/t/:slug/resignations', requireAuth, resolveTenant, resignationsRouter);
 
   // Notifications (user-scoped, no tenant resolution needed — userId from JWT is enough)
   app.use('/api/v1/notifications', requireAuth, notificationsRouter);

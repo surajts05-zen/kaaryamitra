@@ -10,7 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
-import { FileText, Calendar, CalendarClock } from 'lucide-react';
+import { FileText, Calendar, CalendarClock, Laptop, CheckSquare } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const schema = z.object({
   workHoursStart: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format (HH:MM)'),
@@ -19,6 +20,7 @@ const schema = z.object({
   timezone: z.string().min(2),
   isAttendanceEnabled: z.boolean().optional(),
   isGeolocationEnforced: z.boolean().optional(),
+  clearanceMode: z.enum(['SIMPLE', 'CHECKLIST']).optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -41,6 +43,7 @@ export function CompanySettingsPage() {
         timezone: settings.timezone,
         isAttendanceEnabled: settings.isAttendanceEnabled,
         isGeolocationEnforced: settings.isGeolocationEnforced,
+        clearanceMode: settings.clearanceMode,
       });
     }
   }, [settings, reset]);
@@ -128,6 +131,29 @@ export function CompanySettingsPage() {
                 />
                 <Label htmlFor="isGeolocationEnforced" className="cursor-pointer">Enforce Geolocation (Location required for check-in/out)</Label>
               </div>
+
+              <div className="pt-4 border-t space-y-4">
+                <h3 className="text-lg font-medium">Offboarding Settings</h3>
+                <div className="space-y-2 max-w-sm">
+                  <Label>Employee Clearance Mode</Label>
+                  <Controller
+                    control={control}
+                    name="clearanceMode"
+                    render={({ field }) => (
+                      <Select value={field.value || 'SIMPLE'} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select mode" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="SIMPLE">Simple (Single Toggle by HR)</SelectItem>
+                          <SelectItem value="CHECKLIST">Checklist (Department-wise Approval)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.clearanceMode && <p className="text-xs text-destructive">{errors.clearanceMode.message}</p>}
+                </div>
+              </div>
             </div>
           </CardContent>
           <CardFooter>
@@ -165,6 +191,26 @@ export function CompanySettingsPage() {
               <CalendarClock className="h-8 w-8 text-primary mb-2" />
               <CardTitle>Shifts Config</CardTitle>
               <CardDescription>Define shift timings, rotating schedules, and rules</CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link to="assets">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+            <CardHeader>
+              <Laptop className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Asset Management</CardTitle>
+              <CardDescription>Manage company inventory and asset categories</CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link to="checklists">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+            <CardHeader>
+              <CheckSquare className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Checklist Templates</CardTitle>
+              <CardDescription>Define reusable onboarding and offboarding task templates</CardDescription>
             </CardHeader>
           </Card>
         </Link>
