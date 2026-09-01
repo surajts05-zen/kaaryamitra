@@ -25,6 +25,7 @@ export const createEmployeeSchema = z.object({
     joiningDate: z.string(), // Expected ISO string
     confirmationDate: z.string().optional(),
     probationEndDate: z.string().optional(),
+    roleId: z.string().optional(),
   }),
 });
 

@@ -11,6 +11,7 @@ import { DepartmentsPage } from '@/pages/company/departments';
 import { LocationsPage } from '@/pages/company/locations';
 import { DesignationsPage } from '@/pages/company/designations';
 import { CompanySettingsPage } from '@/pages/company/settings';
+import { AdminShiftsPage } from '@/pages/company/settings/shifts';
 
 // Phase 5 - Core HR (Employee Management)
 import { DirectoryPage } from '@/pages/company/employees/directory';
@@ -25,6 +26,8 @@ import { EssDashboardPage } from '@/pages/ess/dashboard';
 import { EssProfilePage } from '@/pages/ess/my-profile';
 import { EssLeavePage } from '@/pages/ess/leave';
 import { MyAttendancePage } from '@/pages/ess/attendance';
+import { MyShiftsPage } from '@/pages/ess/shifts';
+import { MyTimesheetsPage } from '@/pages/ess/timesheets';
 
 // Phase 8 - Workflow Engine
 import { WorkflowsPage } from '@/pages/company/settings/workflows';
@@ -61,6 +64,7 @@ export function App() {
             <Route path="designations" element={<DesignationsPage />} />
             <Route path="settings" element={<CompanySettingsPage />} />
             <Route path="settings/leave" element={<LeaveTypesPage />} />
+            <Route path="settings/shifts" element={<AdminShiftsPage />} />
 
             {/* Phase 7 - Leave Management */}
             <Route path="approvals/leave" element={<LeaveApprovalsPage />} />
@@ -85,6 +89,8 @@ export function App() {
               <Route path="profile" element={<EssProfilePage />} />
               <Route path="attendance" element={<MyAttendancePage />} />
               <Route path="leave" element={<EssLeavePage />} />
+              <Route path="shifts" element={<MyShiftsPage />} />
+              <Route path="timesheets" element={<MyTimesheetsPage />} />
             </Route>
           </Route>
         </Route>

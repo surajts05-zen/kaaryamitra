@@ -58,6 +58,9 @@ const formSchema = z.object({
     'EXPENSE_REQUEST',
     'OFFBOARDING_REQUEST',
     'DOCUMENT_REQUEST',
+    'ATTENDANCE_REGULARIZATION',
+    'TIMESHEET_APPROVAL',
+    'SHIFT_SWAP_REQUEST',
     'CUSTOM',
   ]),
   steps: z.array(stepSchema).min(1, 'At least one step is required'),
@@ -72,6 +75,9 @@ const TRIGGER_LABELS: Record<string, string> = {
   EXPENSE_REQUEST: 'Expense Request',
   OFFBOARDING_REQUEST: 'Offboarding Request',
   DOCUMENT_REQUEST: 'Document Request',
+  ATTENDANCE_REGULARIZATION: 'Attendance Regularization',
+  TIMESHEET_APPROVAL: 'Timesheet Approval',
+  SHIFT_SWAP_REQUEST: 'Shift Swap Request',
   CUSTOM: 'Custom',
 };
 
@@ -88,6 +94,9 @@ const TRIGGER_ICONS: Record<string, string> = {
   EXPENSE_REQUEST: '💳',
   OFFBOARDING_REQUEST: '👋',
   DOCUMENT_REQUEST: '📄',
+  ATTENDANCE_REGULARIZATION: '⏱️',
+  TIMESHEET_APPROVAL: '📅',
+  SHIFT_SWAP_REQUEST: '🔄',
   CUSTOM: '⚙️',
 };
 

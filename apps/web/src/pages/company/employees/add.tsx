@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useCreateEmployee, useEmployees } from '@/features/company/hooks/use-employee-queries';
 import { useDepartments, useLocations, useDesignations } from '@/features/company/hooks/use-org-queries';
+import { useRoles } from '@/features/company/hooks/use-role-queries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,6 +26,7 @@ const schema = z.object({
   locationId: z.string().optional(),
   managerId: z.string().optional(),
   joiningDate: z.string().min(1, 'Joining date is required'),
+  roleId: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -37,6 +39,7 @@ export function AddEmployeePage() {
   const { data: locations } = useLocations();
   const { data: designations } = useDesignations();
   const { data: employees } = useEmployees();
+  const { data: roles } = useRoles();
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -185,6 +188,21 @@ export function AddEmployeePage() {
                   <SelectItem value="none">None</SelectItem>
                   {employees?.map((e: any) => (
                     <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>App Role</Label>
+              <Select onValueChange={(val) => setValue('roleId', val)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {roles?.map((r: any) => (
+                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

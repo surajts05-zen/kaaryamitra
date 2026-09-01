@@ -107,6 +107,18 @@ export function requirePermission(...actions: PermissionAction[]) {
         select: { action: true },
       });
 
+      // Check if user is Company Admin (bypass tenant permissions)
+      const isCompanyAdmin = await prisma.userRole.findFirst({
+        where: {
+          userId: req.auth.userId,
+          role: { name: 'Company Admin', ...(req.tenantId ? { tenantId: req.tenantId } : {}) },
+        },
+      });
+
+      if (isCompanyAdmin) {
+        return next();
+      }
+
       const permSet = new Set(userPermissions.map((p) => p.action));
       const hasAll = actions.every((action) => permSet.has(action));
 

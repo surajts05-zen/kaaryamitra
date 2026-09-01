@@ -15,7 +15,7 @@ export type WorkflowTemplate = {
   tenantId: string;
   name: string;
   description?: string;
-  triggerType: 'LEAVE_REQUEST' | 'EXPENSE_REQUEST' | 'OFFBOARDING_REQUEST' | 'DOCUMENT_REQUEST' | 'CUSTOM';
+  triggerType: 'LEAVE_REQUEST' | 'EXPENSE_REQUEST' | 'OFFBOARDING_REQUEST' | 'DOCUMENT_REQUEST' | 'ATTENDANCE_REGULARIZATION' | 'TIMESHEET_APPROVAL' | 'SHIFT_SWAP_REQUEST' | 'CUSTOM';
   entityType: string;
   isActive: boolean;
   steps: WorkflowStepDef[];
@@ -65,6 +65,38 @@ export type PendingApproval = {
           department?: { name: string };
           designation?: { name: string };
         };
+      };
+    } | null;
+    shiftSwapRequest: {
+      id: string;
+      date: string;
+      reason?: string;
+      status: string;
+      requestingEmployee: {
+        id: string;
+        firstName: string;
+        lastName: string;
+        employeeCode?: string;
+        avatarUrl?: string;
+        department?: { name: string };
+        designation?: { name: string };
+      };
+    } | null;
+    timesheet: {
+      id: string;
+      startDate: string;
+      endDate: string;
+      totalRegularMinutes: number;
+      totalOvertimeMinutes: number;
+      status: string;
+      employee: {
+        id: string;
+        firstName: string;
+        lastName: string;
+        employeeCode?: string;
+        avatarUrl?: string;
+        department?: { name: string };
+        designation?: { name: string };
       };
     } | null;
   };

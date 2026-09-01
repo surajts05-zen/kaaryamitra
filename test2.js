@@ -1,0 +1,1 @@
+const { PrismaClient } = require('./node_modules/@prisma/client'); const prisma = new PrismaClient(); async function main() { const t = await prisma.workflowTemplate.findMany(); console.log(JSON.stringify(t, null, 2)); } main().finally(() => prisma.$disconnect());

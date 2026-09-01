@@ -107,6 +107,10 @@ export async function startWorkflow(
       entityId,
       status: 'IN_PROGRESS',
       currentStepIndex: 0,
+      leaveApplicationId: entityType === 'LeaveApplication' ? entityId : null,
+      attendanceCorrectionId: entityType === 'AttendanceCorrection' ? entityId : null,
+      shiftSwapRequestId: entityType === 'ShiftSwapRequest' ? entityId : null,
+      timesheetId: entityType === 'Timesheet' ? entityId : null,
     },
   });
 
@@ -137,6 +141,18 @@ export async function isUserStepApprover(
   userId: string,
   tenantId: string,
 ): Promise<boolean> {
+  // Company Admin can approve anything
+  const isAdmin = await prisma.userRole.findFirst({
+    where: {
+      userId,
+      role: {
+        tenantId,
+        name: 'Company Admin',
+      },
+    },
+  });
+  if (isAdmin) return true;
+
   if (step.assigneeType === 'SPECIFIC_USER') {
     return step.assigneeId === userId;
   }
@@ -265,6 +281,41 @@ export async function processWorkflowAction(
           email: correction.record.employee.user.email,
         }).catch(() => {});
       }
+    } else if (instance.timesheetId) {
+      const ts = await prisma.timesheet.update({
+        where: { id: instance.timesheetId },
+        data: { status: 'REJECTED' },
+        include: { employee: { include: { user: true } } }
+      });
+      if (ts?.employee?.user) {
+        const tenantSlug = (await prisma.tenant.findUnique({ where: { id: tenantId }, select: { slug: true } }))?.slug;
+        createNotification({
+          tenantId,
+          userId: ts.employee.user.id,
+          type: 'workflow.rejected',
+          title: 'Timesheet Rejected ❌',
+          body: `Your timesheet was rejected${comment ? `: "${comment}"` : '.'}`,
+          link: tenantSlug ? `/t/${tenantSlug}/me/timesheets` : undefined,
+          email: ts.employee.user.email,
+        }).catch(() => {});
+      }
+    } else if (instance.shiftSwapRequestId) {
+      const swap = await prisma.shiftSwapRequest.update({
+        where: { id: instance.shiftSwapRequestId },
+        data: { status: 'REJECTED' },
+        include: { requestingEmployee: { include: { user: true } } }
+      });
+      if (swap?.requestingEmployee?.user) {
+        const tenantSlug = (await prisma.tenant.findUnique({ where: { id: tenantId }, select: { slug: true } }))?.slug;
+        createNotification({
+          tenantId,
+          userId: swap.requestingEmployee.user.id,
+          type: 'workflow.rejected',
+          title: 'Shift Swap Rejected ❌',
+          body: `Your shift swap request was rejected${comment ? `: "${comment}"` : '.'}`,
+          email: swap.requestingEmployee.user.email,
+        }).catch(() => {});
+      }
     }
 
     return rejected;
@@ -339,6 +390,55 @@ export async function processWorkflowAction(
         email: correction.record.employee.user.email,
       }).catch(() => {});
     }
+  } else if (isComplete && instance.timesheetId) {
+    const ts = await prisma.timesheet.update({
+      where: { id: instance.timesheetId },
+      data: { status: 'APPROVED', approverNote: comment || null },
+      include: { employee: { include: { user: true } } }
+    });
+    
+    if (ts?.employee?.user) {
+      createNotification({
+        tenantId,
+        userId: ts.employee.user.id,
+        type: 'workflow.completed',
+        title: 'Timesheet Approved ✅',
+        body: 'Your submitted timesheet has been approved.',
+        link: tenantSlug ? `/t/${tenantSlug}/me/timesheets` : undefined,
+        email: ts.employee.user.email,
+      }).catch(() => {});
+    }
+  } else if (isComplete && instance.shiftSwapRequestId) {
+    const swap = await prisma.shiftSwapRequest.update({
+      where: { id: instance.shiftSwapRequestId },
+      data: { status: 'APPROVED' },
+      include: { 
+        requestingEmployee: { include: { user: true } },
+        targetEmployee: { include: { user: true } }
+      }
+    });
+
+    // Notify both employees
+    if (swap?.requestingEmployee?.user) {
+      createNotification({
+        tenantId,
+        userId: swap.requestingEmployee.user.id,
+        type: 'workflow.completed',
+        title: 'Shift Swap Approved ✅',
+        body: 'Your shift swap request has been approved by management.',
+        email: swap.requestingEmployee.user.email,
+      }).catch(() => {});
+    }
+    if (swap?.targetEmployee?.user) {
+      createNotification({
+        tenantId,
+        userId: swap.targetEmployee.user.id,
+        type: 'workflow.completed',
+        title: 'Shift Swap Confirmed ✅',
+        body: `You are confirmed to swap shifts with ${swap.requestingEmployee.firstName} ${swap.requestingEmployee.lastName}.`,
+        email: swap.targetEmployee.user.email,
+      }).catch(() => {});
+    }
   }
 
   return updated;
@@ -370,6 +470,12 @@ export async function getPendingActionsForUser(tenantId: string, userId: string)
           },
         },
       },
+      timesheet: {
+        include: { employee: { include: { user: true, department: true, designation: true } } }
+      },
+      shiftSwapRequest: {
+        include: { requestingEmployee: { include: { user: true, department: true, designation: true } } }
+      },
     },
   });
 
@@ -380,7 +486,10 @@ export async function getPendingActionsForUser(tenantId: string, userId: string)
     const currentStep = steps[instance.currentStepIndex];
     if (!currentStep) continue;
 
-    const employeeId = instance.leaveApplication?.employeeId || instance.attendanceCorrection?.record.employeeId;
+    const employeeId = instance.leaveApplication?.employeeId || 
+                       instance.attendanceCorrection?.record.employeeId ||
+                       instance.timesheet?.employeeId ||
+                       instance.shiftSwapRequest?.requestingEmployeeId;
     if (!employeeId) continue;
 
     const isApprover = await isUserStepApprover(
@@ -406,6 +515,9 @@ function triggerTypeToEntityType(triggerType: string): string {
     EXPENSE_REQUEST: 'ExpenseRequest',
     OFFBOARDING_REQUEST: 'OffboardingRequest',
     DOCUMENT_REQUEST: 'DocumentRequest',
+    ATTENDANCE_REGULARIZATION: 'AttendanceCorrection',
+    TIMESHEET_APPROVAL: 'Timesheet',
+    SHIFT_SWAP_REQUEST: 'ShiftSwapRequest',
     CUSTOM: 'Custom',
   };
   return map[triggerType] ?? 'Custom';

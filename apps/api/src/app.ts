@@ -19,6 +19,9 @@ import { rolesRouter } from './modules/roles/roles.router.js';
 import { notificationsRouter } from './modules/notifications/notification.router.js';
 import { meAttendanceRouter } from './modules/attendance/attendance.router.js';
 import { aiRouter } from './modules/ai/ai.router.js';
+import { shiftsRouter } from './modules/shifts/shifts.router.js';
+import { shiftSwapsRouter } from './modules/shifts/shift-swaps.router.js';
+import { timesheetsRouter } from './modules/timesheets/timesheets.router.js';
 import { requireAuth, requireSuperAdmin, resolveTenant } from './middleware/auth.js';
 
 export function createApp() {
@@ -96,6 +99,9 @@ export function createApp() {
   app.use('/api/v1/me/attendance', requireAuth, resolveTenant, meAttendanceRouter);
   app.use('/api/v1/t/:slug/me/attendance', requireAuth, resolveTenant, meAttendanceRouter);
 
+  app.use('/api/v1/me/timesheets', requireAuth, resolveTenant, timesheetsRouter);
+  app.use('/api/v1/t/:slug/me/timesheets', requireAuth, resolveTenant, timesheetsRouter);
+
   // Tenant-scoped Leave Admin routes
   app.use('/api/v1/leave', requireAuth, resolveTenant, leaveRouter);
   app.use('/api/v1/t/:slug/leave', requireAuth, resolveTenant, leaveRouter);
@@ -115,6 +121,12 @@ export function createApp() {
   // Tenant-scoped AI routes
   app.use('/api/v1/ai', requireAuth, resolveTenant, aiRouter);
   app.use('/api/v1/t/:slug/ai', requireAuth, resolveTenant, aiRouter);
+
+  // Tenant-scoped Shifts routes
+  app.use('/api/v1/shifts', requireAuth, resolveTenant, shiftsRouter);
+  app.use('/api/v1/t/:slug/shifts', requireAuth, resolveTenant, shiftsRouter);
+  app.use('/api/v1/shift-swaps', requireAuth, resolveTenant, shiftSwapsRouter);
+  app.use('/api/v1/t/:slug/shift-swaps', requireAuth, resolveTenant, shiftSwapsRouter);
 
   // Notifications (user-scoped, no tenant resolution needed — userId from JWT is enough)
   app.use('/api/v1/notifications', requireAuth, notificationsRouter);

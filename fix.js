@@ -1,0 +1,1 @@
+const { PrismaClient } = require('./node_modules/@prisma/client'); const prisma = new PrismaClient(); async function main() { await prisma.workflowInstance.updateMany({ where: { entityType: 'ShiftSwapRequest', shiftSwapRequestId: null }, data: { shiftSwapRequestId: 'cmtiiwgok0003nmgk6gznuhfa' } }); } main().finally(() => prisma.$disconnect());

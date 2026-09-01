@@ -16,7 +16,7 @@ export type WorkflowStepDef = z.infer<typeof WorkflowStepDefSchema>;
 export const CreateWorkflowTemplateSchema = z.object({
   name: z.string().min(1, 'Workflow name is required'),
   description: z.string().optional(),
-  triggerType: z.enum(['LEAVE_REQUEST', 'EXPENSE_REQUEST', 'OFFBOARDING_REQUEST', 'DOCUMENT_REQUEST', 'CUSTOM']),
+  triggerType: z.enum(['LEAVE_REQUEST', 'EXPENSE_REQUEST', 'OFFBOARDING_REQUEST', 'DOCUMENT_REQUEST', 'ATTENDANCE_REGULARIZATION', 'TIMESHEET_APPROVAL', 'SHIFT_SWAP_REQUEST', 'CUSTOM']),
   steps: z.array(WorkflowStepDefSchema).min(1, 'At least one step is required'),
 });
 

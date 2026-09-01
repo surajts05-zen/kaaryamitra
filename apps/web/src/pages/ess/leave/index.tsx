@@ -71,7 +71,7 @@ export function EssLeavePage() {
           <h1 className="text-2xl font-bold tracking-tight text-foreground">My Leaves</h1>
           <p className="text-muted-foreground">Manage your time off and view leave balances.</p>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)} className="bg-km-forest hover:bg-km-forest/90">
+        <Button onClick={() => setIsDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Apply for Leave
         </Button>
@@ -241,7 +241,7 @@ export function EssLeavePage() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" className="bg-km-forest hover:bg-km-forest/90" disabled={applyMutation.isPending}>
+              <Button type="submit" disabled={applyMutation.isPending}>
                 Submit Application
               </Button>
             </DialogFooter>

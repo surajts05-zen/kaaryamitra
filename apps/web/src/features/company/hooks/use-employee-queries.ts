@@ -48,3 +48,12 @@ export function useUpdateEmployee() {
     },
   });
 }
+
+export function useResetEmployeePassword() {
+  return useMutation({
+    mutationFn: async ({ id, sendToAlternate }: { id: string; sendToAlternate: boolean }) => {
+      const res = await apiClient.post(`/employees/${id}/reset-password`, { sendToAlternate });
+      return res.data;
+    },
+  });
+}

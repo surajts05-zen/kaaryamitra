@@ -1,0 +1,1 @@
+const { PrismaClient } = require('./node_modules/@prisma/client'); const prisma = new PrismaClient(); async function main() { const insts = await prisma.workflowInstance.findMany({ where: { status: 'IN_PROGRESS' }, include: { template: true } }); console.log(JSON.stringify(insts, null, 2)); } main().finally(() => prisma.$disconnect());

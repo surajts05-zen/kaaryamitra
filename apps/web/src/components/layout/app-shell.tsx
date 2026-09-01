@@ -19,6 +19,8 @@ import {
   Inbox,
   Shield,
   CalendarDays,
+  CalendarClock,
+  Timer
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/button';
@@ -44,6 +46,8 @@ const navItems: NavItem[] = [
 
   // ESS – visible to everyone
   { icon: CalendarDays, label: 'My Leaves', path: 'me/leave' },
+  { icon: CalendarClock, label: 'My Shifts', path: 'me/shifts' },
+  { icon: Timer, label: 'My Timesheets', path: 'me/timesheets' },
 
   // HR / Admin
   { icon: Users,     label: 'Directory',     path: 'directory',         allowedRoles: HR_ROLES },
@@ -56,6 +60,7 @@ const navItems: NavItem[] = [
 
   // Admin-only configuration
   { icon: Calendar,  label: 'Leave Settings',  path: 'settings/leave',  allowedRoles: HR_ROLES },
+  { icon: CalendarClock, label: 'Shifts Config', path: 'settings/shifts', allowedRoles: HR_ROLES },
   { icon: GitBranch, label: 'Workflows',        path: 'settings/workflows', allowedRoles: ADMIN_ROLES },
   { icon: Shield,    label: 'Roles & Permissions', path: 'settings/roles', allowedRoles: ADMIN_ROLES },
 
@@ -136,9 +141,6 @@ export function AppShell() {
 
         <div className="p-4">
           <div className="mb-4 rounded-xl bg-sidebar-accent p-3">
-            <p className="text-xs text-sidebar-foreground/60 uppercase font-semibold mb-1">
-              {user?.isSuperAdmin ? 'System' : 'Workspace'}
-            </p>
             <p className="font-medium text-sm truncate">{tenantName}</p>
           </div>
 

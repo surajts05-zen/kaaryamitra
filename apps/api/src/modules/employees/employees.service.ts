@@ -105,6 +105,7 @@ export class EmployeesService {
       joiningDate,
       confirmationDate,
       probationEndDate,
+      roleId,
       ...rest
     } = data;
 
@@ -149,7 +150,7 @@ export class EmployeesService {
     }
 
     // Create Employee record
-    return prisma.employee.create({
+    const employee = await prisma.employee.create({
       data: {
         tenantId,
         userId: user.id,
@@ -163,6 +164,17 @@ export class EmployeesService {
         ...rest,
       },
     });
+
+    if (roleId) {
+      await prisma.userRole.create({
+        data: {
+          userId: user.id,
+          roleId,
+        },
+      });
+    }
+
+    return employee;
   }
 
   static async updateEmployee(tenantId: string, employeeId: string, data: any) {

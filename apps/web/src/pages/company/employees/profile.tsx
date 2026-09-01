@@ -1,5 +1,10 @@
+import * as React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useEmployee } from '@/features/company/hooks/use-employee-queries';
+import { useEmployee, useResetEmployeePassword } from '@/features/company/hooks/use-employee-queries';
+import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ArrowLeft, Mail, Phone, Building2, MapPin, Briefcase, Calendar, CheckCircle2, UserCircle } from 'lucide-react';
@@ -8,6 +13,25 @@ import { format } from 'date-fns';
 export function EmployeeProfilePage() {
   const { id } = useParams();
   const { data: employee, isLoading } = useEmployee(id as string);
+  const resetPassword = useResetEmployeePassword();
+  
+  const [isResetPasswordOpen, setIsResetPasswordOpen] = React.useState(false);
+  const [sendToAlternate, setSendToAlternate] = React.useState(false);
+
+  const handleResetPassword = () => {
+    resetPassword.mutate(
+      { id: id as string, sendToAlternate },
+      {
+        onSuccess: (data: any) => {
+          toast.success(data.message || 'Password reset link sent');
+          setIsResetPasswordOpen(false);
+        },
+        onError: () => {
+          toast.error('Failed to reset password');
+        }
+      }
+    );
+  };
 
   if (isLoading) {
     return <div className="p-8 text-center">Loading profile...</div>;
@@ -32,11 +56,50 @@ export function EmployeeProfilePage() {
             <h2 className="text-3xl font-bold tracking-tight">Employee Profile</h2>
           </div>
         </div>
-        <Button asChild variant="outline">
-          <Link to={`edit`}>
-            Edit Profile
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Dialog open={isResetPasswordOpen} onOpenChange={setIsResetPasswordOpen}>
+            <DialogTrigger asChild>
+              <Button variant="secondary">
+                Reset Password
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Reset Password</DialogTitle>
+                <DialogDescription>
+                  This will generate a secure reset link for {employee?.firstName}.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4 space-y-4">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Use Alternate Email</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {employee?.personalEmail ? `Send to personal email: ${employee.personalEmail}` : 'No personal email on file. Link will go to work email.'}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={sendToAlternate}
+                    onCheckedChange={setSendToAlternate}
+                    disabled={!employee?.personalEmail}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsResetPasswordOpen(false)}>Cancel</Button>
+                <Button onClick={handleResetPassword} disabled={resetPassword.isPending}>
+                  {resetPassword.isPending ? 'Sending...' : 'Send Reset Link'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Button asChild variant="outline">
+            <Link to={`edit`}>
+              Edit Profile
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

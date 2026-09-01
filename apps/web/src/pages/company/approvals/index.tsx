@@ -48,7 +48,9 @@ function ActionDialog({
 
   const app = approval.instance.leaveApplication;
   const correction = approval.instance.attendanceCorrection;
-  if (!app && !correction) return null;
+  const swap = approval.instance.shiftSwapRequest;
+  const ts = approval.instance.timesheet;
+  if (!app && !correction && !swap && !ts) return null;
 
   const handleConfirm = () => {
     const payload: { instanceId: string; action: 'APPROVED' | 'REJECTED'; comment?: string } = {
@@ -136,6 +138,34 @@ function ActionDialog({
               )}
             </div>
           )}
+          {swap && (
+            <div className="rounded-lg border p-3 bg-muted/30 space-y-1 text-sm">
+              <p className="font-medium">
+                {swap.requestingEmployee.firstName} {swap.requestingEmployee.lastName}
+              </p>
+              <p className="text-muted-foreground font-semibold">Shift Swap Request</p>
+              <p className="text-muted-foreground">
+                Date: {format(new Date(swap.date), 'MMM d, yyyy')}
+              </p>
+              {swap.reason && (
+                <p className="text-muted-foreground italic mt-2">"{swap.reason}"</p>
+              )}
+            </div>
+          )}
+          {ts && (
+            <div className="rounded-lg border p-3 bg-muted/30 space-y-1 text-sm">
+              <p className="font-medium">
+                {ts.employee.firstName} {ts.employee.lastName}
+              </p>
+              <p className="text-muted-foreground font-semibold">Timesheet Submission</p>
+              <p className="text-muted-foreground">
+                Period: {format(new Date(ts.startDate), 'MMM d')} – {format(new Date(ts.endDate), 'MMM d, yyyy')}
+              </p>
+              <p className="text-muted-foreground">
+                Total Reg: {Math.floor(ts.totalRegularMinutes / 60)}h {ts.totalRegularMinutes % 60}m | OT: {Math.floor(ts.totalOvertimeMinutes / 60)}h {ts.totalOvertimeMinutes % 60}m
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>{isApproving ? 'Comment (Optional)' : 'Reason for Rejection'}</Label>
@@ -183,13 +213,16 @@ function ApprovalCard({
 }) {
   const app = approval.instance.leaveApplication;
   const correction = approval.instance.attendanceCorrection;
-  if (!app && !correction) return null;
+  const swap = approval.instance.shiftSwapRequest;
+  const ts = approval.instance.timesheet;
+  if (!app && !correction && !swap && !ts) return null;
 
-  const employee = app ? app.employee : correction!.record.employee;
+  const employee = app ? app.employee : correction ? correction.record.employee : swap ? swap.requestingEmployee : ts!.employee;
   const initials = `${employee.firstName[0]}${employee.lastName[0]}`.toUpperCase();
   const stepLabel = approval.currentStep.label;
   const stepIndex = approval.instance.currentStepIndex + 1;
-  const leaveColor = app?.leaveType?.color ?? '#4CAF50';
+  const badgeColor = app ? (app.leaveType?.color ?? '#4CAF50') : swap ? '#9c27b0' : ts ? '#2196f3' : '#ff9800';
+  const badgeLabel = app ? app.leaveType.name : swap ? 'Shift Swap' : ts ? 'Timesheet' : 'Attendance Regularization';
 
   return (
     <Card className="hover:shadow-md transition-all group">
@@ -228,9 +261,9 @@ function ApprovalCard({
               <Badge
                 variant="secondary"
                 className="text-xs flex-shrink-0"
-                style={{ backgroundColor: `${app ? leaveColor : '#ff9800'}20`, color: app ? leaveColor : '#ff9800' }}
+                style={{ backgroundColor: `${badgeColor}20`, color: badgeColor }}
               >
-                {app ? app.leaveType.name : 'Attendance Regularization'}
+                {badgeLabel}
               </Badge>
             </div>
 
@@ -278,6 +311,36 @@ function ApprovalCard({
                     "{correction.reason}"
                   </p>
                 )}
+              </>
+            ) : swap ? (
+              <>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>{format(new Date(swap.date), 'MMM d, yyyy')}</span>
+                  </div>
+                </div>
+
+                {swap.reason && (
+                  <p className="text-sm text-muted-foreground italic mb-3 truncate">
+                    "{swap.reason}"
+                  </p>
+                )}
+              </>
+            ) : ts ? (
+              <>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      {format(new Date(ts.startDate), 'MMM d')} – {format(new Date(ts.endDate), 'MMM d, yyyy')}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                    <span>Reg: {Math.floor(ts.totalRegularMinutes / 60)}h {ts.totalRegularMinutes % 60}m</span>
+                    <span>OT: {Math.floor(ts.totalOvertimeMinutes / 60)}h {ts.totalOvertimeMinutes % 60}m</span>
+                  </div>
+                </div>
               </>
             ) : null}
 

@@ -105,7 +105,22 @@ enum WorkflowTriggerType {
   OFFBOARDING_REQUEST
   DOCUMENT_REQUEST
   ATTENDANCE_REGULARIZATION
+  TIMESHEET_APPROVAL
+  SHIFT_SWAP_REQUEST
   CUSTOM
+}
+
+enum ShiftType {
+  FIXED
+  FLEXIBLE
+  ROTATING
+}
+
+enum TimesheetStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
 }
 
 enum WorkflowAssigneeType {
@@ -164,6 +179,7 @@ model Tenant {
   jobLevels         JobLevel[]
   holidays          Holiday[]
   companySettings   CompanySettings?
+  shifts            Shift[]
 
   @@map("tenants")
 }
@@ -407,6 +423,7 @@ model CompanySettings {
   timezone              String  @default("Asia/Kolkata")
   isAttendanceEnabled   Boolean @default(true)
   isGeolocationEnforced Boolean @default(false)
+  isTimesheetEnabled    Boolean @default(true)
 
   updatedAt DateTime @updatedAt
 
@@ -472,6 +489,10 @@ model Employee {
   leaveBalances     LeaveBalance[]
   attendanceRecords AttendanceRecord[]
   notifications     Notification[]     @relation("EmployeeNotifications")
+  employeeShifts    EmployeeShift[]
+  timesheets        Timesheet[]
+  requestedSwaps    ShiftSwapRequest[] @relation("RequestedSwaps")
+  targetSwaps       ShiftSwapRequest[] @relation("TargetSwaps")
 
   @@index([tenantId])
   @@index([managerId])
@@ -698,6 +719,8 @@ model WorkflowInstance {
   completedAt          DateTime?
   leaveApplicationId   String?        @unique
   attendanceCorrectionId String?      @unique
+  timesheetId          String?        @unique
+  shiftSwapRequestId   String?        @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -705,6 +728,8 @@ model WorkflowInstance {
   template             WorkflowTemplate      @relation(fields: [templateId], references: [id])
   leaveApplication     LeaveApplication?     @relation(fields: [leaveApplicationId], references: [id])
   attendanceCorrection AttendanceCorrection? @relation(fields: [attendanceCorrectionId], references: [id])
+  timesheet            Timesheet?            @relation(fields: [timesheetId], references: [id])
+  shiftSwapRequest     ShiftSwapRequest?     @relation(fields: [shiftSwapRequestId], references: [id])
   actions              WorkflowAction[]
 
   @@map("workflow_instances")
@@ -775,4 +800,107 @@ model AuditLog {
   @@index([actorId])
   @@index([entityType, entityId])
   @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SHIFTS & TIMESHEETS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Shift {
+  id                 String    @id @default(cuid())
+  tenantId           String
+  name               String
+  startTime          String    // e.g., "09:00"
+  endTime            String    // e.g., "17:00"
+  type               ShiftType @default(FIXED)
+  gracePeriodMinutes Int       @default(15)
+  color              String?   @default("#4CAF50")
+  isActive           Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant         Tenant          @relation(fields: [tenantId], references: [id])
+  employeeShifts EmployeeShift[]
+
+  @@unique([tenantId, name])
+  @@map("shifts")
+}
+
+model EmployeeShift {
+  id         String    @id @default(cuid())
+  tenantId   String
+  employeeId String
+  shiftId    String
+  effectiveFrom DateTime @db.Date
+  effectiveTo   DateTime? @db.Date
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  shift    Shift    @relation(fields: [shiftId], references: [id])
+
+  @@index([tenantId, employeeId])
+  @@map("employee_shifts")
+}
+
+model Timesheet {
+  id              String          @id @default(cuid())
+  tenantId        String
+  employeeId      String
+  periodStartDate DateTime        @db.Date
+  periodEndDate   DateTime        @db.Date
+  status          TimesheetStatus @default(DRAFT)
+  totalHours      Float           @default(0)
+  totalOvertime   Float           @default(0)
+
+  submittedAt     DateTime?
+  approverNote    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee         Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  workflowInstance WorkflowInstance?
+  entries          TimesheetEntry[]
+
+  @@unique([tenantId, employeeId, periodStartDate, periodEndDate])
+  @@map("timesheets")
+}
+
+model TimesheetEntry {
+  id            String   @id @default(cuid())
+  timesheetId   String
+  date          DateTime @db.Date
+  hours         Float    @default(0)
+  overtimeHours Float    @default(0)
+  description   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  timesheet Timesheet @relation(fields: [timesheetId], references: [id], onDelete: Cascade)
+
+  @@unique([timesheetId, date])
+  @@map("timesheet_entries")
+}
+
+model ShiftSwapRequest {
+  id                   String   @id @default(cuid())
+  tenantId             String
+  requestingEmployeeId String
+  targetEmployeeId     String
+  date                 DateTime @db.Date
+  status               String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  reason               String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  requestingEmployee Employee          @relation("RequestedSwaps", fields: [requestingEmployeeId], references: [id])
+  targetEmployee     Employee          @relation("TargetSwaps", fields: [targetEmployeeId], references: [id])
+  workflowInstance   WorkflowInstance?
+
+  @@map("shift_swap_requests")
 }
