@@ -21,7 +21,9 @@ import {
   CalendarDays,
   CalendarClock,
   Timer,
-  FileText
+  FileText,
+  UserMinus,
+  DoorOpen
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/button';
@@ -45,16 +47,17 @@ interface NavItem {
 const navItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', path: 'dashboard' },
 
-  // ESS – visible to everyone
   { icon: CalendarDays, label: 'My Leaves', path: 'me/leave' },
   { icon: CalendarClock, label: 'My Shifts', path: 'me/shifts' },
   { icon: Timer, label: 'My Timesheets', path: 'me/timesheets' },
+  { icon: DoorOpen, label: 'My Resignation', path: 'me/resignation' },
 
   // HR / Admin
   { icon: Users,     label: 'Directory',     path: 'directory',         allowedRoles: HR_ROLES },
   { icon: Building2, label: 'Departments',   path: 'departments',       allowedRoles: HR_ROLES },
   { icon: MapPin,    label: 'Locations',     path: 'locations',         allowedRoles: HR_ROLES },
   { icon: Briefcase, label: 'Designations',  path: 'designations',      allowedRoles: HR_ROLES },
+  { icon: UserMinus, label: 'Resignations',  path: 'resignations',      allowedRoles: HR_ROLES },
 
   // Approvers
   { icon: Inbox,     label: 'Approvals Inbox', path: 'approvals',       allowedRoles: APPROVER_ROLES },
