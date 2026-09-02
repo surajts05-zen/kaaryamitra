@@ -612,5 +612,20 @@ export async function seedStandardWorkflows(tenantId: string) {
     }
   }
 
-  return results;
+  // Seed Helpdesk Categories
+  const standardHelpdeskCategories = [
+    { name: 'IT Support', description: 'Hardware, Software, and Network issues', slaLowHours: 72, slaMediumHours: 48, slaHighHours: 24, slaUrgentHours: 4 },
+    { name: 'HR Queries', description: 'Payroll, Benefits, and Policy queries', slaLowHours: 120, slaMediumHours: 72, slaHighHours: 48, slaUrgentHours: 24 },
+    { name: 'Facilities', description: 'Office maintenance and supplies', slaLowHours: 120, slaMediumHours: 72, slaHighHours: 48, slaUrgentHours: 24 },
+  ];
+
+  for (const cat of standardHelpdeskCategories) {
+    await prisma.helpdeskCategory.upsert({
+      where: { tenantId_name: { tenantId, name: cat.name } },
+      update: {}, // Don't override if user edited them
+      create: { tenantId, ...cat }
+    });
+  }
+
+  return { seeded: results.length, total: standardTemplates.length, helpdeskCategoriesSeeded: standardHelpdeskCategories.length };
 }

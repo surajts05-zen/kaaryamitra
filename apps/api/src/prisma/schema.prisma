@@ -99,6 +99,20 @@ enum WorkflowStatus {
   ESCALATED
 }
 
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 enum WorkflowTriggerType {
   LEAVE_REQUEST
   EXPENSE_REQUEST
@@ -224,6 +238,8 @@ model Tenant {
   checklistTemplates ChecklistTemplate[]
   employeeChecklists EmployeeChecklist[]
   resignations      Resignation[]
+  helpdeskCategories   HelpdeskCategory[]
+  helpdeskTickets      HelpdeskTicket[]
 
   @@map("tenants")
 }
@@ -656,6 +672,9 @@ model Employee {
   requestedSwaps    ShiftSwapRequest[] @relation("RequestedSwaps")
   targetSwaps       ShiftSwapRequest[] @relation("TargetSwaps")
   documents         Document[]
+  requestedTickets   HelpdeskTicket[]   @relation("RequestedTickets")
+  assignedTickets    HelpdeskTicket[]   @relation("AssignedTickets")
+  helpdeskComments   HelpdeskComment[]
 
   @@index([tenantId])
   @@index([managerId])
@@ -1138,3 +1157,80 @@ model DocumentVersion {
   @@index([documentId])
   @@map("document_versions")
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPDESK (Phase 14)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model HelpdeskCategory {
+  id           String @id @default(cuid())
+  tenantId     String
+  name         String
+  description  String?
+  
+  // SLAs (in hours) based on priority
+  slaLowHours    Int @default(72)
+  slaMediumHours Int @default(48)
+  slaHighHours   Int @default(24)
+  slaUrgentHours Int @default(4)
+  
+  isActive     Boolean @default(true)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant       Tenant @relation(fields: [tenantId], references: [id])
+  tickets      HelpdeskTicket[]
+
+  @@unique([tenantId, name])
+  @@map("helpdesk_categories")
+}
+
+model HelpdeskTicket {
+  id           String         @id @default(cuid())
+  tenantId     String
+  employeeId   String         // Requester
+  assignedToId String?        // Assignee
+  categoryId   String
+  
+  subject      String
+  description  String
+  status       TicketStatus   @default(OPEN)
+  priority     TicketPriority @default(MEDIUM)
+  
+  attachments  Json           @default("[]") // Array of S3 keys or URLs
+  
+  slaDeadline  DateTime?      
+  resolvedAt   DateTime?
+  
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  
+  employee     Employee       @relation("RequestedTickets", fields: [employeeId], references: [id])
+  assignedTo   Employee?      @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  category     HelpdeskCategory @relation(fields: [categoryId], references: [id])
+  tenant       Tenant         @relation(fields: [tenantId], references: [id])
+  comments     HelpdeskComment[]
+
+  @@map("helpdesk_tickets")
+}
+
+model HelpdeskComment {
+  id          String   @id @default(cuid())
+  ticketId    String
+  authorId    String
+  
+  content     String
+  attachments Json     @default("[]")
+  
+  isInternal  Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  ticket      HelpdeskTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author      Employee       @relation(fields: [authorId], references: [id])
+
+  @@map("helpdesk_comments")
+}
+

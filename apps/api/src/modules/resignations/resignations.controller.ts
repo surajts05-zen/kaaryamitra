@@ -9,7 +9,7 @@ export const submitResignationHandler = async (req: Request, res: Response) => {
   const employee = await prisma.employee.findUnique({
     where: { userId: req.auth!.userId }
   });
-  if (!employee) throw new AppError('Employee record not found', 404);
+  if (!employee) throw AppError.notFound('Employee');
   const employeeId = employee.id;
   
   const resignation = await ResignationsService.submitResignation(tenantId, employeeId, req.body);
@@ -21,7 +21,7 @@ export const getMyResignationHandler = async (req: Request, res: Response) => {
   const employee = await prisma.employee.findUnique({
     where: { userId: req.auth!.userId }
   });
-  if (!employee) throw new AppError('Employee record not found', 404);
+  if (!employee) throw AppError.notFound('Employee');
   const employeeId = employee.id;
   
   const resignation = await ResignationsService.getMyResignation(tenantId, employeeId);
@@ -36,14 +36,14 @@ export const listResignationsHandler = async (req: Request, res: Response) => {
 
 export const updateResignationStatusHandler = async (req: Request, res: Response) => {
   const tenantId = req.tenantId!;
-  const { id } = req.params;
+  const { id } = req.params as { id: string };
   const resignation = await ResignationsService.updateResignationStatus(tenantId, id, req.body);
   res.json({ success: true, data: resignation });
 };
 
 export const updateClearanceHandler = async (req: Request, res: Response) => {
   const tenantId = req.tenantId!;
-  const { id } = req.params;
+  const { id } = req.params as { id: string };
   const { isClearanceCompleted } = req.body;
   const resignation = await ResignationsService.updateClearance(tenantId, id, isClearanceCompleted);
   res.json({ success: true, data: resignation });

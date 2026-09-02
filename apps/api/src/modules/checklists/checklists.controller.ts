@@ -16,28 +16,28 @@ export const createTemplateHandler = async (req: Request, res: Response) => {
 
 export const updateTemplateHandler = async (req: Request, res: Response) => {
   const tenantId = req.tenantId!;
-  const { id } = req.params;
+  const { id } = req.params as { id: string };
   const template = await ChecklistsService.updateTemplate(tenantId, id, req.body);
   res.json({ success: true, data: template });
 };
 
 export const deleteTemplateHandler = async (req: Request, res: Response) => {
   const tenantId = req.tenantId!;
-  const { id } = req.params;
+  const { id } = req.params as { id: string };
   await ChecklistsService.deleteTemplate(tenantId, id);
   res.json({ success: true });
 };
 
 export const listEmployeeChecklistsHandler = async (req: Request, res: Response) => {
   const tenantId = req.tenantId!;
-  const { employeeId } = req.params;
+  const { employeeId } = req.params as { employeeId: string };
   const checklists = await ChecklistsService.listEmployeeChecklists(tenantId, employeeId);
   res.json({ success: true, data: checklists });
 };
 
 export const assignChecklistHandler = async (req: Request, res: Response) => {
   const tenantId = req.tenantId!;
-  const { employeeId } = req.params;
+  const { employeeId } = req.params as { employeeId: string };
   const { templateId } = req.body;
   const checklist = await ChecklistsService.assignChecklist(tenantId, employeeId, templateId);
   res.json({ success: true, data: checklist });
@@ -45,7 +45,7 @@ export const assignChecklistHandler = async (req: Request, res: Response) => {
 
 export const updateTaskStatusHandler = async (req: Request, res: Response) => {
   const tenantId = req.tenantId!;
-  const { taskId } = req.params;
+  const { taskId } = req.params as { taskId: string };
   const { status } = req.body as { status: TaskStatus };
   
   // Note: in a real system we'd verify the user has permission to update this specific task

@@ -25,18 +25,21 @@ export class HolidaysService {
         name: data.name,
         date: new Date(data.date),
         type: data.type,
-        locationId: data.locationId,
+        locationId: data.locationId ?? null,
       },
     });
   }
 
   static async updateHoliday(tenantId: string, id: string, data: z.infer<typeof updateHolidaySchema>) {
+    const updateData: any = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.type !== undefined) updateData.type = data.type;
+    if (data.locationId !== undefined) updateData.locationId = data.locationId ?? null;
+    if (data.date !== undefined && data.date) updateData.date = new Date(data.date);
+
     return prisma.holiday.update({
       where: { id, tenantId },
-      data: {
-        ...data,
-        date: data.date ? new Date(data.date) : undefined,
-      },
+      data: updateData,
     });
   }
 

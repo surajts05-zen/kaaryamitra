@@ -39,10 +39,17 @@ import { DocumentSettings } from '@/pages/company/settings/documents';
 import { AssetSettings } from '@/pages/company/settings/assets';
 import { ChecklistSettings } from '@/pages/company/settings/checklists';
 import { HolidaysSettingsPage } from '@/pages/company/settings/holidays';
+import { HelpdeskSettingsPage } from '@/pages/company/settings/helpdesk';
 
 // Phase 13 - Resignations
 import { ResignationsPage } from '@/pages/company/resignations';
 import { MyResignationPage } from '@/pages/ess/resignation';
+
+// Phase 14 - Helpdesk
+import { EssHelpdeskPage } from '@/pages/ess/helpdesk';
+import { EssHelpdeskThreadPage } from '@/pages/ess/helpdesk-thread';
+import { AdminHelpdeskPage } from '@/pages/company/helpdesk';
+import { AdminHelpdeskThreadPage } from '@/pages/company/helpdesk/thread';
 
 /**
  * KaaryaMitra App Router
@@ -79,6 +86,7 @@ export function App() {
             <Route path="settings/assets" element={<AssetSettings />} />
             <Route path="settings/checklists" element={<ChecklistSettings />} />
             <Route path="settings/holidays" element={<HolidaysSettingsPage />} />
+            <Route path="settings/helpdesk" element={<HelpdeskSettingsPage />} />
 
             {/* Phase 7 - Leave Management */}
             <Route path="approvals/leave" element={<LeaveApprovalsPage />} />
@@ -88,6 +96,8 @@ export function App() {
 
             {/* Phase 13 - Resignations */}
             <Route path="resignations" element={<ResignationsPage />} />
+            <Route path="helpdesk" element={<AdminHelpdeskPage />} />
+            <Route path="helpdesk/:id" element={<AdminHelpdeskThreadPage />} />
 
             {/* RBAC */}
             <Route path="settings/roles" element={<RolesPage />} />
@@ -108,6 +118,8 @@ export function App() {
               <Route path="shifts" element={<MyShiftsPage />} />
               <Route path="timesheets" element={<MyTimesheetsPage />} />
               <Route path="resignation" element={<MyResignationPage />} />
+              <Route path="helpdesk" element={<EssHelpdeskPage />} />
+              <Route path="helpdesk/:id" element={<EssHelpdeskThreadPage />} />
             </Route>
           </Route>
         </Route>

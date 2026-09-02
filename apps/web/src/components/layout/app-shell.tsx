@@ -23,7 +23,8 @@ import {
   Timer,
   FileText,
   UserMinus,
-  DoorOpen
+  DoorOpen,
+  Headset
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/button';
@@ -51,6 +52,7 @@ const navItems: NavItem[] = [
   { icon: CalendarClock, label: 'My Shifts', path: 'me/shifts' },
   { icon: Timer, label: 'My Timesheets', path: 'me/timesheets' },
   { icon: DoorOpen, label: 'My Resignation', path: 'me/resignation' },
+  { icon: Headset, label: 'My Helpdesk', path: 'me/helpdesk' },
 
   // HR / Admin
   { icon: Users,     label: 'Directory',     path: 'directory',         allowedRoles: HR_ROLES },
@@ -58,6 +60,7 @@ const navItems: NavItem[] = [
   { icon: MapPin,    label: 'Locations',     path: 'locations',         allowedRoles: HR_ROLES },
   { icon: Briefcase, label: 'Designations',  path: 'designations',      allowedRoles: HR_ROLES },
   { icon: UserMinus, label: 'Resignations',  path: 'resignations',      allowedRoles: HR_ROLES },
+  { icon: Headset,       label: 'Helpdesk',      path: 'helpdesk',          allowedRoles: HR_ROLES },
 
   // Approvers
   { icon: Inbox,     label: 'Approvals Inbox', path: 'approvals',       allowedRoles: APPROVER_ROLES },

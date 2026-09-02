@@ -50,9 +50,9 @@ export class ResignationsService {
       where: { id, tenantId },
       data: {
         status: data.status,
-        approvedLastWorkingDay: data.approvedLastWorkingDay ? new Date(data.approvedLastWorkingDay) : undefined,
-        noticePeriodDays: data.noticePeriodDays ? parseInt(data.noticePeriodDays, 10) : undefined,
-        exitInterviewNotes: data.exitInterviewNotes,
+        ...(data.approvedLastWorkingDay !== undefined && { approvedLastWorkingDay: data.approvedLastWorkingDay ? new Date(data.approvedLastWorkingDay) : null }),
+        ...(data.noticePeriodDays !== undefined && { noticePeriodDays: data.noticePeriodDays ? parseInt(data.noticePeriodDays, 10) : null }),
+        ...(data.exitInterviewNotes !== undefined && { exitInterviewNotes: data.exitInterviewNotes ?? null }),
       }
     });
   }

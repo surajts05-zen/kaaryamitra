@@ -22,5 +22,5 @@ templatesRouter.delete('/:id', requireAuth, requirePermission('settings:manage')
 
 // Employee Checklists
 employeeChecklistsRouter.get('/', requireAuth, asyncHandler(listEmployeeChecklistsHandler));
-employeeChecklistsRouter.post('/', requireAuth, requirePermission('users:manage'), asyncHandler(assignChecklistHandler));
+employeeChecklistsRouter.post('/', requireAuth, requirePermission('employee:update'), asyncHandler(assignChecklistHandler));
 employeeChecklistsRouter.patch('/tasks/:taskId/status', requireAuth, asyncHandler(updateTaskStatusHandler));

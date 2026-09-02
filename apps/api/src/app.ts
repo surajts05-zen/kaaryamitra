@@ -27,6 +27,7 @@ import { assetsRouter, employeeAssetsRouter } from './modules/assets/assets.rout
 import { templatesRouter, employeeChecklistsRouter } from './modules/checklists/checklists.router.js';
 import { resignationsRouter } from './modules/resignations/resignations.router.js';
 import { holidaysRouter } from './modules/holidays/holidays.router.js';
+import { helpdeskAdminRouter, helpdeskEssRouter } from './modules/helpdesk/helpdesk.router.js';
 import { dashboardRouter } from './modules/dashboard/dashboard.router.js';
 import { requireAuth, requireSuperAdmin, resolveTenant } from './middleware/auth.js';
 
@@ -166,6 +167,10 @@ export function createApp() {
   // Tenant-scoped Holidays routes
   app.use('/api/v1/holidays', requireAuth, resolveTenant, holidaysRouter);
   app.use('/api/v1/t/:slug/holidays', requireAuth, resolveTenant, holidaysRouter);
+
+  // Tenant-scoped Helpdesk routes
+  app.use('/api/v1/t/:slug/helpdesk', requireAuth, resolveTenant, helpdeskAdminRouter);
+  app.use('/api/v1/t/:slug/me/helpdesk', requireAuth, resolveTenant, helpdeskEssRouter);
 
   // Notifications (user-scoped, no tenant resolution needed — userId from JWT is enough)
   app.use('/api/v1/notifications', requireAuth, notificationsRouter);

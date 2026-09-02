@@ -10,7 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
-import { FileText, Calendar, CalendarClock, Laptop, CheckSquare } from 'lucide-react';
+import { FileText, Calendar, CalendarClock, Laptop, CheckSquare, Headset } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const schema = z.object({
@@ -221,6 +221,16 @@ export function CompanySettingsPage() {
               <CheckSquare className="h-8 w-8 text-primary mb-2" />
               <CardTitle>Checklist Templates</CardTitle>
               <CardDescription>Define reusable onboarding and offboarding task templates</CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link to="helpdesk">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+            <CardHeader>
+              <Headset className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Helpdesk Categories</CardTitle>
+              <CardDescription>Configure support request categories and SLAs</CardDescription>
             </CardHeader>
           </Card>
         </Link>

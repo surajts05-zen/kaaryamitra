@@ -16,6 +16,6 @@ resignationsRouter.post('/my', requireAuth, asyncHandler(submitResignationHandle
 resignationsRouter.get('/my', requireAuth, asyncHandler(getMyResignationHandler));
 
 // Admin / HR endpoints
-resignationsRouter.get('/', requireAuth, requirePermission('users:manage'), asyncHandler(listResignationsHandler));
-resignationsRouter.patch('/:id/status', requireAuth, requirePermission('users:manage'), asyncHandler(updateResignationStatusHandler));
-resignationsRouter.patch('/:id/clearance', requireAuth, requirePermission('users:manage'), asyncHandler(updateClearanceHandler));
+resignationsRouter.get('/', requireAuth, requirePermission('employee:update'), asyncHandler(listResignationsHandler));
+resignationsRouter.patch('/:id/status', requireAuth, requirePermission('employee:update'), asyncHandler(updateResignationStatusHandler));
+resignationsRouter.patch('/:id/clearance', requireAuth, requirePermission('employee:update'), asyncHandler(updateClearanceHandler));
