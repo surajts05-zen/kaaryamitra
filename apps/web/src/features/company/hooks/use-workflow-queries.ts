@@ -141,6 +141,19 @@ export function useUpdateWorkflowTemplate() {
   });
 }
 
+export function useSeedWorkflows() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await apiClient.post('/workflows/templates/seed', {});
+      return res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workflows', 'templates'] });
+    },
+  });
+}
+
 // ── Approvals Inbox Queries ────────────────────────────────────────────────────
 
 export function useMyPendingApprovals() {

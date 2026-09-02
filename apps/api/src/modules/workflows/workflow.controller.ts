@@ -12,6 +12,7 @@ import {
   updateWorkflowTemplate,
   getPendingActionsForUser,
   processWorkflowAction,
+  seedStandardWorkflows,
 } from './workflow.service.js';
 import { prisma } from '../../lib/prisma.js';
 
@@ -147,4 +148,10 @@ export async function processWorkflowActionHandler(req: Request, res: Response) 
     data: updated,
     message: action === 'APPROVED' ? 'Application approved' : 'Application rejected',
   });
+}
+
+export async function seedStandardWorkflowsHandler(req: Request, res: Response) {
+  const tenantId = req.tenantId!;
+  const seeded = await seedStandardWorkflows(tenantId);
+  res.json({ data: seeded, message: 'Standard workflows seeded successfully' });
 }

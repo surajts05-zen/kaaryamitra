@@ -6,6 +6,7 @@ import {
   useWorkflowTemplates,
   useCreateWorkflowTemplate,
   useUpdateWorkflowTemplate,
+  useSeedWorkflows,
   type WorkflowTemplate,
 } from '@/features/company/hooks/use-workflow-queries';
 import { useEmployees } from '@/features/company/hooks/use-employee-queries';
@@ -407,6 +408,7 @@ export function WorkflowsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<WorkflowTemplate | null>(null);
   const updateMutation = useUpdateWorkflowTemplate();
+  const seedMutation = useSeedWorkflows();
 
   const { data: templates, isLoading } = useWorkflowTemplates();
 
@@ -441,10 +443,25 @@ export function WorkflowsPage() {
             Configure multi-step approval chains triggered by HR events.
           </p>
         </div>
-        <Button onClick={handleCreate} className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Workflow
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              seedMutation.mutate(undefined, {
+                onSuccess: () => toast.success('Standard workflows loaded')
+              });
+            }}
+            disabled={seedMutation.isPending}
+            className="gap-2"
+          >
+            <Zap className="h-4 w-4 text-primary" />
+            {seedMutation.isPending ? 'Loading...' : 'Load Examples'}
+          </Button>
+          <Button onClick={handleCreate} className="gap-2">
+            <Plus className="h-4 w-4" />
+            New Workflow
+          </Button>
+        </div>
       </div>
 
       {/* Explainer */}

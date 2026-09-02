@@ -7,12 +7,14 @@ import {
   updateWorkflowTemplateHandler,
   listMyPendingApprovalsHandler,
   processWorkflowActionHandler,
+  seedStandardWorkflowsHandler,
 } from './workflow.controller.js';
 
 export const workflowRouter = Router();
 
 // ─── Admin: Workflow Template Management ──────────────────────────────────────
 workflowRouter.get('/templates', asyncHandler(listWorkflowTemplatesHandler));
+workflowRouter.post('/templates/seed', asyncHandler(seedStandardWorkflowsHandler));
 workflowRouter.get('/templates/:id', asyncHandler(getWorkflowTemplateHandler));
 workflowRouter.post('/templates', asyncHandler(createWorkflowTemplateHandler));
 workflowRouter.put('/templates/:id', asyncHandler(updateWorkflowTemplateHandler));

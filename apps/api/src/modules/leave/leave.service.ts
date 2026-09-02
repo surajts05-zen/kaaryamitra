@@ -126,11 +126,47 @@ export async function getMyLeaveApplications(tenantId: string, employeeId: strin
   });
 }
 
-function calculateDays(startDate: Date, endDate: Date, isHalfDay: boolean): number {
+async function calculateDays(tenantId: string, startDate: Date, endDate: Date, isHalfDay: boolean): Promise<number> {
   if (isHalfDay) return 0.5;
-  const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
-  return diffDays;
+
+  // Get company settings for working days
+  const settings = await prisma.companySettings.findUnique({
+    where: { tenantId }
+  });
+  // Default working days: Mon to Fri (1,2,3,4,5). 0 is Sun, 6 is Sat.
+  const workingDays: number[] = settings?.workingDays ? (settings.workingDays as number[]) : [1, 2, 3, 4, 5];
+
+  // Get holidays in this range
+  const holidays = await prisma.holiday.findMany({
+    where: {
+      tenantId,
+      date: {
+        gte: startDate,
+        lte: endDate
+      }
+    }
+  });
+
+  const holidayDateStrings = new Set(holidays.map(h => h.date.toISOString().split('T')[0]));
+
+  let count = 0;
+  const current = new Date(startDate);
+  current.setHours(0, 0, 0, 0);
+  const end = new Date(endDate);
+  end.setHours(0, 0, 0, 0);
+
+  while (current <= end) {
+    const dayOfWeek = current.getDay();
+    const dateStr = current.toISOString().split('T')[0];
+
+    // If it's a working day and not a holiday, count it
+    if (workingDays.includes(dayOfWeek) && !holidayDateStrings.has(dateStr!)) {
+      count++;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+
+  return count;
 }
 
 export async function applyForLeave(tenantId: string, employeeId: string, data: z.infer<typeof CreateLeaveApplicationSchema>) {
@@ -142,7 +178,7 @@ export async function applyForLeave(tenantId: string, employeeId: string, data: 
     throw AppError.badRequest('Start date must be before or equal to end date');
   }
 
-  const totalDays = calculateDays(start, end, data.isHalfDay);
+  const totalDays = await calculateDays(tenantId, start, end, data.isHalfDay);
 
   const balance = await prisma.leaveBalance.findUnique({
     where: {

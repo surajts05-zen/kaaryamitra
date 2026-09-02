@@ -522,3 +522,95 @@ function triggerTypeToEntityType(triggerType: string): string {
   };
   return map[triggerType] ?? 'Custom';
 }
+
+export async function seedStandardWorkflows(tenantId: string) {
+  const standardTemplates = [
+    {
+      name: 'Standard Leave Approval',
+      description: 'Requires reporting manager approval for all leave requests.',
+      triggerType: 'LEAVE_REQUEST',
+      entityType: 'LeaveApplication',
+      isActive: true,
+      steps: [
+        {
+          stepOrder: 1,
+          assigneeType: 'MANAGER',
+          label: 'Reporting Manager Review',
+        }
+      ]
+    },
+    {
+      name: 'Attendance Regularization',
+      description: 'Manager approval for attendance corrections.',
+      triggerType: 'ATTENDANCE_REGULARIZATION',
+      entityType: 'AttendanceCorrection',
+      isActive: true,
+      steps: [
+        {
+          stepOrder: 1,
+          assigneeType: 'MANAGER',
+          label: 'Reporting Manager Review',
+        }
+      ]
+    },
+    {
+      name: 'Timesheet Approval',
+      description: 'Timesheets must be approved by the reporting manager.',
+      triggerType: 'TIMESHEET_APPROVAL',
+      entityType: 'Timesheet',
+      isActive: true,
+      steps: [
+        {
+          stepOrder: 1,
+          assigneeType: 'MANAGER',
+          label: 'Reporting Manager Review',
+        }
+      ]
+    },
+    {
+      name: 'Standard Offboarding',
+      description: 'HR and Manager reviews for offboarding requests.',
+      triggerType: 'OFFBOARDING_REQUEST',
+      entityType: 'OffboardingRequest',
+      isActive: true,
+      steps: [
+        {
+          stepOrder: 1,
+          assigneeType: 'MANAGER',
+          label: 'Reporting Manager Review',
+        },
+        {
+          stepOrder: 2,
+          assigneeType: 'HR',
+          label: 'HR Clearance',
+        }
+      ]
+    }
+  ];
+
+  const results = [];
+
+  for (const tpl of standardTemplates) {
+    const existing = await prisma.workflowTemplate.findUnique({
+      where: {
+        tenantId_triggerType: {
+          tenantId,
+          triggerType: tpl.triggerType as any,
+        }
+      }
+    });
+
+    if (!existing) {
+      const created = await prisma.workflowTemplate.create({
+        data: {
+          ...tpl,
+          tenantId,
+          triggerType: tpl.triggerType as any,
+        }
+      });
+      results.push(created);
+    }
+  }
+
+  return results;
+}

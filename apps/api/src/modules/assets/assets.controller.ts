@@ -16,7 +16,7 @@ export const createCategoryHandler = async (req: Request, res: Response) => {
 
 export const deleteCategoryHandler = async (req: Request, res: Response) => {
   const tenantId = req.tenantId!;
-  const { id } = req.params;
+  const id = req.params['id'] as string;
   await AssetsService.deleteCategory(tenantId, id);
   res.json({ success: true });
 };
@@ -35,21 +35,21 @@ export const createAssetHandler = async (req: Request, res: Response) => {
 
 export const updateAssetHandler = async (req: Request, res: Response) => {
   const tenantId = req.tenantId!;
-  const { id } = req.params;
+  const id = req.params['id'] as string;
   const asset = await AssetsService.updateAsset(tenantId, id, req.body);
   res.json({ success: true, data: asset });
 };
 
 export const deleteAssetHandler = async (req: Request, res: Response) => {
   const tenantId = req.tenantId!;
-  const { id } = req.params;
+  const id = req.params['id'] as string;
   await AssetsService.deleteAsset(tenantId, id);
   res.json({ success: true });
 };
 
 export const assignAssetHandler = async (req: Request, res: Response) => {
   const tenantId = req.tenantId!;
-  const { id } = req.params;
+  const id = req.params['id'] as string;
   const { employeeId } = req.body;
   
   if (employeeId) {
@@ -63,7 +63,8 @@ export const assignAssetHandler = async (req: Request, res: Response) => {
 
 export const listEmployeeAssetsHandler = async (req: Request, res: Response) => {
   const tenantId = req.tenantId!;
-  const { employeeId } = req.params;
+  const employeeId = req.params['employeeId'] as string;
   const assets = await AssetsService.listEmployeeAssets(tenantId, employeeId);
   res.json({ success: true, data: assets });
 };
+

@@ -38,6 +38,7 @@ import { RolesPage } from '@/pages/company/settings/roles';
 import { DocumentSettings } from '@/pages/company/settings/documents';
 import { AssetSettings } from '@/pages/company/settings/assets';
 import { ChecklistSettings } from '@/pages/company/settings/checklists';
+import { HolidaysSettingsPage } from '@/pages/company/settings/holidays';
 
 // Phase 13 - Resignations
 import { ResignationsPage } from '@/pages/company/resignations';
@@ -77,6 +78,7 @@ export function App() {
             <Route path="settings/documents" element={<DocumentSettings />} />
             <Route path="settings/assets" element={<AssetSettings />} />
             <Route path="settings/checklists" element={<ChecklistSettings />} />
+            <Route path="settings/holidays" element={<HolidaysSettingsPage />} />
 
             {/* Phase 7 - Leave Management */}
             <Route path="approvals/leave" element={<LeaveApprovalsPage />} />

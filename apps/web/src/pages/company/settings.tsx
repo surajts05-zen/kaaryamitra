@@ -180,7 +180,17 @@ export function CompanySettingsPage() {
             <CardHeader>
               <Calendar className="h-8 w-8 text-primary mb-2" />
               <CardTitle>Leave Settings</CardTitle>
-              <CardDescription>Configure leave types, policies, and holiday calendars</CardDescription>
+              <CardDescription>Configure leave types and policies</CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link to="holidays">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+            <CardHeader>
+              <Calendar className="h-8 w-8 text-primary mb-2" />
+              <CardTitle>Holiday Calendar</CardTitle>
+              <CardDescription>Manage company public and optional holidays</CardDescription>
             </CardHeader>
           </Card>
         </Link>
