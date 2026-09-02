@@ -109,27 +109,38 @@ export class OrgService {
         data: { tenantId },
       });
     }
-    return settings;
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { geminiApiKey: true } });
+    return { ...settings, geminiApiKey: tenant?.geminiApiKey };
   }
 
   static async updateCompanySettings(tenantId: string, data: z.infer<typeof updateCompanySettingsSchema>['body']) {
-    const updateData: any = { ...data };
+    const { geminiApiKey, ...settingsData } = data;
+    const updateData: any = { ...settingsData };
+    
     Object.keys(updateData).forEach((key) => {
       if (updateData[key] === undefined) {
         delete updateData[key];
       }
     });
 
+    // Update tenant's AI key if provided
+    if (geminiApiKey !== undefined) {
+      await prisma.tenant.update({
+        where: { id: tenantId },
+        data: { geminiApiKey: geminiApiKey || null },
+      });
+    }
+
     return prisma.companySettings.upsert({
       where: { tenantId },
       update: updateData,
       create: {
         tenantId,
-        workingDays: data.workingDays ?? [1, 2, 3, 4, 5],
-        workHoursStart: data.workHoursStart ?? '09:00',
-        workHoursEnd: data.workHoursEnd ?? '18:00',
-        probationDays: data.probationDays ?? 90,
-        timezone: data.timezone ?? 'Asia/Kolkata',
+        workingDays: updateData.workingDays ?? [1, 2, 3, 4, 5],
+        workHoursStart: updateData.workHoursStart ?? '09:00',
+        workHoursEnd: updateData.workHoursEnd ?? '18:00',
+        probationDays: updateData.probationDays ?? 90,
+        timezone: updateData.timezone ?? 'Asia/Kolkata',
       },
     });
   }

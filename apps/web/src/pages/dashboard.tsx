@@ -3,10 +3,14 @@ import { useAuthStore } from '@/store/auth.store';
 import { Building2, Users, MapPin, Briefcase } from 'lucide-react';
 import { useDashboardStats } from '@/features/dashboard/hooks/use-dashboard-queries';
 import { format } from 'date-fns';
+import { useAiInsights } from '@/features/ai/hooks/use-ai-chat';
+import { Bot, Sparkles } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 export function DashboardPage() {
   const { user } = useAuthStore();
   const { data: stats, isLoading } = useDashboardStats();
+  const { data: insights, isLoading: insightsLoading } = useAiInsights();
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
@@ -59,6 +63,33 @@ export function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="bg-km-forest/5 border-km-forest/20 shadow-sm relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 opacity-10">
+          <Bot className="h-24 w-24 text-km-forest" />
+        </div>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center gap-2 text-km-forest">
+            <Sparkles className="h-5 w-5 text-km-lime" />
+            Executive HR Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {insightsLoading ? (
+            <div className="space-y-2">
+              <div className="h-4 bg-muted animate-pulse rounded w-3/4"></div>
+              <div className="h-4 bg-muted animate-pulse rounded w-full"></div>
+              <div className="h-4 bg-muted animate-pulse rounded w-5/6"></div>
+            </div>
+          ) : insights ? (
+            <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground">
+              <ReactMarkdown>{insights}</ReactMarkdown>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">AI Insights are currently unavailable. Ensure your Gemini API Key is configured in settings.</p>
+          )}
+        </CardContent>
+      </Card>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">

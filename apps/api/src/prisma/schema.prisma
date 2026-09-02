@@ -258,6 +258,9 @@ model Tenant {
   // Feature flags (JSON map: featureName -> boolean)
   featureFlags Json @default("{}")
 
+  // AI Config
+  geminiApiKey String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

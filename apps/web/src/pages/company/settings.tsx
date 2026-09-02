@@ -21,6 +21,7 @@ const schema = z.object({
   isAttendanceEnabled: z.boolean().optional(),
   isGeolocationEnforced: z.boolean().optional(),
   clearanceMode: z.enum(['SIMPLE', 'CHECKLIST']).optional(),
+  geminiApiKey: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -44,6 +45,7 @@ export function CompanySettingsPage() {
         isAttendanceEnabled: settings.isAttendanceEnabled,
         isGeolocationEnforced: settings.isGeolocationEnforced,
         clearanceMode: settings.clearanceMode,
+        geminiApiKey: settings.geminiApiKey,
       });
     }
   }, [settings, reset]);
@@ -152,6 +154,16 @@ export function CompanySettingsPage() {
                     )}
                   />
                   {errors.clearanceMode && <p className="text-xs text-destructive">{errors.clearanceMode.message}</p>}
+                </div>
+              </div>
+
+              <div className="pt-4 border-t space-y-4">
+                <h3 className="text-lg font-medium">AI & Integrations</h3>
+                <div className="space-y-2 max-w-sm">
+                  <Label>Gemini API Key (BYOK)</Label>
+                  <Input type="password" placeholder="AI-..." {...register('geminiApiKey')} />
+                  <p className="text-xs text-muted-foreground">Optional. Overrides the platform-wide AI key for this workspace.</p>
+                  {errors.geminiApiKey && <p className="text-xs text-destructive">{errors.geminiApiKey.message}</p>}
                 </div>
               </div>
             </div>

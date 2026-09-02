@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { useEmployeeDocuments, useUploadDocument, useDocumentCategories, useVerifyDocument, usePreviewDocument, EmployeeDocument } from '@/features/company/hooks/use-documents-queries';
+import { useEmployeeDocuments, useUploadDocument, useDocumentCategories, useVerifyDocument, usePreviewDocument, type EmployeeDocument } from '@/features/company/hooks/use-documents-queries';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Upload, Eye, CheckCircle, XCircle, FileText } from 'lucide-react';
+import { Upload, Eye, CheckCircle, XCircle, FileText, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
+import { useAiExtract } from '@/features/ai/hooks/use-ai-chat';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +24,7 @@ export function EmployeeDocumentsTab({ employeeId }: { employeeId: string }) {
   const uploadDoc = useUploadDocument(employeeId);
   const verifyDoc = useVerifyDocument(employeeId);
   const previewDoc = usePreviewDocument();
+  const extractMutation = useAiExtract();
 
   const [isOpen, setIsOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -55,6 +58,26 @@ export function EmployeeDocumentsTab({ employeeId }: { employeeId: string }) {
     await verifyDoc.mutateAsync({ id, status });
   };
 
+  const handleExtract = async () => {
+    if (!file) {
+      toast.error('Please select a file first');
+      return;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('prompt', 'Extract the document title and guess the category. Return a JSON object with "title" (string) and "category" (string). Examples of categories might be ID Proof, Resume, Offer Letter, Address Proof.');
+    
+    toast.promise(extractMutation.mutateAsync(formData), {
+      loading: 'Extracting document details...',
+      success: (data) => {
+        if (data.title) setTitle(data.title);
+        // We can't perfectly auto-select category because we need the category ID, but we can set the title
+        return `Extracted title: ${data.title}`;
+      },
+      error: 'Failed to extract document details',
+    });
+  };
+
   if (isLoading) return <div>Loading documents...</div>;
 
   return (
@@ -72,6 +95,22 @@ export function EmployeeDocumentsTab({ employeeId }: { employeeId: string }) {
               <DialogTitle>Upload Document</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
+              <div className="space-y-2 flex flex-col gap-2">
+                <Label>File (Max 5MB)</Label>
+                <div className="flex gap-2 items-center">
+                  <Input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} className="flex-1" />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="text-km-forest"
+                    disabled={!file || extractMutation.isPending}
+                    onClick={handleExtract}
+                  >
+                    <Sparkles className="h-4 w-4 mr-2 text-km-lime" />
+                    Auto-fill Title
+                  </Button>
+                </div>
+              </div>
               <div className="space-y-2">
                 <Label>Category</Label>
                 <Select value={categoryId} onValueChange={setCategoryId}>
@@ -88,10 +127,6 @@ export function EmployeeDocumentsTab({ employeeId }: { employeeId: string }) {
               <div className="space-y-2">
                 <Label>Title</Label>
                 <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Passport Front Page" />
-              </div>
-              <div className="space-y-2">
-                <Label>File (Max 5MB)</Label>
-                <Input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
               </div>
               <div className="space-y-2">
                 <Label>Expiry Date (Optional)</Label>

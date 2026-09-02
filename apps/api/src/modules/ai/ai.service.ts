@@ -1,7 +1,13 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { prisma } from '../../lib/prisma.js';
 
-const ai = new GoogleGenAI({ apiKey: process.env['GEMINI_API_KEY'] || '' });
+export async function getAiClient(tenantId: string) {
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+  // @ts-ignore - geminiApiKey added to schema but client may not be fully regenerated yet
+  const apiKey = tenant?.geminiApiKey || process.env['GEMINI_API_KEY'];
+  if (!apiKey) return null;
+  return new GoogleGenAI({ apiKey });
+}
 
 // ─── Tools Definition ─────────────────────────────────────────────────────────
 
@@ -172,8 +178,9 @@ async function executeApplyForLeave(tenantId: string, userId: string, args: any)
 // ─── Chat Orchestration ───────────────────────────────────────────────────────
 
 export async function handleAiChat(tenantId: string, userId: string, userMessage: string, history: any[] = []) {
-  if (!process.env['GEMINI_API_KEY']) {
-    return "AI is currently unavailable. Please configure the GEMINI_API_KEY environment variable.";
+  const ai = await getAiClient(tenantId);
+  if (!ai) {
+    return "AI is currently unavailable. Please configure the Gemini API Key in Tenant Settings or environment variables.";
   }
 
   // Convert history to genai format
@@ -185,18 +192,6 @@ export async function handleAiChat(tenantId: string, userId: string, userMessage
   const systemInstruction = "You are a helpful HR assistant for KaaryaMitra. You can answer questions about employees, leave balances, and who is on leave, and even help the user apply for leave. Always format your responses in clear markdown.";
 
   try {
-    let chat = ai.chats.create({
-      model: 'gemini-2.5-flash',
-      config: {
-        systemInstruction,
-        tools: [{ functionDeclarations: [getEmployeesTool, getLeaveBalanceTool, getWhoIsOnLeaveTool, applyForLeaveTool] }]
-      }
-    });
-
-    // Manually set history if supported, or just send the message
-    // Actually in `@google/genai`, chat.sendMessage({ message }) takes a string or array of parts.
-    // Let's pass the raw userMessage. If we want history, we can pass it in create options if allowed,
-    // or just let the caller maintain it. For now, since we created a new chat, we can just send the whole conversation as one message or configure history.
     let response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: [...chatHistory, { role: 'user', parts: [{ text: userMessage }] }],
@@ -263,3 +258,77 @@ export async function handleAiChat(tenantId: string, userId: string, userMessage
     return "I encountered an error while processing your request. Please try again later.";
   }
 }
+
+export async function generateInsights(tenantId: string) {
+  const ai = await getAiClient(tenantId);
+  if (!ai) return null;
+
+  // Import dynamically or get stats directly
+  const { DashboardService } = await import('../dashboard/dashboard.service.js');
+  const stats = await DashboardService.getDashboardStats(tenantId);
+
+  const prompt = `
+You are an expert HR Analyst. Based on the following raw dashboard data for our company, write a concise, professional "Executive HR Summary" (2-3 short paragraphs).
+Highlight any interesting patterns, such as upcoming holidays, recent activity, or headcount. Keep the tone encouraging but professional.
+
+Data:
+- Headcount: ${stats.headcount} employees
+- Departments: ${stats.departments}
+- Locations: ${stats.locations}
+- Open Roles (Designations): ${stats.openRoles}
+- Upcoming Holidays: ${stats.upcomingHolidays.map(h => h.name).join(', ') || 'None'}
+- Recent Activity: ${stats.recentActivity.map(a => a.action).join(', ') || 'None'}
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt
+    });
+    return response.text;
+  } catch (error) {
+    console.error('Gemini Insights Error:', error);
+    return null;
+  }
+}
+
+export async function extractDocumentData(tenantId: string, fileBuffer: Buffer, mimeType: string, prompt: string) {
+  const ai = await getAiClient(tenantId);
+  if (!ai) return null;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: prompt + " \n\nIMPORTANT: Return ONLY valid JSON. Do not include markdown formatting like ```json" },
+            {
+              inlineData: {
+                data: fileBuffer.toString("base64"),
+                mimeType: mimeType
+              }
+            }
+          ]
+        }
+      ],
+      config: {
+        responseMimeType: "application/json",
+      }
+    });
+
+    try {
+      const text = response.text || "{}";
+      const cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(cleanedText);
+    } catch (e) {
+      console.error("Failed to parse Gemini JSON output", e, response.text);
+      return null;
+    }
+  } catch (error) {
+    console.error('Gemini Extract Error:', error);
+    return null;
+  }
+}
+

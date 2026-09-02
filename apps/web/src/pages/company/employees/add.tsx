@@ -10,9 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Sparkles, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAiExtract } from '@/features/ai/hooks/use-ai-chat';
 
 const schema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -40,6 +41,7 @@ export function AddEmployeePage() {
   const { data: designations } = useDesignations();
   const { data: employees } = useEmployees();
   const { data: roles } = useRoles();
+  const extractMutation = useAiExtract();
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -66,6 +68,27 @@ export function AddEmployeePage() {
     });
   };
 
+  const handleResumeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('prompt', 'Extract the following fields from this resume: firstName, lastName, personalEmail, phone. Return them in a flat JSON object.');
+
+    toast.promise(extractMutation.mutateAsync(formData), {
+      loading: 'Extracting data with AI...',
+      success: (data) => {
+        if (data.firstName) setValue('firstName', data.firstName);
+        if (data.lastName) setValue('lastName', data.lastName);
+        if (data.personalEmail) setValue('personalEmail', data.personalEmail);
+        if (data.phone) setValue('phone', data.phone);
+        return 'Data extracted successfully!';
+      },
+      error: 'Failed to extract data',
+    });
+  };
+
   return (
     <div className="flex-1 space-y-4 p-8 pt-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-4 mb-6">
@@ -80,9 +103,27 @@ export function AddEmployeePage() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-            <CardDescription>Basic details about the employee.</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Personal Information</CardTitle>
+              <CardDescription>Basic details about the employee.</CardDescription>
+            </div>
+            <div>
+              <Label htmlFor="resume-upload" className="cursor-pointer">
+                <div className="flex items-center gap-2 px-4 py-2 bg-km-forest/5 hover:bg-km-forest/10 border border-km-forest/20 text-km-forest rounded-md text-sm font-medium transition-colors">
+                  <Sparkles className="h-4 w-4 text-km-lime" />
+                  Auto-fill from Resume
+                </div>
+              </Label>
+              <Input 
+                id="resume-upload" 
+                type="file" 
+                accept=".pdf,.png,.jpg,.jpeg" 
+                className="hidden" 
+                onChange={handleResumeUpload}
+                disabled={extractMutation.isPending}
+              />
+            </div>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
