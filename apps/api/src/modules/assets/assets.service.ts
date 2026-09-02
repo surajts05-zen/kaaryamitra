@@ -1,99 +1,214 @@
 import { prisma } from '../../lib/prisma.js';
 import { AppError } from '../../lib/errors.js';
-import { AssetStatus } from '@prisma/client';
+import { AssetStatus, AssetAssignmentStatus } from '@prisma/client';
 
 export class AssetsService {
-  static async listCategories(tenantId: string) {
+  // ─── Categories ────────────────────────────────────────────────────────────
+
+  static async getCategories(tenantId: string) {
     return prisma.assetCategory.findMany({
       where: { tenantId },
       orderBy: { name: 'asc' },
     });
   }
 
-  static async createCategory(tenantId: string, name: string) {
+  static async createCategory(tenantId: string, data: any) {
     return prisma.assetCategory.create({
-      data: { tenantId, name },
+      data: {
+        tenantId,
+        ...data,
+      },
     });
   }
 
-  static async deleteCategory(tenantId: string, categoryId: string) {
-    return prisma.assetCategory.delete({
-      where: { id: categoryId, tenantId },
-    });
-  }
+  // ─── Assets ────────────────────────────────────────────────────────────────
 
-  static async listAssets(tenantId: string) {
+  static async getAssets(tenantId: string, filters: any = {}) {
+    const { categoryId, status, search } = filters;
+    const where: any = { tenantId };
+
+    if (categoryId) where.categoryId = categoryId;
+    if (status) where.status = status;
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { serialNumber: { contains: search, mode: 'insensitive' } },
+        { assetTag: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
     return prisma.asset.findMany({
-      where: { tenantId },
+      where,
       include: {
         category: true,
-        assignedTo: { select: { id: true, firstName: true, lastName: true } },
+        assignedTo: {
+          select: { id: true, firstName: true, lastName: true, avatarUrl: true },
+        },
       },
       orderBy: { name: 'asc' },
     });
+  }
+
+  static async getAssetById(tenantId: string, assetId: string) {
+    const asset = await prisma.asset.findUnique({
+      where: { id: assetId, tenantId },
+      include: {
+        category: true,
+        assignedTo: {
+          select: { id: true, firstName: true, lastName: true, avatarUrl: true, employeeCode: true },
+        },
+        assignments: {
+          orderBy: { assignedAt: 'desc' },
+          include: {
+            employee: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+            assignedBy: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+          },
+        },
+      },
+    });
+
+    if (!asset) throw new AppError('Asset not found', 404);
+    return asset;
   }
 
   static async createAsset(tenantId: string, data: any) {
     return prisma.asset.create({
       data: {
         tenantId,
-        categoryId: data.categoryId,
-        name: data.name,
-        serialNumber: data.serialNumber,
-        status: data.status || 'AVAILABLE',
-        customFields: data.customFields || {},
+        ...data,
       },
-      include: {
-        category: true,
-        assignedTo: { select: { id: true, firstName: true, lastName: true } },
-      }
     });
   }
 
   static async updateAsset(tenantId: string, assetId: string, data: any) {
     return prisma.asset.update({
       where: { id: assetId, tenantId },
-      data: {
-        name: data.name,
-        serialNumber: data.serialNumber,
-        status: data.status,
-        customFields: data.customFields,
-      },
+      data,
     });
   }
 
   static async deleteAsset(tenantId: string, assetId: string) {
+    // Check if it's currently assigned
+    const asset = await prisma.asset.findUnique({ where: { id: assetId, tenantId } });
+    if (!asset) throw new AppError('Asset not found', 404);
+    if (asset.status === AssetStatus.ASSIGNED) {
+      throw new AppError('Cannot delete an asset that is currently assigned', 400);
+    }
+
     return prisma.asset.delete({
       where: { id: assetId, tenantId },
     });
   }
 
-  static async assignAsset(tenantId: string, assetId: string, employeeId: string) {
-    return prisma.asset.update({
-      where: { id: assetId, tenantId },
+  // ─── Assignments & Lifecycle ───────────────────────────────────────────────
+
+  static async assignAsset(tenantId: string, assetId: string, employeeId: string, assignedById: string, notes?: string) {
+    const asset = await prisma.asset.findUnique({ where: { id: assetId, tenantId } });
+    if (!asset) throw new AppError('Asset not found', 404);
+    if (asset.status === AssetStatus.ASSIGNED) {
+      throw new AppError('Asset is already assigned', 400);
+    }
+
+    // Use a transaction to create assignment and update asset
+    return prisma.$transaction(async (tx) => {
+      const assignment = await tx.assetAssignment.create({
+        data: {
+          tenantId,
+          assetId,
+          employeeId,
+          assignedById,
+          notes,
+          status: AssetAssignmentStatus.PENDING_ACKNOWLEDGEMENT,
+        },
+      });
+
+      const updatedAsset = await tx.asset.update({
+        where: { id: assetId },
+        data: {
+          status: AssetStatus.ASSIGNED,
+          assignedToId: employeeId,
+          assignedAt: new Date(),
+        },
+      });
+
+      return { assignment, asset: updatedAsset };
+    });
+  }
+
+  static async acknowledgeAsset(tenantId: string, assetId: string, employeeId: string) {
+    const assignment = await prisma.assetAssignment.findFirst({
+      where: {
+        tenantId,
+        assetId,
+        employeeId,
+        status: AssetAssignmentStatus.PENDING_ACKNOWLEDGEMENT,
+      },
+      orderBy: { assignedAt: 'desc' },
+    });
+
+    if (!assignment) {
+      throw new AppError('No pending assignment found to acknowledge', 404);
+    }
+
+    return prisma.assetAssignment.update({
+      where: { id: assignment.id },
       data: {
-        assignedToId: employeeId,
-        assignedAt: new Date(),
-        status: 'ASSIGNED',
+        status: AssetAssignmentStatus.ACKNOWLEDGED,
+        acknowledgedAt: new Date(),
       },
     });
   }
 
-  static async unassignAsset(tenantId: string, assetId: string) {
-    return prisma.asset.update({
-      where: { id: assetId, tenantId },
-      data: {
-        assignedToId: null,
-        assignedAt: null,
-        status: 'AVAILABLE',
-      },
+  static async returnAsset(tenantId: string, assetId: string, returnCondition: string, notes?: string) {
+    const asset = await prisma.asset.findUnique({ where: { id: assetId, tenantId } });
+    if (!asset) throw new AppError('Asset not found', 404);
+    if (asset.status !== AssetStatus.ASSIGNED) {
+      throw new AppError('Asset is not currently assigned', 400);
+    }
+
+    // Find the current active assignment
+    const currentAssignment = await prisma.assetAssignment.findFirst({
+      where: { assetId, tenantId, status: { not: AssetAssignmentStatus.RETURNED } },
+      orderBy: { assignedAt: 'desc' },
+    });
+
+    return prisma.$transaction(async (tx) => {
+      if (currentAssignment) {
+        await tx.assetAssignment.update({
+          where: { id: currentAssignment.id },
+          data: {
+            status: AssetAssignmentStatus.RETURNED,
+            returnedAt: new Date(),
+            returnCondition,
+            notes: notes ? `${currentAssignment.notes || ''}\nReturn Note: ${notes}` : currentAssignment.notes,
+          },
+        });
+      }
+
+      const updatedAsset = await tx.asset.update({
+        where: { id: assetId },
+        data: {
+          status: AssetStatus.AVAILABLE,
+          assignedToId: null,
+          assignedAt: null,
+        },
+      });
+
+      return updatedAsset;
     });
   }
 
-  static async listEmployeeAssets(tenantId: string, employeeId: string) {
+  static async getEmployeeAssets(tenantId: string, employeeId: string) {
     return prisma.asset.findMany({
       where: { tenantId, assignedToId: employeeId },
-      include: { category: true },
+      include: {
+        category: true,
+        assignments: {
+          where: { employeeId, status: { not: AssetAssignmentStatus.RETURNED } },
+          orderBy: { assignedAt: 'desc' },
+          take: 1,
+        },
+      },
     });
   }
 }

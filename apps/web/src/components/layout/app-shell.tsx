@@ -24,7 +24,9 @@ import {
   FileText,
   UserMinus,
   DoorOpen,
-  Headset
+  Headset,
+  Laptop,
+  Target
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/button';
@@ -51,16 +53,22 @@ const navItems: NavItem[] = [
   { icon: CalendarDays, label: 'My Leaves', path: 'me/leave' },
   { icon: CalendarClock, label: 'My Shifts', path: 'me/shifts' },
   { icon: Timer, label: 'My Timesheets', path: 'me/timesheets' },
+  { icon: Laptop, label: 'My Assets', path: 'me/assets' },
   { icon: DoorOpen, label: 'My Resignation', path: 'me/resignation' },
   { icon: Headset, label: 'My Helpdesk', path: 'me/helpdesk' },
+  { icon: Target, label: 'My Goals', path: 'me/performance/goals' },
+  { icon: Target, label: 'My Reviews', path: 'me/performance/reviews' },
 
   // HR / Admin
   { icon: Users,     label: 'Directory',     path: 'directory',         allowedRoles: HR_ROLES },
   { icon: Building2, label: 'Departments',   path: 'departments',       allowedRoles: HR_ROLES },
   { icon: MapPin,    label: 'Locations',     path: 'locations',         allowedRoles: HR_ROLES },
   { icon: Briefcase, label: 'Designations',  path: 'designations',      allowedRoles: HR_ROLES },
+  { icon: Laptop,        label: 'Assets',        path: 'assets',            allowedRoles: HR_ROLES },
   { icon: UserMinus, label: 'Resignations',  path: 'resignations',      allowedRoles: HR_ROLES },
   { icon: Headset,       label: 'Helpdesk',      path: 'helpdesk',          allowedRoles: HR_ROLES },
+  { icon: Target,        label: 'Goals',         path: 'performance/goals', allowedRoles: HR_ROLES },
+  { icon: Target,        label: 'Review Cycles', path: 'performance/reviews', allowedRoles: HR_ROLES },
 
   // Approvers
   { icon: Inbox,     label: 'Approvals Inbox', path: 'approvals',       allowedRoles: APPROVER_ROLES },
@@ -117,7 +125,15 @@ export function AppShell() {
   React.useEffect(() => {
     if (!user) return;
     const stop = startPolling();
-    return stop;
+
+    // Stop polling immediately when the session expires
+    const handleLogout = () => stop();
+    window.addEventListener('auth:logout', handleLogout);
+
+    return () => {
+      stop();
+      window.removeEventListener('auth:logout', handleLogout);
+    };
   }, [user?.id, startPolling]);
 
   return (

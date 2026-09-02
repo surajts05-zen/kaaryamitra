@@ -51,6 +51,17 @@ import { EssHelpdeskThreadPage } from '@/pages/ess/helpdesk-thread';
 import { AdminHelpdeskPage } from '@/pages/company/helpdesk';
 import { AdminHelpdeskThreadPage } from '@/pages/company/helpdesk/thread';
 
+// Phase 16 - Performance
+import { CompanyGoalsPage } from '@/pages/company/performance/goals';
+import { CompanyReviewsPage } from '@/pages/company/performance/reviews';
+import { EssMyGoalsPage } from '@/pages/ess/performance/my-goals';
+import { EssMyReviewsPage } from '@/pages/ess/performance/my-reviews';
+
+// Phase 15 - Asset Management
+import AssetDirectory from '@/pages/company/assets';
+import AssetDetails from '@/pages/company/assets/asset-details';
+import MyAssets from '@/pages/ess/assets';
+
 /**
  * KaaryaMitra App Router
  */
@@ -96,8 +107,18 @@ export function App() {
 
             {/* Phase 13 - Resignations */}
             <Route path="resignations" element={<ResignationsPage />} />
+            
+            {/* Phase 14 - Helpdesk */}
             <Route path="helpdesk" element={<AdminHelpdeskPage />} />
             <Route path="helpdesk/:id" element={<AdminHelpdeskThreadPage />} />
+
+            {/* Phase 15 - Asset Management */}
+            <Route path="assets" element={<AssetDirectory />} />
+            <Route path="assets/:id" element={<AssetDetails />} />
+            
+            {/* Phase 16 - Performance */}
+            <Route path="performance/goals" element={<CompanyGoalsPage />} />
+            <Route path="performance/reviews" element={<CompanyReviewsPage />} />
 
             {/* RBAC */}
             <Route path="settings/roles" element={<RolesPage />} />
@@ -120,6 +141,11 @@ export function App() {
               <Route path="resignation" element={<MyResignationPage />} />
               <Route path="helpdesk" element={<EssHelpdeskPage />} />
               <Route path="helpdesk/:id" element={<EssHelpdeskThreadPage />} />
+              <Route path="assets" element={<MyAssets />} />
+              
+              {/* Phase 16 - Performance */}
+              <Route path="performance/goals" element={<EssMyGoalsPage />} />
+              <Route path="performance/reviews" element={<EssMyReviewsPage />} />
             </Route>
           </Route>
         </Route>

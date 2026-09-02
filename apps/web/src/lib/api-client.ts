@@ -75,6 +75,8 @@ apiClient.interceptors.response.use(
         localStorage.removeItem('km_access_token');
         refreshQueue.forEach(({ reject }) => reject(refreshError));
         refreshQueue = [];
+        // Notify the app so polling intervals can stop cleanly
+        window.dispatchEvent(new CustomEvent('auth:logout'));
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';
         }

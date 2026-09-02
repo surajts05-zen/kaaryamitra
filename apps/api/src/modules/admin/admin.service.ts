@@ -54,6 +54,13 @@ export class AdminService {
               { name: 'Address Proof', description: 'Utility bill, passport, or rent agreement', isRequired: true },
               { name: 'Nationality proof / passport', description: 'Passport or Citizenship document', isRequired: false }
             ]
+          },
+          helpdeskCategories: {
+            create: [
+              { name: 'IT Support', description: 'Hardware, software, and network issues' },
+              { name: 'HR Inquiry', description: 'Payroll, benefits, and policies' },
+              { name: 'Facilities', description: 'Office maintenance and supplies' }
+            ]
           }
         },
       });

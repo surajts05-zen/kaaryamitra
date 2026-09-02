@@ -36,6 +36,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   fetchNotifications: async () => {
+    // Don't attempt if not authenticated — avoids 401 spam from polling
+    if (!localStorage.getItem('km_access_token')) return;
     if (get().isFetching) return;
     set({ isFetching: true });
     try {
@@ -52,6 +54,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       set({ isFetching: false });
     }
   },
+
 
   markRead: async (id: string) => {
     // Optimistic update

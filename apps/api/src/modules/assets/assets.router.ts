@@ -1,32 +1,26 @@
 import { Router } from 'express';
 import { requireAuth, requirePermission } from '../../middleware/auth.js';
 import { asyncHandler } from '../../middleware/errorHandler.js';
-import {
-  listCategoriesHandler,
-  createCategoryHandler,
-  deleteCategoryHandler,
-  listAssetsHandler,
-  createAssetHandler,
-  updateAssetHandler,
-  deleteAssetHandler,
-  assignAssetHandler,
-  listEmployeeAssetsHandler,
-} from './assets.controller.js';
+import { AssetsController } from './assets.controller.js';
 
 export const assetsRouter = Router();
 export const employeeAssetsRouter = Router({ mergeParams: true });
 
 // Admin: Categories
-assetsRouter.get('/categories', requireAuth, asyncHandler(listCategoriesHandler));
-assetsRouter.post('/categories', requireAuth, requirePermission('settings:manage'), asyncHandler(createCategoryHandler));
-assetsRouter.delete('/categories/:id', requireAuth, requirePermission('settings:manage'), asyncHandler(deleteCategoryHandler));
+assetsRouter.get('/categories', requireAuth, asyncHandler(AssetsController.getCategories));
+assetsRouter.post('/categories', requireAuth, requirePermission('settings:manage'), asyncHandler(AssetsController.createCategory));
 
 // Admin: Assets
-assetsRouter.get('/', requireAuth, asyncHandler(listAssetsHandler));
-assetsRouter.post('/', requireAuth, requirePermission('settings:manage'), asyncHandler(createAssetHandler));
-assetsRouter.put('/:id', requireAuth, requirePermission('settings:manage'), asyncHandler(updateAssetHandler));
-assetsRouter.delete('/:id', requireAuth, requirePermission('settings:manage'), asyncHandler(deleteAssetHandler));
-assetsRouter.patch('/:id/assign', requireAuth, requirePermission('settings:manage'), asyncHandler(assignAssetHandler));
+assetsRouter.get('/', requireAuth, asyncHandler(AssetsController.getAssets));
+assetsRouter.post('/', requireAuth, requirePermission('settings:manage'), asyncHandler(AssetsController.createAsset));
+assetsRouter.get('/:id', requireAuth, asyncHandler(AssetsController.getAssetById));
+assetsRouter.put('/:id', requireAuth, requirePermission('settings:manage'), asyncHandler(AssetsController.updateAsset));
+assetsRouter.delete('/:id', requireAuth, requirePermission('settings:manage'), asyncHandler(AssetsController.deleteAsset));
 
-// Employee Assets
-employeeAssetsRouter.get('/', requireAuth, asyncHandler(listEmployeeAssetsHandler));
+// Admin: Lifecycle
+assetsRouter.post('/:id/assign', requireAuth, requirePermission('settings:manage'), asyncHandler(AssetsController.assignAsset));
+assetsRouter.post('/:id/return', requireAuth, requirePermission('settings:manage'), asyncHandler(AssetsController.returnAsset));
+
+// Employee Assets (ESS)
+employeeAssetsRouter.get('/', requireAuth, asyncHandler(AssetsController.getMyAssets));
+employeeAssetsRouter.post('/:id/acknowledge', requireAuth, asyncHandler(AssetsController.acknowledgeAsset));

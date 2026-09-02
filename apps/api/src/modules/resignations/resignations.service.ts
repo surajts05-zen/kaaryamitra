@@ -58,6 +58,19 @@ export class ResignationsService {
   }
 
   static async updateClearance(tenantId: string, id: string, isClearanceCompleted: boolean) {
+    if (isClearanceCompleted) {
+      const resignation = await prisma.resignation.findUnique({ where: { id, tenantId } });
+      if (!resignation) throw new AppError('Resignation not found', 404);
+
+      // Check for unreturned assets
+      const unreturnedAssets = await prisma.asset.count({
+        where: { tenantId, assignedToId: resignation.employeeId, status: 'ASSIGNED' }
+      });
+      if (unreturnedAssets > 0) {
+        throw new AppError(`Cannot complete clearance. Employee has ${unreturnedAssets} unreturned asset(s).`, 400);
+      }
+    }
+
     return prisma.resignation.update({
       where: { id, tenantId },
       data: { isClearanceCompleted }
