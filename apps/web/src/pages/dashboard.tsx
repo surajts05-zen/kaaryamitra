@@ -1,11 +1,26 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/store/auth.store';
-import { Building2, Users, MapPin, Briefcase } from 'lucide-react';
+import { Building2, Users, MapPin, Briefcase, CalendarDays, Headset, UserMinus, UserPlus, Activity, Bot, Sparkles } from 'lucide-react';
 import { useDashboardStats } from '@/features/dashboard/hooks/use-dashboard-queries';
 import { format } from 'date-fns';
 import { useAiInsights } from '@/features/ai/hooks/use-ai-chat';
-import { Bot, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+
+function getActivityMeta(action: string) {
+  if (action.includes('onboarded')) {
+    return { icon: UserPlus, color: 'text-emerald-600 bg-emerald-500/10' };
+  }
+  if (action.includes('Leave')) {
+    return { icon: CalendarDays, color: 'text-blue-600 bg-blue-500/10' };
+  }
+  if (action.includes('Helpdesk')) {
+    return { icon: Headset, color: 'text-purple-600 bg-purple-500/10' };
+  }
+  if (action.includes('Resignation')) {
+    return { icon: UserMinus, color: 'text-rose-600 bg-rose-500/10' };
+  }
+  return { icon: Activity, color: 'text-primary bg-primary/10' };
+}
 
 export function DashboardPage() {
   const { user } = useAuthStore();
@@ -99,24 +114,28 @@ export function DashboardPage() {
           <CardContent>
             {isLoading ? (
               <p className="text-sm text-muted-foreground">Loading activity...</p>
-            ) : stats?.recentActivity.length === 0 ? (
+            ) : !stats?.recentActivity || stats.recentActivity.length === 0 ? (
               <p className="text-sm text-muted-foreground">No recent activity to display.</p>
             ) : (
               <div className="space-y-4">
-                {stats?.recentActivity.map(activity => (
-                  <div key={activity.id} className="flex items-center gap-4 text-sm">
-                    <div className="bg-primary/10 p-2 rounded-full">
-                      <Users className="h-4 w-4 text-primary" />
+                {stats.recentActivity.map((activity) => {
+                  const meta = getActivityMeta(activity.action);
+                  const Icon = meta.icon;
+                  return (
+                    <div key={activity.id} className="flex items-center gap-3.5 text-sm">
+                      <div className={`p-2 rounded-lg shrink-0 ${meta.color}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground truncate">{activity.action}</p>
+                        <p className="text-muted-foreground text-xs truncate">{activity.actorEmail}</p>
+                      </div>
+                      <div className="text-xs text-muted-foreground shrink-0 font-medium">
+                        {format(new Date(activity.createdAt), 'MMM d, h:mm a')}
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium">{activity.action}</p>
-                      <p className="text-muted-foreground text-xs">{activity.actorEmail}</p>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {format(new Date(activity.createdAt), 'MMM d, h:mm a')}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
@@ -129,17 +148,22 @@ export function DashboardPage() {
           <CardContent>
             {isLoading ? (
               <p className="text-sm text-muted-foreground">Loading holidays...</p>
-            ) : stats?.upcomingHolidays.length === 0 ? (
+            ) : !stats?.upcomingHolidays || stats.upcomingHolidays.length === 0 ? (
               <p className="text-sm text-muted-foreground">No upcoming holidays scheduled.</p>
             ) : (
-              <div className="space-y-4">
-                {stats?.upcomingHolidays.map(holiday => (
-                  <div key={holiday.id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
-                    <div>
-                      <p className="font-medium text-sm">{holiday.name}</p>
-                      <p className="text-xs text-muted-foreground">{holiday.type}</p>
+              <div className="space-y-3">
+                {stats.upcomingHolidays.map((holiday) => (
+                  <div key={holiday.id} className="flex items-center justify-between border-b border-border/50 pb-2.5 last:border-0 last:pb-0">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
+                        <CalendarDays className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm text-foreground">{holiday.name}</p>
+                        <p className="text-xs text-muted-foreground">{holiday.type || 'Company Holiday'}</p>
+                      </div>
                     </div>
-                    <div className="text-sm font-medium">
+                    <div className="text-xs font-semibold px-2.5 py-1 rounded-md bg-muted text-foreground shrink-0">
                       {format(new Date(holiday.date), 'MMM d, yyyy')}
                     </div>
                   </div>

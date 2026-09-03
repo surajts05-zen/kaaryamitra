@@ -29,12 +29,49 @@ export const SYSTEM_ROLES = [
 // ─── Seed system roles for a tenant if not already present ────────────────────
 
 export async function seedSystemRoles(tenantId: string) {
+  const allPermissions = await prisma.permission.findMany();
+  const permMap = new Map(allPermissions.map((p) => [p.action, p.id]));
+
+  const roleDefaults: Record<string, string[]> = {
+    'Company Admin': allPermissions.map((p) => p.id),
+    'HR Manager': allPermissions
+      .filter((p) => !p.action.startsWith('tenant:') && !p.action.startsWith('platform:'))
+      .map((p) => p.id),
+    Manager: [
+      'employee:read',
+      'org:read',
+      'leave:read',
+      'leave:approve',
+      'attendance:read',
+      'attendance:manage',
+      'report:read',
+      'document:read',
+    ]
+      .map((action) => permMap.get(action))
+      .filter(Boolean) as string[],
+    Employee: ['leave:apply', 'leave:read', 'attendance:checkin', 'attendance:read', 'document:read', 'document:upload']
+      .map((action) => permMap.get(action))
+      .filter(Boolean) as string[],
+  };
+
   for (const role of SYSTEM_ROLES) {
-    await prisma.role.upsert({
+    const createdRole = await prisma.role.upsert({
       where: { tenantId_name: { tenantId, name: role.name } },
       create: { tenantId, ...role },
       update: {},
     });
+
+    // Check if role permissions exist
+    const count = await prisma.rolePermission.count({ where: { roleId: createdRole.id } });
+    const defaults = roleDefaults[role.name];
+    if (count === 0 && defaults && defaults.length) {
+      await prisma.rolePermission.createMany({
+        data: defaults.map((permissionId) => ({
+          roleId: createdRole.id,
+          permissionId,
+        })),
+      });
+    }
   }
 }
 
@@ -44,7 +81,7 @@ export async function listRoles(tenantId: string) {
   return prisma.role.findMany({
     where: { tenantId },
     include: {
-      _count: { select: { userRoles: true } },
+      _count: { select: { userRoles: true, rolePermissions: true } },
     },
     orderBy: { createdAt: 'asc' },
   });
@@ -196,4 +233,42 @@ export async function listEmployeesWithRoles(tenantId: string) {
       userRoles: u.userRoles,
     },
   }));
+}
+
+// ─── Permission Management ───────────────────────────────────────────────────
+
+export async function listAllPermissions() {
+  return prisma.permission.findMany({
+    orderBy: { action: 'asc' },
+  });
+}
+
+export async function getRolePermissions(tenantId: string, roleId: string) {
+  const role = await prisma.role.findFirst({ where: { id: roleId, tenantId } });
+  if (!role) throw AppError.notFound('Role');
+
+  const rolePermissions = await prisma.rolePermission.findMany({
+    where: { roleId },
+    select: { permissionId: true },
+  });
+
+  return rolePermissions.map((rp) => rp.permissionId);
+}
+
+export async function updateRolePermissions(
+  tenantId: string,
+  roleId: string,
+  permissionIds: string[],
+) {
+  const role = await prisma.role.findFirst({ where: { id: roleId, tenantId } });
+  if (!role) throw AppError.notFound('Role');
+
+  await prisma.$transaction([
+    prisma.rolePermission.deleteMany({ where: { roleId } }),
+    prisma.rolePermission.createMany({
+      data: permissionIds.map((permissionId) => ({ roleId, permissionId })),
+    }),
+  ]);
+
+  return getRolePermissions(tenantId, roleId);
 }

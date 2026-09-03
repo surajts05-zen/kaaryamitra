@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Users, Search, Plus, UserCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Search, Plus, List, Network } from 'lucide-react';
 import { useState } from 'react';
+import { OrgChartView } from './org-chart-view';
 
 export function DirectoryPage() {
   const { data: employees, isLoading } = useEmployees();
@@ -34,83 +36,117 @@ export function DirectoryPage() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <div className="space-y-1">
-            <CardTitle>All Employees</CardTitle>
-            <CardDescription>A complete list of active employees.</CardDescription>
+      <Tabs defaultValue="list" className="space-y-4">
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="list" className="flex items-center gap-2">
+              <List className="h-4 w-4" />
+              List View
+            </TabsTrigger>
+            <TabsTrigger value="org-chart" className="flex items-center gap-2">
+              <Network className="h-4 w-4" />
+              Org Chart
+            </TabsTrigger>
+          </TabsList>
+          
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search employees..."
+              className="pl-8 w-[250px]"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search employees..."
-                className="pl-8 w-[250px]"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Employee</TableHead>
-                <TableHead>ID</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Designation</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center h-24">Loading employees...</TableCell>
-                </TableRow>
-              ) : !filteredEmployees.length ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
-                    No employees found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredEmployees.map((emp: any) => (
-                  <TableRow key={emp.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        {emp.avatarUrl ? (
-                          <img src={emp.avatarUrl} alt={emp.firstName} className="h-8 w-8 rounded-full object-cover" />
-                        ) : (
-                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-xs">
-                            {emp.firstName[0]}{emp.lastName[0]}
-                          </div>
-                        )}
-                        <div>
-                          <div className="font-medium">{emp.firstName} {emp.lastName}</div>
-                          <div className="text-xs text-muted-foreground">{emp.workEmail}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{emp.employeeCode || '-'}</TableCell>
-                    <TableCell>{emp.department?.name || '-'}</TableCell>
-                    <TableCell>{emp.designation?.name || '-'}</TableCell>
-                    <TableCell>{emp.location?.name || '-'}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to={emp.id}>
-                          View Profile
-                        </Link>
-                      </Button>
-                    </TableCell>
+        </div>
+
+        <TabsContent value="list" className="space-y-4 m-0">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <div className="space-y-1">
+                <CardTitle>All Employees</CardTitle>
+                <CardDescription>A complete list of active employees.</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Employee</TableHead>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Department</TableHead>
+                    <TableHead>Designation</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center h-24">Loading employees...</TableCell>
+                    </TableRow>
+                  ) : !filteredEmployees.length ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
+                        No employees found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredEmployees.map((emp: any) => (
+                      <TableRow key={emp.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            {emp.avatarUrl ? (
+                              <img src={emp.avatarUrl} alt={emp.firstName} className="h-8 w-8 rounded-full object-cover" />
+                            ) : (
+                              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-xs">
+                                {emp.firstName[0]}{emp.lastName[0]}
+                              </div>
+                            )}
+                            <div>
+                              <div className="font-medium">{emp.firstName} {emp.lastName}</div>
+                              <div className="text-xs text-muted-foreground">{emp.workEmail}</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{emp.employeeCode || '-'}</TableCell>
+                        <TableCell>{emp.department?.name || '-'}</TableCell>
+                        <TableCell>{emp.designation?.name || '-'}</TableCell>
+                        <TableCell>{emp.location?.name || '-'}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" asChild>
+                            <Link to={emp.id}>
+                              View Profile
+                            </Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="org-chart" className="m-0">
+          <Card>
+            <CardHeader>
+              <CardTitle>Organization Chart</CardTitle>
+              <CardDescription>Hierarchical view of reporting structures.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="text-center p-8 h-64 flex items-center justify-center text-muted-foreground">
+                  Loading org chart...
+                </div>
+              ) : (
+                <OrgChartView employees={filteredEmployees} />
               )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

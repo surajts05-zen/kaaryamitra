@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 import {
   useRoles,
   useCreateRole,
@@ -7,15 +8,21 @@ import {
   useEmployeesWithRoles,
   useAssignRole,
   useRevokeRole,
+  useAllPermissions,
+  useRolePermissions,
+  useUpdateRolePermissions,
   type Role,
   type EmployeeWithRoles,
+  type Permission,
 } from '@/features/company/hooks/use-role-queries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -40,6 +47,8 @@ import {
   Lock,
   X,
   Check,
+  Key,
+  Save,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -71,6 +80,11 @@ function RoleFormDialog({
   const [description, setDescription] = useState(editing?.description ?? '');
   const createMutation = useCreateRole();
   const updateMutation = useUpdateRole();
+
+  useEffect(() => {
+    setName(editing?.name ?? '');
+    setDescription(editing?.description ?? '');
+  }, [editing]);
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
@@ -143,6 +157,185 @@ function RoleFormDialog({
   );
 }
 
+// ─── Role Permissions Matrix Dialog ──────────────────────────────────────────
+
+function RolePermissionsDialog({
+  open,
+  onOpenChange,
+  role,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  role: Role | null;
+}) {
+  const { data: allPermissions, isLoading: loadingPerms } = useAllPermissions();
+  const { data: rolePermIds, isLoading: loadingRolePerms } = useRolePermissions(role?.id ?? null);
+  const updatePermissionsMutation = useUpdateRolePermissions();
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (rolePermIds) {
+      setSelectedIds(new Set(rolePermIds));
+    }
+  }, [rolePermIds]);
+
+  if (!role) return null;
+
+  const isPending = updatePermissionsMutation.isPending;
+
+  const handleToggle = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleToggleGroup = (groupPerms: Permission[], selectAll: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      groupPerms.forEach((p) => {
+        if (selectAll) next.add(p.id);
+        else next.delete(p.id);
+      });
+      return next;
+    });
+  };
+
+  const handleSave = () => {
+    updatePermissionsMutation.mutate(
+      { roleId: role.id, permissionIds: Array.from(selectedIds) },
+      {
+        onSuccess: () => {
+          toast.success(`Permissions updated for "${role.name}"`);
+          onOpenChange(false);
+        },
+        onError: (err: any) => {
+          toast.error(err.response?.data?.error?.message || 'Failed to update permissions');
+        },
+      }
+    );
+  };
+
+  // Group permissions by category
+  const categories: Record<string, { label: string; icon: string; perms: Permission[] }> = {
+    employee: { label: 'Employee Management', icon: '👥', perms: [] },
+    org: { label: 'Organization & Structure', icon: '🏢', perms: [] },
+    leave: { label: 'Leave & Approvals', icon: '📅', perms: [] },
+    attendance: { label: 'Attendance & Shifts', icon: '⏱️', perms: [] },
+    document: { label: 'Document Vault', icon: '📄', perms: [] },
+    report: { label: 'Reports & Analytics', icon: '📊', perms: [] },
+    settings: { label: 'Company Settings', icon: '⚙️', perms: [] },
+    other: { label: 'General System', icon: '🔐', perms: [] },
+  };
+
+  allPermissions?.forEach((perm) => {
+    const prefix = perm.action ? perm.action.split(':')[0] : 'other';
+    const group = (prefix && categories[prefix]) ? categories[prefix] : categories['other'];
+    if (group) {
+      group.perms.push(perm);
+    }
+  });
+
+  const isLoading = loadingPerms || loadingRolePerms;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5 text-primary" />
+            Configure Permissions — {role.name}
+          </DialogTitle>
+          <DialogDescription>
+            Select what actions users assigned to the <strong className="text-foreground">{role.name}</strong> role can perform in the system.
+          </DialogDescription>
+        </DialogHeader>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto space-y-6 pr-2 my-2">
+            {Object.entries(categories).map(([key, group]) => {
+              if (group.perms.length === 0) return null;
+              const allSelected = group.perms.every((p) => selectedIds.has(p.id));
+
+              return (
+                <div key={key} className="border rounded-lg p-4 space-y-3 bg-card">
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <div className="flex items-center gap-2 font-semibold text-sm">
+                      <span>{group.icon}</span>
+                      <span>{group.label}</span>
+                      <Badge variant="secondary" className="text-[10px] ml-1">
+                        {group.perms.filter((p) => selectedIds.has(p.id)).length} / {group.perms.length}
+                      </Badge>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => handleToggleGroup(group.perms, !allSelected)}
+                    >
+                      {allSelected ? 'Deselect All' : 'Select All'}
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                    {group.perms.map((perm) => {
+                      const isChecked = selectedIds.has(perm.id);
+                      return (
+                        <label
+                          key={perm.id}
+                          htmlFor={`perm-${perm.id}`}
+                          className={cn(
+                            'flex items-start gap-3 p-2.5 rounded-md border text-xs cursor-pointer transition-colors hover:bg-accent/50',
+                            isChecked ? 'border-primary/50 bg-primary/5' : 'border-border/50'
+                          )}
+                        >
+                          <Checkbox
+                            id={`perm-${perm.id}`}
+                            checked={isChecked}
+                            onCheckedChange={() => handleToggle(perm.id)}
+                            className="mt-0.5"
+                          />
+                          <div className="space-y-0.5">
+                            <p className="font-mono font-medium text-foreground">{perm.action}</p>
+                            <p className="text-muted-foreground">{perm.description}</p>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between pt-3 border-t">
+          <p className="text-xs text-muted-foreground">
+            {selectedIds.size} total permission{selectedIds.size !== 1 ? 's' : ''} selected
+          </p>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave} disabled={isPending || isLoading} className="gap-2">
+              <Save className="h-4 w-4" />
+              {isPending ? 'Saving...' : 'Save Permissions'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Roles Tab ────────────────────────────────────────────────────────────────
 
 function RolesTab() {
@@ -151,9 +344,17 @@ function RolesTab() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
 
+  const [permDialogOpen, setPermDialogOpen] = useState(false);
+  const [configuringPermRole, setConfiguringPermRole] = useState<Role | null>(null);
+
   const handleEdit = (role: Role) => {
     setEditingRole(role);
     setDialogOpen(true);
+  };
+
+  const handleConfigurePermissions = (role: Role) => {
+    setConfiguringPermRole(role);
+    setPermDialogOpen(true);
   };
 
   const handleDelete = (role: Role) => {
@@ -171,10 +372,16 @@ function RolesTab() {
 
   return (
     <div className="space-y-4">
+      <Breadcrumb
+        items={[
+          { label: 'Settings', path: 'settings' },
+          { label: 'Roles & Permissions' },
+        ]}
+      />
+
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Roles define what actions users can perform in the system. System roles are built-in and
-          cannot be deleted.
+          Roles define what actions users can perform in the system. Configure permissions for any role to control access rights.
         </p>
         <Button
           size="sm"
@@ -220,14 +427,33 @@ function RolesTab() {
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {role.description || 'No description'}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1.5">
-                        <Users className="h-3 w-3 inline mr-1" />
-                        {role._count?.userRoles ?? 0} member
-                        {(role._count?.userRoles ?? 0) !== 1 ? 's' : ''}
-                      </p>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
+                        <span>
+                          <Users className="h-3 w-3 inline mr-1" />
+                          {role._count?.userRoles ?? 0} member
+                          {(role._count?.userRoles ?? 0) !== 1 ? 's' : ''}
+                        </span>
+                        <span>
+                          <Key className="h-3 w-3 inline mr-1 text-primary" />
+                          {role._count?.rolePermissions ?? 0} permission
+                          {(role._count?.rolePermissions ?? 0) !== 1 ? 's' : ''}
+                        </span>
+                      </div>
                     </div>
                   </div>
+
                   <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs gap-1.5"
+                      onClick={() => handleConfigurePermissions(role)}
+                      title="Configure Permissions"
+                    >
+                      <Key className="h-3.5 w-3.5 text-primary" />
+                      Permissions
+                    </Button>
+
                     <Button
                       size="icon"
                       variant="ghost"
@@ -262,6 +488,15 @@ function RolesTab() {
           if (!v) setEditingRole(null);
         }}
         editing={editingRole}
+      />
+
+      <RolePermissionsDialog
+        open={permDialogOpen}
+        onOpenChange={(v) => {
+          setPermDialogOpen(v);
+          if (!v) setConfiguringPermRole(null);
+        }}
+        role={configuringPermRole}
       />
     </div>
   );
@@ -471,7 +706,7 @@ function AssignmentsTab() {
 type ActiveTab = 'roles' | 'assignments';
 
 export function RolesPage() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('assignments');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('roles');
 
   return (
     <div className="flex-1 space-y-6 p-8 pt-6">
@@ -482,7 +717,7 @@ export function RolesPage() {
           Roles & Permissions
         </h2>
         <p className="text-muted-foreground mt-1">
-          Define roles and control who can access what in your organisation.
+          Define roles, configure module access permissions, and assign roles to your employees.
         </p>
       </div>
 
@@ -490,8 +725,8 @@ export function RolesPage() {
       <div className="flex border-b">
         {(
           [
-            { key: 'assignments', label: 'Role Assignments', icon: UserCheck },
-            { key: 'roles', label: 'Manage Roles', icon: Shield },
+            { key: 'roles', label: 'Manage Roles & Permissions', icon: Shield },
+            { key: 'assignments', label: 'Employee Role Assignments', icon: UserCheck },
           ] as { key: ActiveTab; label: string; icon: any }[]
         ).map(({ key, label, icon: Icon }) => (
           <button

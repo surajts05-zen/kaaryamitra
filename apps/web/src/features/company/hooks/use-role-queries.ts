@@ -3,13 +3,19 @@ import { apiClient } from '@/lib/api-client';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export type Permission = {
+  id: string;
+  action: string;
+  description: string;
+};
+
 export type Role = {
   id: string;
   name: string;
   description?: string;
   isSystem: boolean;
   tenantId: string;
-  _count?: { userRoles: number };
+  _count?: { userRoles: number; rolePermissions?: number };
 };
 
 export type UserRoleEntry = {
@@ -107,5 +113,43 @@ export function useRevokeRole() {
       await apiClient.delete(`/roles/assignments/${userId}/${roleId}`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['roles', 'assignments'] }),
+  });
+}
+
+// ─── Permission Queries ────────────────────────────────────────────────────────
+
+export function useAllPermissions() {
+  return useQuery<Permission[]>({
+    queryKey: ['permissions'],
+    queryFn: async () => {
+      const res = await apiClient.get('/roles/permissions');
+      return res.data.data;
+    },
+  });
+}
+
+export function useRolePermissions(roleId: string | null) {
+  return useQuery<string[]>({
+    queryKey: ['roles', roleId, 'permissions'],
+    queryFn: async () => {
+      if (!roleId) return [];
+      const res = await apiClient.get(`/roles/${roleId}/permissions`);
+      return res.data.data;
+    },
+    enabled: !!roleId,
+  });
+}
+
+export function useUpdateRolePermissions() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ roleId, permissionIds }: { roleId: string; permissionIds: string[] }) => {
+      const res = await apiClient.put(`/roles/${roleId}/permissions`, { permissionIds });
+      return res.data.data;
+    },
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ['roles'] });
+      qc.invalidateQueries({ queryKey: ['roles', variables.roleId, 'permissions'] });
+    },
   });
 }

@@ -5,6 +5,7 @@ import { LoginPage } from '@/pages/login';
 import { ProtectedRoute, TenantResolver } from '@/components/auth/protected-route';
 import { AdminDashboardPage } from '@/pages/admin/dashboard';
 import { AdminTenantsPage } from '@/pages/admin/tenants';
+import { AdminSettingsPage } from '@/pages/admin/settings';
 
 import { DashboardPage } from '@/pages/dashboard';
 import { DepartmentsPage } from '@/pages/company/departments';
@@ -62,6 +63,9 @@ import AssetDirectory from '@/pages/company/assets';
 import AssetDetails from '@/pages/company/assets/asset-details';
 import MyAssets from '@/pages/ess/assets';
 
+// Help & Resources
+import { UserGuidePage } from '@/pages/user-guide';
+
 /**
  * KaaryaMitra App Router
  */
@@ -76,6 +80,7 @@ export function App() {
         <Route path="/admin" element={<AppShell />}>
           <Route index element={<AdminDashboardPage />} />
           <Route path="tenants" element={<AdminTenantsPage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
 
         {/* Workspace Routes */}
@@ -119,6 +124,9 @@ export function App() {
             {/* Phase 16 - Performance */}
             <Route path="performance/goals" element={<CompanyGoalsPage />} />
             <Route path="performance/reviews" element={<CompanyReviewsPage />} />
+
+            {/* Help & Resources */}
+            <Route path="user-guide" element={<UserGuidePage />} />
 
             {/* RBAC */}
             <Route path="settings/roles" element={<RolesPage />} />

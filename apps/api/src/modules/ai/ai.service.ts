@@ -3,8 +3,16 @@ import { prisma } from '../../lib/prisma.js';
 
 export async function getAiClient(tenantId: string) {
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+  
+  let dbSettings: any = null;
+  try {
+    dbSettings = await (prisma as any).platformSettings.findUnique({ where: { id: 'global' } });
+  } catch (err) {
+    // fallback gracefully
+  }
+
   // @ts-ignore - geminiApiKey added to schema but client may not be fully regenerated yet
-  const apiKey = tenant?.geminiApiKey || process.env['GEMINI_API_KEY'];
+  const apiKey = tenant?.geminiApiKey || dbSettings?.geminiApiKey || process.env['GEMINI_API_KEY'];
   if (!apiKey) return null;
   return new GoogleGenAI({ apiKey });
 }
@@ -189,7 +197,7 @@ export async function handleAiChat(tenantId: string, userId: string, userMessage
     parts: h.parts.map((p: any) => ({ text: p.text }))
   }));
 
-  const systemInstruction = "You are a helpful HR assistant for KaaryaMitra. You can answer questions about employees, leave balances, and who is on leave, and even help the user apply for leave. Always format your responses in clear markdown.";
+  const systemInstruction = "You are KaaryaMitra Assistant, an intelligent AI helper for KaaryaMitra HRMS. You can answer questions about employees, leave balances, who is on leave, policies, and assist users with applying for leave or managing HR tasks. Always format your responses in clear markdown.";
 
   try {
     let response = await ai.models.generateContent({

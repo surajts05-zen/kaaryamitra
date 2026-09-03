@@ -11,6 +11,9 @@ import {
   revokeRole,
   listEmployeesWithRoles,
   seedSystemRoles,
+  listAllPermissions,
+  getRolePermissions,
+  updateRolePermissions,
 } from './roles.service.js';
 
 // ─── Roles CRUD ────────────────────────────────────────────────────────────────
@@ -80,4 +83,28 @@ export async function revokeRoleHandler(req: Request, res: Response) {
   if (!userId || !roleId) throw new AppError(400, 'VALIDATION_ERROR', 'userId and roleId are required');
   await revokeRole(tenantId, userId, roleId);
   res.json({ message: 'Role revoked' });
+}
+
+// ─── Permission Management ────────────────────────────────────────────────────
+
+export async function listAllPermissionsHandler(_req: Request, res: Response) {
+  const permissions = await listAllPermissions();
+  res.json({ data: permissions });
+}
+
+export async function getRolePermissionsHandler(req: Request, res: Response) {
+  const tenantId = req.tenantId!;
+  const id = req.params['id'] as string;
+  const permissions = await getRolePermissions(tenantId, id);
+  res.json({ data: permissions });
+}
+
+export async function updateRolePermissionsHandler(req: Request, res: Response) {
+  const tenantId = req.tenantId!;
+  const id = req.params['id'] as string;
+  const { permissionIds } = z
+    .object({ permissionIds: z.array(z.string()) })
+    .parse(req.body);
+  const updated = await updateRolePermissions(tenantId, id, permissionIds);
+  res.json({ data: updated, message: 'Permissions updated successfully' });
 }

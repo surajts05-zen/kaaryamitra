@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAssetCategories, useCreateAssetCategory, useAssets, useCreateAsset } from '@/features/company/hooks/use-assets-queries';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +12,13 @@ import { toast } from 'sonner';
 export function AssetSettings() {
   return (
     <div className="flex-1 space-y-4 p-8 pt-6 max-w-5xl">
+      <Breadcrumb
+        items={[
+          { label: 'Settings', path: 'settings' },
+          { label: 'Asset Management' },
+        ]}
+      />
+
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Asset Management</h2>
       </div>

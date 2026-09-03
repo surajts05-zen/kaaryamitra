@@ -22,5 +22,17 @@ export const updateTenantSchema = z.object({
   }),
 });
 
+export const updatePlatformSettingsSchema = z.object({
+  body: z.object({
+    smtpHost: z.string().optional().nullable(),
+    smtpPort: z.number().int().optional().nullable(),
+    smtpUser: z.string().optional().nullable(),
+    smtpPass: z.string().optional().nullable(),
+    smtpFrom: z.string().optional().nullable(),
+    geminiApiKey: z.string().optional().nullable(),
+  }),
+});
+
 export type CreateTenantInput = z.infer<typeof createTenantSchema>['body'];
 export type UpdateTenantInput = z.infer<typeof updateTenantSchema>['body'];
+export type UpdatePlatformSettingsInput = z.infer<typeof updatePlatformSettingsSchema>['body'];

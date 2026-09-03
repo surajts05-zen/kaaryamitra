@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useShifts, useCreateShift, useUpdateShift, useAssignShift } from '@/features/company/hooks/use-shifts-queries';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { useEmployees } from '@/features/company/hooks/use-employee-queries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -132,6 +133,13 @@ export function AdminShiftsPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb
+        items={[
+          { label: 'Settings', path: 'settings' },
+          { label: 'Shifts Config' },
+        ]}
+      />
+
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Shift Configuration</h1>

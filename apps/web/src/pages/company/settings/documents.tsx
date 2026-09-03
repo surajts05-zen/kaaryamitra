@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Edit } from 'lucide-react';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 import {
   useDocumentCategories,
   useCreateDocumentCategory,
@@ -73,6 +74,13 @@ export function DocumentSettings() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb
+        items={[
+          { label: 'Settings', path: 'settings' },
+          { label: 'Document Settings' },
+        ]}
+      />
+
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Document Categories</h2>

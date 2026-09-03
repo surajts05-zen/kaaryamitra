@@ -63,3 +63,36 @@ export function useResetTenantPassword() {
     },
   });
 }
+
+export type PlatformSettings = {
+  id: string;
+  smtpHost: string | null;
+  smtpPort: number | null;
+  smtpUser: string | null;
+  smtpPass: string | null;
+  smtpFrom: string | null;
+  geminiApiKey: string | null;
+};
+
+export function usePlatformSettings() {
+  return useQuery({
+    queryKey: ['platform-settings'],
+    queryFn: async () => {
+      const res = await apiClient.get<{ data: PlatformSettings }>('/admin/settings');
+      return res.data.data;
+    },
+  });
+}
+
+export function useUpdatePlatformSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: Record<string, any>) => {
+      const res = await apiClient.patch<{ data: PlatformSettings }>('/admin/settings', data);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['platform-settings'] });
+    },
+  });
+}

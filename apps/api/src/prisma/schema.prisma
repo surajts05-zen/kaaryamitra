@@ -1414,3 +1414,20 @@ model HelpdeskComment {
 
   @@map("helpdesk_comments")
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PLATFORM SETTINGS (Super Admin)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PlatformSettings {
+  id           String   @id @default("global")
+  smtpHost     String?
+  smtpPort     Int?     @default(587)
+  smtpUser     String?
+  smtpPass     String?
+  smtpFrom     String?
+  geminiApiKey String?
+  updatedAt    DateTime @updatedAt
+
+  @@map("platform_settings")
+}

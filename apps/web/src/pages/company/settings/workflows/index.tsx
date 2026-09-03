@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -435,6 +436,13 @@ export function WorkflowsPage() {
 
   return (
     <div className="flex-1 space-y-6 p-8 pt-6">
+      <Breadcrumb
+        items={[
+          { label: 'Settings', path: 'settings' },
+          { label: 'Workflow Engine' },
+        ]}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

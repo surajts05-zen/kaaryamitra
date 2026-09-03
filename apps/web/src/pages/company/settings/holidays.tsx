@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useHolidays, useCreateHoliday, useDeleteHoliday, Holiday } from '@/features/company/hooks/use-holidays-queries';
@@ -69,6 +70,13 @@ export function HolidaysSettingsPage() {
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
+      <Breadcrumb
+        items={[
+          { label: 'Settings', path: 'settings' },
+          { label: 'Holiday Calendar' },
+        ]}
+      />
+
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Holiday Calendar</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

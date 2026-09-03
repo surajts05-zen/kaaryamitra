@@ -27,6 +27,34 @@ export function useCreateChecklistTemplate() {
   });
 }
 
+export function useUpdateChecklistTemplate() {
+  const { slug } = useParams();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await apiClient.put(`/t/${slug}/checklists/${id}`, data);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['checklist-templates', slug] });
+    },
+  });
+}
+
+export function useDeleteChecklistTemplate() {
+  const { slug } = useParams();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiClient.delete(`/t/${slug}/checklists/${id}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['checklist-templates', slug] });
+    },
+  });
+}
+
 export function useEmployeeChecklists(employeeId: string) {
   const { slug } = useParams();
   return useQuery({

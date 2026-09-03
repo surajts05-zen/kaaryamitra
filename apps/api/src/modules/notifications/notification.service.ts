@@ -84,14 +84,28 @@ export async function markAllRead(userId: string) {
 
 // ─── Email sender (console-log fallback when SMTP not configured) ─────────────
 
-interface EmailPayload {
+export interface EmailPayload {
   to: string;
   subject: string;
   html: string;
 }
 
-async function sendEmail(payload: EmailPayload) {
-  if (!env.SMTP_HOST || !env.SMTP_USER || !env.SMTP_PASS) {
+export async function sendEmail(payload: EmailPayload) {
+  // Query DB settings first
+  let dbSettings: any = null;
+  try {
+    dbSettings = await (prisma as any).platformSettings.findUnique({ where: { id: 'global' } });
+  } catch (err) {
+    // fallback gracefully
+  }
+
+  const host = dbSettings?.smtpHost || env.SMTP_HOST;
+  const port = dbSettings?.smtpPort || env.SMTP_PORT || 587;
+  const user = dbSettings?.smtpUser || env.SMTP_USER;
+  const pass = dbSettings?.smtpPass || env.SMTP_PASS;
+  const from = dbSettings?.smtpFrom || env.SMTP_FROM || user || 'noreply@kaaryamitra.com';
+
+  if (!host || !user || !pass) {
     // Dev mode: just log the email
     logger.info(
       { to: payload.to, subject: payload.subject },
@@ -103,14 +117,14 @@ async function sendEmail(payload: EmailPayload) {
   // Lazy-import nodemailer only when SMTP is configured
   const nodemailer = await import('nodemailer');
   const transporter = nodemailer.createTransport({
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_PORT === 465,
-    auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+    host,
+    port: Number(port),
+    secure: Number(port) === 465,
+    auth: { user, pass },
   });
 
   await transporter.sendMail({
-    from: env.SMTP_FROM,
+    from,
     to: payload.to,
     subject: payload.subject,
     html: payload.html,
@@ -121,7 +135,7 @@ async function sendEmail(payload: EmailPayload) {
 
 // ─── Email HTML template ──────────────────────────────────────────────────────
 
-function buildEmailHtml(title: string, body: string, link?: string) {
+export function buildEmailHtml(title: string, body: string, link?: string) {
   const ctaBlock = link
     ? `<p style="margin-top:24px">
         <a href="${link}" style="background:#A8E600;color:#0D4F3C;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px">

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState, useRef, useEffect } from 'react';
-import { Bot, X, Send, User } from 'lucide-react';
+import { Sparkles, X, Send, User } from 'lucide-react';
 import { useAiChat, type ChatMessage } from '../hooks/use-ai-chat';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,7 @@ export function AiChatWidget() {
   const [input, setInput] = useState('');
   const [history, setHistory] = useState<ChatMessage[]>([{
     role: 'model',
-    parts: [{ text: 'Hello! I am your KaaryaMitra HR assistant. How can I help you today?' }]
+    parts: [{ text: 'Hello! I am your KaaryaMitra Assistant. How can I help you today?' }]
   }]);
   
   const { mutateAsync: sendMessage, isPending } = useAiChat();
@@ -46,9 +46,10 @@ export function AiChatWidget() {
     return (
       <Button 
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-xl bg-km-lime text-km-forest hover:bg-km-green hover:text-white transition-all z-50 p-0"
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-2xl bg-km-forest text-km-lime hover:bg-km-forest/90 hover:scale-105 transition-all z-50 p-0 flex items-center justify-center border-2 border-km-lime/40"
+        title="KaaryaMitra Assistant"
       >
-        <Bot className="h-7 w-7" />
+        <Sparkles className="h-7 w-7 text-km-lime animate-pulse" />
       </Button>
     );
   }
@@ -57,9 +58,11 @@ export function AiChatWidget() {
     <div className="fixed bottom-6 right-6 w-80 sm:w-96 h-[500px] max-h-[80vh] bg-card border border-border shadow-2xl rounded-2xl flex flex-col overflow-hidden z-50 animate-in slide-in-from-bottom-5">
       {/* Header */}
       <div className="bg-km-forest text-white p-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Bot className="h-5 w-5 text-km-lime" />
-          <span className="font-semibold text-sm">HR Assistant (AI)</span>
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 bg-km-lime/20 rounded-lg">
+            <Sparkles className="h-4 w-4 text-km-lime animate-pulse" />
+          </div>
+          <span className="font-semibold text-sm tracking-wide">KaaryaMitra Assistant</span>
         </div>
         <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="text-white hover:bg-white/20 h-8 w-8">
           <X className="h-4 w-4" />
@@ -74,9 +77,9 @@ export function AiChatWidget() {
         {history.map((msg, i) => (
           <div key={i} className={cn("flex gap-3", msg.role === 'user' ? "flex-row-reverse" : "flex-row")}>
             <div className={cn("flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center", 
-              msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-sidebar-accent text-sidebar-foreground"
+              msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-km-forest text-km-lime"
             )}>
-              {msg.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+              {msg.role === 'user' ? <User className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
             </div>
             <div className={cn(
               "px-4 py-2 rounded-2xl text-sm max-w-[75%]",
@@ -94,8 +97,8 @@ export function AiChatWidget() {
         ))}
         {isPending && (
           <div className="flex gap-3 flex-row">
-            <div className="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-sidebar-accent text-sidebar-foreground">
-              <Bot className="h-4 w-4" />
+            <div className="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-km-forest text-km-lime">
+              <Sparkles className="h-4 w-4 animate-spin" />
             </div>
             <div className="px-4 py-3 rounded-2xl bg-muted text-muted-foreground text-sm rounded-tl-sm flex items-center gap-1">
               <span className="animate-bounce">•</span>

@@ -60,9 +60,9 @@ export function LoginPage() {
     <div className="flex min-h-screen">
       {/* Left side — Branding */}
       <div className="hidden w-1/2 flex-col justify-between bg-sidebar p-12 text-sidebar-foreground lg:flex">
-        <div className="flex items-center gap-3">
-          <img src="/icon.png" alt="KaaryaMitra Logo" className="h-10 w-10 object-contain rounded-lg" />
-          <span className="text-2xl font-bold tracking-tight">KaaryaMitra</span>
+        <div className="flex items-center gap-4">
+          <img src="/icon.png" alt="KaaryaMitra Logo" className="h-14 w-auto object-contain rounded-lg shadow-md" />
+          <span className="text-3xl font-bold tracking-tight">KaaryaMitra</span>
         </div>
         
         <div className="space-y-6 max-w-md">

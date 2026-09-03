@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Pencil } from 'lucide-react';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -80,6 +81,13 @@ export function HelpdeskSettingsPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb
+        items={[
+          { label: 'Settings', path: 'settings' },
+          { label: 'Helpdesk Categories' },
+        ]}
+      />
+
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Helpdesk Categories</h2>

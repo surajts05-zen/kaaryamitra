@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useLeaveTypes, useCreateLeaveType, useUpdateLeaveType } from '@/features/leave/leave.service';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Settings2, CheckCircle2, XCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Settings2, CheckCircle2, XCircle, CalendarDays } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -32,7 +34,7 @@ export function LeaveTypesPage() {
     accrualFrequency: 'YEARLY' as 'YEARLY' | 'MONTHLY',
     isCarryForwardAllowed: false,
     maxCarryForward: 0,
-    isActive: true
+    isActive: true,
   });
 
   const handleOpenNew = () => {
@@ -45,7 +47,7 @@ export function LeaveTypesPage() {
       accrualFrequency: 'YEARLY',
       isCarryForwardAllowed: false,
       maxCarryForward: 0,
-      isActive: true
+      isActive: true,
     });
     setIsDialogOpen(true);
   };
@@ -60,7 +62,7 @@ export function LeaveTypesPage() {
       accrualFrequency: lt.accrualFrequency,
       isCarryForwardAllowed: lt.isCarryForwardAllowed,
       maxCarryForward: lt.maxCarryForward,
-      isActive: lt.isActive
+      isActive: lt.isActive,
     });
     setIsDialogOpen(true);
   };
@@ -76,99 +78,138 @@ export function LeaveTypesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex-1 space-y-6 p-8 pt-6">
+      <Breadcrumb
+        items={[
+          { label: 'Settings', path: 'settings' },
+          { label: 'Leave Settings' },
+        ]}
+      />
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Leave Policies</h1>
-          <p className="text-muted-foreground">Manage time-off types and accrual rules.</p>
+          <h2 className="text-3xl font-bold tracking-tight">Leave Policies</h2>
+          <p className="text-muted-foreground mt-1">Manage company time-off categories, annual allowances, and carry-forward rules.</p>
         </div>
-        <Button onClick={handleOpenNew} className="bg-km-forest hover:bg-km-forest/90">
-          <Plus className="mr-2 h-4 w-4" />
+        <Button onClick={handleOpenNew} className="gap-2">
+          <Plus className="h-4 w-4" />
           Add Leave Type
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {isLoading ? (
-          <p>Loading...</p>
-        ) : (
-          leaveTypes?.map((lt) => (
-            <Card key={lt.id} className="relative overflow-hidden group">
-              <div 
-                className="absolute top-0 left-0 w-1 h-full" 
-                style={{ backgroundColor: lt.color || '#4CAF50' }}
-              />
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      {lt.name}
-                      {!lt.isActive && (
-                        <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground font-normal">
-                          Inactive
-                        </span>
-                      )}
-                    </CardTitle>
-                    <CardDescription className="mt-1">{lt.code}</CardDescription>
+      {isLoading ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-44 rounded-xl border border-border/60 bg-muted/20 animate-pulse" />
+          ))}
+        </div>
+      ) : !leaveTypes || leaveTypes.length === 0 ? (
+        <div className="rounded-xl border border-dashed p-12 text-center text-muted-foreground bg-card">
+          <CalendarDays className="mx-auto h-12 w-12 text-muted-foreground/40 mb-3" />
+          <h3 className="font-semibold text-lg text-foreground mb-1">No Leave Types Configured</h3>
+          <p className="text-sm mb-4">Add leave types (e.g., Casual Leave, Sick Leave, Earned Leave) to start managing employee time-off.</p>
+          <Button onClick={handleOpenNew} variant="outline" className="gap-2">
+            <Plus className="h-4 w-4" /> Add First Leave Type
+          </Button>
+        </div>
+      ) : (
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {leaveTypes.map((lt) => (
+            <Card key={lt.id} className="border-border/60 hover:shadow-md transition-all group">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-600 shrink-0">
+                      <CalendarDays className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base font-semibold flex items-center gap-2">
+                        {lt.name}
+                        {!lt.isActive && (
+                          <Badge variant="secondary" className="text-[10px] font-medium">
+                            Inactive
+                          </Badge>
+                        )}
+                      </CardTitle>
+                      <CardDescription className="text-xs font-mono text-muted-foreground mt-0.5">
+                        Code: {lt.code}
+                      </CardDescription>
+                    </div>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(lt)} className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Settings2 className="h-4 w-4 text-muted-foreground" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleOpenEdit(lt)}
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    title="Edit Policy"
+                  >
+                    <Settings2 className="h-4 w-4" />
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between border-b pb-1">
-                    <span className="text-muted-foreground">Allowance</span>
-                    <span className="font-medium">{lt.daysPerYear} days/{lt.accrualFrequency === 'YEARLY' ? 'yr' : 'mo'}</span>
-                  </div>
-                  <div className="flex justify-between border-b pb-1">
-                    <span className="text-muted-foreground">Paid Time Off</span>
-                    <span className="font-medium flex items-center">
-                      {lt.isPaid ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-muted-foreground" />}
+              <CardContent className="space-y-2.5">
+                <div className="space-y-2 text-xs pt-1">
+                  <div className="flex justify-between border-b border-border/40 pb-2">
+                    <span className="text-muted-foreground font-medium">Annual Allowance</span>
+                    <span className="font-semibold text-foreground">
+                      {lt.daysPerYear} days / {lt.accrualFrequency === 'YEARLY' ? 'year' : 'month'}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Carry Forward</span>
-                    <span className="font-medium">
-                      {lt.isCarryForwardAllowed ? `Up to ${lt.maxCarryForward} days` : 'No'}
+                  <div className="flex justify-between border-b border-border/40 pb-2">
+                    <span className="text-muted-foreground font-medium">Compensation</span>
+                    <span className="font-medium flex items-center gap-1.5">
+                      {lt.isPaid ? (
+                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px] font-medium py-0">
+                          <CheckCircle2 className="h-3 w-3 mr-1" /> Paid Leave
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-muted text-muted-foreground text-[10px] font-medium py-0">
+                          <XCircle className="h-3 w-3 mr-1" /> Unpaid
+                        </Badge>
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between pt-0.5">
+                    <span className="text-muted-foreground font-medium">Carry Forward</span>
+                    <span className="font-medium text-foreground">
+                      {lt.isCarryForwardAllowed ? `Up to ${lt.maxCarryForward} days` : 'Not allowed'}
                     </span>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[440px]">
           <form onSubmit={handleSubmit}>
             <DialogHeader>
-              <DialogTitle>{editingId ? 'Edit' : 'Create'} Leave Type</DialogTitle>
+              <DialogTitle>{editingId ? 'Edit Leave Policy' : 'Create Leave Type'}</DialogTitle>
               <DialogDescription>
-                Configure the rules and allowance for this leave type.
+                Configure allowance, accrual rules, and carry forward settings.
               </DialogDescription>
             </DialogHeader>
             
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">Leave Name</Label>
                 <Input 
                   id="name" 
                   value={formData.name} 
                   onChange={e => setFormData({...formData, name: e.target.value})} 
-                  placeholder="e.g. Sick Leave"
+                  placeholder="e.g. Annual Leave" 
                   required
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="code">Code</Label>
+                <Label htmlFor="code">Short Code</Label>
                 <Input 
                   id="code" 
                   value={formData.code} 
                   onChange={e => setFormData({...formData, code: e.target.value.toUpperCase()})} 
-                  placeholder="e.g. SL"
+                  placeholder="e.g. AL" 
                   required
                   disabled={!!editingId}
                 />
@@ -180,8 +221,10 @@ export function LeaveTypesPage() {
                   <Input 
                     id="daysPerYear" 
                     type="number"
+                    min="0"
+                    step="0.5"
                     value={formData.daysPerYear} 
-                    onChange={e => setFormData({...formData, daysPerYear: parseFloat(e.target.value)})} 
+                    onChange={e => setFormData({...formData, daysPerYear: parseFloat(e.target.value) || 0})} 
                     required
                   />
                 </div>
@@ -202,52 +245,55 @@ export function LeaveTypesPage() {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2 mt-2">
+              <div className="flex items-center space-x-2.5 mt-1">
                 <Checkbox 
                   id="isPaid" 
                   checked={formData.isPaid}
                   onCheckedChange={(checked) => setFormData({...formData, isPaid: checked === true})}
                 />
-                <Label htmlFor="isPaid" className="font-normal cursor-pointer">This is a Paid Leave</Label>
+                <Label htmlFor="isPaid" className="font-normal cursor-pointer text-sm">Paid Leave (Salaried time-off)</Label>
               </div>
 
-              <div className="flex items-center space-x-2 mt-2">
+              <div className="flex items-center space-x-2.5 mt-1">
                 <Checkbox 
                   id="isCarryForwardAllowed" 
                   checked={formData.isCarryForwardAllowed}
                   onCheckedChange={(checked) => setFormData({...formData, isCarryForwardAllowed: checked === true})}
                 />
-                <Label htmlFor="isCarryForwardAllowed" className="font-normal cursor-pointer">Allow carry forward to next year</Label>
+                <Label htmlFor="isCarryForwardAllowed" className="font-normal cursor-pointer text-sm">Allow Carry Forward to next year</Label>
               </div>
 
               {formData.isCarryForwardAllowed && (
-                <div className="grid gap-2">
-                  <Label htmlFor="maxCarryForward">Max Carry Forward (Days)</Label>
+                <div className="grid gap-2 pl-6 pt-1">
+                  <Label htmlFor="maxCarryForward" className="text-xs">Max Carry Forward Days</Label>
                   <Input 
                     id="maxCarryForward" 
                     type="number"
+                    min="0"
                     value={formData.maxCarryForward} 
-                    onChange={e => setFormData({...formData, maxCarryForward: parseFloat(e.target.value)})} 
+                    onChange={e => setFormData({...formData, maxCarryForward: parseFloat(e.target.value) || 0})} 
                   />
                 </div>
               )}
 
               {editingId && (
-                <div className="flex items-center space-x-2 mt-2 border-t pt-4">
+                <div className="flex items-center space-x-2.5 border-t pt-4 mt-2">
                   <Checkbox 
                     id="isActive" 
                     checked={formData.isActive}
                     onCheckedChange={(checked) => setFormData({...formData, isActive: checked === true})}
                   />
-                  <Label htmlFor="isActive" className="font-normal cursor-pointer text-red-500">Active (Employees can apply)</Label>
+                  <Label htmlFor="isActive" className="font-medium cursor-pointer text-destructive text-sm">
+                    Active (Employees can select and apply)
+                  </Label>
                 </div>
               )}
-
             </div>
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" className="bg-km-forest hover:bg-km-forest/90" disabled={createMutation.isPending || updateMutation.isPending}>
-                Save Changes
+              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                {(createMutation.isPending || updateMutation.isPending) ? 'Saving...' : 'Save Policy'}
               </Button>
             </DialogFooter>
           </form>
