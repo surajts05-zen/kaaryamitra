@@ -54,6 +54,33 @@ export function CsvImportModal({
     }
   };
 
+  const normalizeRows = (rawRows: Record<string, string>[]) => {
+    return rawRows.map((raw) => {
+      const normalized: Record<string, string> = { ...raw };
+      
+      headers.forEach((h) => {
+        const currentVal = normalized[h.key];
+        if (currentVal !== undefined && currentVal.trim() !== '') {
+          return;
+        }
+
+        const targetCleanKey = h.key.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const targetCleanLabel = h.label.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        const matchingRawKey = Object.keys(raw).find((rawKey) => {
+          const cleanRawKey = rawKey.toLowerCase().replace(/[^a-z0-9]/g, '');
+          return cleanRawKey === targetCleanKey || cleanRawKey === targetCleanLabel || cleanRawKey.startsWith(targetCleanKey);
+        });
+
+        if (matchingRawKey && raw[matchingRawKey] !== undefined) {
+          normalized[h.key] = raw[matchingRawKey];
+        }
+      });
+
+      return normalized;
+    });
+  };
+
   const processFile = (file: File) => {
     if (!file.name.endsWith('.csv')) {
       toast.error('Please select a valid .csv file');
@@ -64,7 +91,8 @@ export function CsvImportModal({
     const reader = new FileReader();
     reader.onload = (evt) => {
       const text = evt.target?.result as string;
-      const rows = parseCsv(text);
+      const rawRows = parseCsv(text);
+      const rows = normalizeRows(rawRows);
       setParsedRows(rows);
       setParsing(false);
     };

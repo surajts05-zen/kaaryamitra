@@ -145,33 +145,60 @@ export class EmployeesService {
       where: { userId: user.id, tenantId },
     });
 
+    let employee;
+    const parsedDob = dateOfBirth && !isNaN(new Date(dateOfBirth).getTime()) ? new Date(dateOfBirth) : undefined;
+    const parsedJoining = joiningDate && !isNaN(new Date(joiningDate).getTime()) ? new Date(joiningDate) : undefined;
+    const parsedConfirm = confirmationDate && !isNaN(new Date(confirmationDate).getTime()) ? new Date(confirmationDate) : undefined;
+    const parsedProbation = probationEndDate && !isNaN(new Date(probationEndDate).getTime()) ? new Date(probationEndDate) : undefined;
+
     if (existingEmployee) {
-      throw new Error('An employee record already exists for this email.');
-    }
-
-    // Create Employee record
-    const employee = await prisma.employee.create({
-      data: {
-        tenantId,
-        userId: user.id,
-        firstName,
-        lastName,
-        workEmail,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
-        joiningDate: new Date(joiningDate),
-        confirmationDate: confirmationDate ? new Date(confirmationDate) : undefined,
-        probationEndDate: probationEndDate ? new Date(probationEndDate) : undefined,
-        ...rest,
-      },
-    });
-
-    if (roleId) {
-      await prisma.userRole.create({
+      employee = await prisma.employee.update({
+        where: { id: existingEmployee.id },
         data: {
-          userId: user.id,
-          roleId,
+          firstName,
+          lastName,
+          ...(parsedDob ? { dateOfBirth: parsedDob } : {}),
+          ...(parsedJoining ? { joiningDate: parsedJoining } : {}),
+          ...(parsedConfirm ? { confirmationDate: parsedConfirm } : {}),
+          ...(parsedProbation ? { probationEndDate: parsedProbation } : {}),
+          ...rest,
         },
       });
+    } else {
+      employee = await prisma.employee.create({
+        data: {
+          tenantId,
+          userId: user.id,
+          firstName,
+          lastName,
+          workEmail,
+          dateOfBirth: parsedDob,
+          joiningDate: parsedJoining || new Date(),
+          confirmationDate: parsedConfirm,
+          probationEndDate: parsedProbation,
+          ...rest,
+        },
+      });
+    }
+
+    if (roleId) {
+      try {
+        await prisma.userRole.upsert({
+          where: {
+            userId_roleId: {
+              userId: user.id,
+              roleId,
+            },
+          },
+          create: {
+            userId: user.id,
+            roleId,
+          },
+          update: {},
+        });
+      } catch (err) {
+        console.error(`Failed to assign role ${roleId} to user ${user.id}:`, err);
+      }
     }
 
     return employee;
@@ -263,23 +290,97 @@ export class EmployeesService {
     });
   }
 
-  static async bulkCreateEmployees(tenantId: string, items: Array<{ firstName: string; lastName: string; workEmail: string; employeeCode?: string; joiningDate?: string }>) {
+  static async bulkCreateEmployees(
+    tenantId: string,
+    items: Array<{
+      firstName: string;
+      lastName: string;
+      workEmail: string;
+      employeeCode?: string;
+      joiningDate?: string;
+      role?: string;
+      roleId?: string;
+      managerEmail?: string;
+      managerCode?: string;
+      manager?: string;
+    }>
+  ) {
+    // 1. Pre-fetch tenant roles to map role names to role IDs
+    const tenantRoles = await prisma.role.findMany({ where: { tenantId } });
+    const roleMap = new Map<string, string>();
+    tenantRoles.forEach((r) => roleMap.set(r.name.toLowerCase(), r.id));
+
+    // 2. Pre-fetch existing tenant employees for manager lookup
+    const existingEmployees = await prisma.employee.findMany({
+      where: { tenantId },
+      select: { id: true, workEmail: true, employeeCode: true, firstName: true, lastName: true },
+    });
+
+    const empLookupMap = new Map<string, string>();
+    existingEmployees.forEach((e) => {
+      if (e.workEmail) empLookupMap.set(e.workEmail.toLowerCase(), e.id);
+      if (e.employeeCode) empLookupMap.set(e.employeeCode.trim().toLowerCase(), e.id);
+      const fullName = `${e.firstName} ${e.lastName}`.trim().toLowerCase();
+      if (fullName) empLookupMap.set(fullName, e.id);
+    });
+
     const created: any[] = [];
+    const createdBatch: { emp: any; item: any }[] = [];
+
+    // Pass 1: Create Employee and User accounts & assign Roles
     for (const item of items) {
       if (!item.firstName || !item.lastName || !item.workEmail) continue;
       try {
+        const cleanEmail = item.workEmail.toLowerCase().trim();
+        let targetRoleId = item.roleId;
+
+        if (!targetRoleId && item.role) {
+          const cleanRoleName = item.role.trim().toLowerCase();
+          targetRoleId = roleMap.get(cleanRoleName);
+        }
+
         const emp = await this.createEmployee(tenantId, {
           firstName: item.firstName.trim(),
           lastName: item.lastName.trim(),
-          workEmail: item.workEmail.toLowerCase().trim(),
+          workEmail: cleanEmail,
           employeeCode: item.employeeCode ? item.employeeCode.trim() : undefined,
           joiningDate: item.joiningDate ? item.joiningDate : new Date().toISOString(),
+          roleId: targetRoleId || undefined,
         });
+
         created.push(emp);
+        createdBatch.push({ emp, item });
+
+        // Update lookup map with newly created employee
+        empLookupMap.set(cleanEmail, emp.id);
+        if (emp.employeeCode) {
+          empLookupMap.set(emp.employeeCode.trim().toLowerCase(), emp.id);
+        }
+        const fullName = `${emp.firstName} ${emp.lastName}`.trim().toLowerCase();
+        if (fullName) empLookupMap.set(fullName, emp.id);
       } catch (err) {
         console.error(`Failed to bulk create employee ${item.workEmail}:`, err);
       }
     }
+
+    // Pass 2: Connect Manager relationships
+    for (const { emp, item } of createdBatch) {
+      const managerRef = (item.managerEmail || item.managerCode || item.manager || '').trim().toLowerCase();
+      if (!managerRef) continue;
+
+      const managerId = empLookupMap.get(managerRef);
+      if (managerId && managerId !== emp.id) {
+        try {
+          await prisma.employee.update({
+            where: { id: emp.id },
+            data: { managerId },
+          });
+        } catch (err) {
+          console.error(`Failed to assign manager ${managerRef} to employee ${emp.workEmail}:`, err);
+        }
+      }
+    }
+
     return created;
   }
 }

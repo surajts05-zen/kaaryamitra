@@ -25,11 +25,13 @@ export function DirectoryPage() {
 
   const handleBulkImport = async (rows: Record<string, string>[]) => {
     const items = rows.map(r => ({
-      firstName: r.firstName,
-      lastName: r.lastName,
-      workEmail: r.workEmail,
-      employeeCode: r.employeeCode,
-      joiningDate: r.joiningDate,
+      firstName: r.firstName || r['First Name'] || r['firstname'] || '',
+      lastName: r.lastName || r['Last Name'] || r['lastname'] || '',
+      workEmail: r.workEmail || r['Work Email'] || r['workemail'] || r['email'] || '',
+      employeeCode: r.employeeCode || r['Employee Code'] || r['employeecode'] || '',
+      joiningDate: r.joiningDate || r['Joining Date (YYYY-MM-DD)'] || r['Joining Date'] || r['joiningdate'] || '',
+      role: r.role || r['System Role (Employee|HR Manager|Manager)'] || r['System Role'] || r['Role'] || '',
+      managerEmail: r.managerEmail || r['Manager Email or Code'] || r['Manager Email'] || r['Manager'] || r.manager || '',
     }));
 
     const res = await bulkCreateMutation.mutateAsync(items);
@@ -181,10 +183,12 @@ export function DirectoryPage() {
           { key: 'workEmail', label: 'Work Email', required: true },
           { key: 'employeeCode', label: 'Employee Code', required: false },
           { key: 'joiningDate', label: 'Joining Date (YYYY-MM-DD)', required: false },
+          { key: 'role', label: 'System Role (Employee|HR Manager|Manager)', required: false },
+          { key: 'managerEmail', label: 'Manager Email or Code', required: false },
         ]}
         sampleRows={[
-          ['Alice', 'Smith', 'alice.smith@acme.corp', 'EMP-1001', '2026-01-15'],
-          ['Bob', 'Johnson', 'bob.johnson@acme.corp', 'EMP-1002', '2026-02-01'],
+          ['Alice', 'Smith', 'alice.smith@acme.corp', 'EMP-1001', '2026-01-15', 'Manager', ''],
+          ['Bob', 'Johnson', 'bob.johnson@acme.corp', 'EMP-1002', '2026-02-01', 'Employee', 'alice.smith@acme.corp'],
         ]}
         onImport={handleBulkImport}
         isLoading={bulkCreateMutation.isPending}
