@@ -6,12 +6,15 @@ import {
   createHolidayHandler,
   updateHolidayHandler,
   deleteHolidayHandler,
+  bulkCreateHolidaysHandler,
 } from './holidays.controller.js';
 
 export const holidaysRouter = Router();
 
 // Everyone in the tenant can view holidays
 holidaysRouter.get('/', asyncHandler(listHolidaysHandler));
+
+holidaysRouter.post('/bulk', requirePermission('settings:manage'), asyncHandler(bulkCreateHolidaysHandler));
 
 // Only HR/Admins can manage holidays
 holidaysRouter.post(

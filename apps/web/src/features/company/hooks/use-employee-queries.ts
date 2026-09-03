@@ -57,3 +57,16 @@ export function useResetEmployeePassword() {
     },
   });
 }
+
+export function useBulkCreateEmployees() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (items: any[]) => {
+      const res = await apiClient.post('/employees/bulk', { items });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+    },
+  });
+}

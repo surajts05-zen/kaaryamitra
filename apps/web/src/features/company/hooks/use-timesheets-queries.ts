@@ -63,3 +63,18 @@ export function useTimesheet(id?: string) {
     enabled: !!user?.tenantSlug && !!id,
   });
 }
+
+export function useBulkCreateTimesheets() {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  
+  return useMutation({
+    mutationFn: async (items: any[]) => {
+      const res = await apiClient.post(`/t/${user?.tenantSlug}/me/timesheets/bulk`, { items });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timesheet'] });
+    },
+  });
+}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAssetCategories, useCreateAssetCategory, useAssets, useCreateAsset } from '@/features/company/hooks/use-assets-queries';
+import { useAssetCategories, useCreateAssetCategory, useAssets, useCreateAsset, useBulkCreateAssets } from '@/features/company/hooks/use-asset-queries';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Upload } from 'lucide-react';
 import { toast } from 'sonner';
+import { CsvImportModal } from '@/components/ui/csv-import-modal';
 
 export function AssetSettings() {
   return (
@@ -109,8 +111,10 @@ function AssetInventoryTab() {
   const { data: assets, isLoading: isLoadingAssets } = useAssets();
   const { data: categories, isLoading: isLoadingCategories } = useAssetCategories();
   const createMutation = useCreateAsset();
+  const bulkCreateMutation = useBulkCreateAssets();
   
   const [isOpen, setIsOpen] = useState(false);
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [name, setName] = useState('');
   const [serialNumber, setSerialNumber] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -139,6 +143,19 @@ function AssetInventoryTab() {
     });
   };
 
+  const handleBulkImport = async (rows: Record<string, string>[]) => {
+    const items = rows.map(r => ({
+      name: r.name,
+      category: r.category,
+      serialNumber: r.serialNumber,
+      assetTag: r.assetTag,
+      status: r.status,
+    }));
+
+    const res = await bulkCreateMutation.mutateAsync(items);
+    toast.success(`Successfully imported ${res.count} assets`);
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -146,11 +163,15 @@ function AssetInventoryTab() {
           <CardTitle>Asset Inventory</CardTitle>
           <CardDescription>Manage individual assets and track their assignment status.</CardDescription>
         </div>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
-            <Button>Add Asset</Button>
-          </DialogTrigger>
-          <DialogContent>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setIsCsvModalOpen(true)} className="gap-2">
+            <Upload className="h-4 w-4" /> Import CSV
+          </Button>
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+              <Button>Add Asset</Button>
+            </DialogTrigger>
+            <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New Asset</DialogTitle>
               <DialogDescription>Add a physical item to the company inventory.</DialogDescription>
@@ -186,6 +207,7 @@ function AssetInventoryTab() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
@@ -225,6 +247,26 @@ function AssetInventoryTab() {
           </TableBody>
         </Table>
       </CardContent>
+      <CsvImportModal
+        isOpen={isCsvModalOpen}
+        onOpenChange={setIsCsvModalOpen}
+        title="Import Asset Inventory"
+        description="Upload a CSV file containing company physical assets and hardware."
+        sampleFilename="assets"
+        headers={[
+          { key: 'name', label: 'Asset Name', required: true },
+          { key: 'category', label: 'Category Name', required: false },
+          { key: 'serialNumber', label: 'Serial Number', required: false },
+          { key: 'assetTag', label: 'Asset Tag', required: false },
+          { key: 'status', label: 'Status (AVAILABLE|ASSIGNED|REPAIR|RETIRED)', required: false },
+        ]}
+        sampleRows={[
+          ['MacBook Pro M3', 'Laptops', 'SN-998877', 'TAG-001', 'AVAILABLE'],
+          ['Dell UltraSharp 27"', 'Monitors', 'SN-443322', 'TAG-002', 'AVAILABLE'],
+        ]}
+        onImport={handleBulkImport}
+        isLoading={bulkCreateMutation.isPending}
+      />
     </Card>
   );
 }

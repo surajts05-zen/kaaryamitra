@@ -128,3 +128,59 @@ export async function submitTimesheetHandler(req: Request, res: Response) {
 
   res.json({ success: true, data: updated });
 }
+
+export async function bulkCreateTimesheetsHandler(req: Request, res: Response) {
+  const tenantId = req.tenantId!;
+  const { items } = req.body;
+  if (!Array.isArray(items)) {
+    return res.status(400).json({ success: false, error: { message: 'Items must be an array' } });
+  }
+
+  const created: any[] = [];
+  for (const item of items) {
+    if (!item.workEmail || !item.date) continue;
+    try {
+      const emp = await prisma.employee.findFirst({
+        where: { tenantId, workEmail: item.workEmail.trim().toLowerCase() }
+      });
+      if (!emp) continue;
+
+      const dateObj = new Date(item.date);
+      if (isNaN(dateObj.getTime())) continue;
+
+      const start = new Date(dateObj.getFullYear(), dateObj.getMonth(), 1);
+      const end = new Date(dateObj.getFullYear(), dateObj.getMonth() + 1, 0);
+
+      let timesheet = await prisma.timesheet.findFirst({
+        where: { tenantId, employeeId: emp.id, periodStartDate: start, periodEndDate: end }
+      });
+
+      if (!timesheet) {
+        timesheet = await prisma.timesheet.create({
+          data: {
+            tenantId,
+            employeeId: emp.id,
+            periodStartDate: start,
+            periodEndDate: end,
+            status: 'DRAFT'
+          }
+        });
+      }
+
+      const entry = await prisma.timesheetEntry.create({
+        data: {
+          timesheetId: timesheet.id,
+          date: dateObj,
+          hours: parseFloat(item.hours) || 8,
+          overtimeHours: parseFloat(item.overtimeHours) || 0,
+          description: item.description ? item.description.trim() : null
+        }
+      });
+      created.push(entry);
+    } catch (err) {
+      console.error(`Failed to bulk create timesheet entry for ${item.workEmail}:`, err);
+    }
+  }
+
+  res.status(201).json({ success: true, count: created.length, data: created });
+}

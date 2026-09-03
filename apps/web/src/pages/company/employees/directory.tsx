@@ -1,23 +1,40 @@
 import { Link } from 'react-router-dom';
-import { useEmployees } from '@/features/company/hooks/use-employee-queries';
+import { useEmployees, useBulkCreateEmployees } from '@/features/company/hooks/use-employee-queries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Plus, List, Network } from 'lucide-react';
+import { Search, Plus, List, Network, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { OrgChartView } from './org-chart-view';
+import { CsvImportModal } from '@/components/ui/csv-import-modal';
+import { toast } from 'sonner';
 
 export function DirectoryPage() {
   const { data: employees, isLoading } = useEmployees();
+  const bulkCreateMutation = useBulkCreateEmployees();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
 
   const filteredEmployees = employees?.filter((emp: any) => {
     const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase();
     return fullName.includes(searchTerm.toLowerCase()) || 
            emp.workEmail.toLowerCase().includes(searchTerm.toLowerCase());
   }) || [];
+
+  const handleBulkImport = async (rows: Record<string, string>[]) => {
+    const items = rows.map(r => ({
+      firstName: r.firstName,
+      lastName: r.lastName,
+      workEmail: r.workEmail,
+      employeeCode: r.employeeCode,
+      joiningDate: r.joiningDate,
+    }));
+
+    const res = await bulkCreateMutation.mutateAsync(items);
+    toast.success(`Successfully imported ${res.count} employees`);
+  };
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
@@ -27,6 +44,10 @@ export function DirectoryPage() {
           <p className="text-muted-foreground">Manage your organization's workforce.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setIsCsvModalOpen(true)} className="gap-2">
+            <Upload className="h-4 w-4" />
+            Import CSV
+          </Button>
           <Button asChild>
             <Link to="new">
               <Plus className="mr-2 h-4 w-4" />
@@ -147,6 +168,27 @@ export function DirectoryPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <CsvImportModal
+        isOpen={isCsvModalOpen}
+        onOpenChange={setIsCsvModalOpen}
+        title="Import Employee Records"
+        description="Upload a CSV file containing employee master data."
+        sampleFilename="employees"
+        headers={[
+          { key: 'firstName', label: 'First Name', required: true },
+          { key: 'lastName', label: 'Last Name', required: true },
+          { key: 'workEmail', label: 'Work Email', required: true },
+          { key: 'employeeCode', label: 'Employee Code', required: false },
+          { key: 'joiningDate', label: 'Joining Date (YYYY-MM-DD)', required: false },
+        ]}
+        sampleRows={[
+          ['Alice', 'Smith', 'alice.smith@acme.corp', 'EMP-1001', '2026-01-15'],
+          ['Bob', 'Johnson', 'bob.johnson@acme.corp', 'EMP-1002', '2026-02-01'],
+        ]}
+        onImport={handleBulkImport}
+        isLoading={bulkCreateMutation.isPending}
+      />
     </div>
   );
 }

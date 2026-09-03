@@ -31,6 +31,36 @@ export async function getShiftsHandler(req: Request, res: Response) {
   res.json({ success: true, data: shifts });
 }
 
+export async function bulkCreateShiftsHandler(req: Request, res: Response) {
+  const tenantId = req.tenantId!;
+  const { items } = req.body;
+  if (!Array.isArray(items)) {
+    return res.status(400).json({ success: false, error: { message: 'Items must be an array' } });
+  }
+  
+  const created: any[] = [];
+  for (const item of items) {
+    if (!item.name || !item.startTime || !item.endTime) continue;
+    try {
+      const shift = await prisma.shift.create({
+        data: {
+          tenantId,
+          name: item.name.trim(),
+          startTime: item.startTime.trim(),
+          endTime: item.endTime.trim(),
+          type: (item.type ? item.type.toUpperCase() : 'FIXED') as any,
+          gracePeriodMinutes: item.gracePeriodMinutes ? parseInt(item.gracePeriodMinutes) || 15 : 15,
+        }
+      });
+      created.push(shift);
+    } catch (err) {
+      console.error(`Failed to bulk create shift ${item.name}:`, err);
+    }
+  }
+  
+  res.status(201).json({ success: true, count: created.length, data: created });
+}
+
 export async function updateShiftHandler(req: Request, res: Response) {
   const tenantId = req.tenantId!;
   const id = req.params['id'] as string;

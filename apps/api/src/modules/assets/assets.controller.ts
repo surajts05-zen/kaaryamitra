@@ -33,6 +33,15 @@ export class AssetsController {
     res.status(201).json({ data: asset });
   }
 
+  static async bulkCreateAssets(req: Request, res: Response) {
+    const { items } = req.body;
+    if (!Array.isArray(items)) {
+      return res.status(400).json({ success: false, error: { message: 'Items must be an array' } });
+    }
+    const data = await AssetsService.bulkCreateAssets(req.tenantId!, items);
+    res.status(201).json({ success: true, count: data.length, data });
+  }
+
   static async updateAsset(req: Request, res: Response) {
     const asset = await AssetsService.updateAsset(req.tenantId!, req.params.id as string, req.body);
     res.json({ data: asset });

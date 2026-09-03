@@ -62,6 +62,21 @@ export function useCreateShift() {
   });
 }
 
+export function useBulkCreateShifts() {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  
+  return useMutation({
+    mutationFn: async (items: any[]) => {
+      const res = await apiClient.post(`/t/${user?.tenantSlug}/shifts/bulk`, { items });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shifts', user?.tenantSlug] });
+    },
+  });
+}
+
 export function useUpdateShift() {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();

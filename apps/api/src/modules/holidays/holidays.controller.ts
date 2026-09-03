@@ -28,3 +28,13 @@ export const deleteHolidayHandler = async (req: Request, res: Response) => {
   await HolidaysService.deleteHoliday(tenantId, id);
   res.json({ success: true });
 };
+
+export const bulkCreateHolidaysHandler = async (req: Request, res: Response) => {
+  const tenantId = req.tenantId!;
+  const { items } = req.body;
+  if (!Array.isArray(items)) {
+    return res.status(400).json({ success: false, error: { message: 'Items must be an array' } });
+  }
+  const created = await HolidaysService.bulkCreateHolidays(tenantId, items);
+  res.json({ success: true, count: created.length, data: created });
+};

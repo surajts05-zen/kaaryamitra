@@ -69,6 +69,21 @@ export function useCreateAsset() {
   });
 }
 
+export function useBulkCreateAssets() {
+  const queryClient = useQueryClient();
+  const { slug } = useParams();
+  
+  return useMutation({
+    mutationFn: async (items: any[]) => {
+      const res = await apiClient.post(`/t/${slug}/assets/bulk`, { items });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assets', slug] });
+    },
+  });
+}
+
 export function useUpdateAsset() {
   const queryClient = useQueryClient();
   const { slug } = useParams();

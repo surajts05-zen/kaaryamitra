@@ -4,6 +4,7 @@ import {
   getShiftsHandler,
   updateShiftHandler,
   deleteShiftHandler,
+  bulkCreateShiftsHandler,
   assignShiftHandler,
   getEmployeeShiftsHandler,
   getDailyScheduleHandler
@@ -14,6 +15,7 @@ export const shiftsRouter = Router();
 
 // CRUD for Shift Templates (HR/Admin)
 shiftsRouter.post('/', requirePermission('settings:manage'), createShiftHandler);
+shiftsRouter.post('/bulk', requirePermission('settings:manage'), bulkCreateShiftsHandler);
 shiftsRouter.get('/', getShiftsHandler); // Everyone needs to see available shifts for dropdowns or view
 shiftsRouter.put('/:id', requirePermission('settings:manage'), updateShiftHandler);
 shiftsRouter.delete('/:id', requirePermission('settings:manage'), deleteShiftHandler);

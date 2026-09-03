@@ -59,3 +59,17 @@ export function useDeleteHoliday() {
     },
   });
 }
+
+export function useBulkCreateHolidays() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (items: Array<{ name: string; date: string; type?: string }>) => {
+      const res = await apiClient.post<{ success: boolean; count: number }>('/holidays/bulk', { items });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['holidays'] });
+    },
+  });
+}

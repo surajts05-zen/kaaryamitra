@@ -262,4 +262,24 @@ export class EmployeesService {
       data: updateData,
     });
   }
+
+  static async bulkCreateEmployees(tenantId: string, items: Array<{ firstName: string; lastName: string; workEmail: string; employeeCode?: string; joiningDate?: string }>) {
+    const created: any[] = [];
+    for (const item of items) {
+      if (!item.firstName || !item.lastName || !item.workEmail) continue;
+      try {
+        const emp = await this.createEmployee(tenantId, {
+          firstName: item.firstName.trim(),
+          lastName: item.lastName.trim(),
+          workEmail: item.workEmail.toLowerCase().trim(),
+          employeeCode: item.employeeCode ? item.employeeCode.trim() : undefined,
+          joiningDate: item.joiningDate ? item.joiningDate : new Date().toISOString(),
+        });
+        created.push(emp);
+      } catch (err) {
+        console.error(`Failed to bulk create employee ${item.workEmail}:`, err);
+      }
+    }
+    return created;
+  }
 }

@@ -211,4 +211,39 @@ export class AssetsService {
       },
     });
   }
+
+  static async bulkCreateAssets(tenantId: string, items: Array<{ name: string; category?: string; serialNumber?: string; assetTag?: string; status?: string }>) {
+    const created: any[] = [];
+    
+    // Cache categories for this tenant
+    const existingCategories = await this.getCategories(tenantId);
+    const categoryMap = new Map<string, string>();
+    existingCategories.forEach(c => categoryMap.set(c.name.toLowerCase(), c.id));
+
+    for (const item of items) {
+      if (!item.name) continue;
+      try {
+        const catName = item.category ? item.category.trim() : 'General';
+        let categoryId = categoryMap.get(catName.toLowerCase());
+
+        if (!categoryId) {
+          const newCat = await this.createCategory(tenantId, { name: catName });
+          categoryId = newCat.id;
+          categoryMap.set(catName.toLowerCase(), categoryId);
+        }
+
+        const asset = await this.createAsset(tenantId, {
+          name: item.name.trim(),
+          categoryId,
+          serialNumber: item.serialNumber ? item.serialNumber.trim() : null,
+          assetTag: item.assetTag ? item.assetTag.trim() : null,
+          status: item.status ? item.status.toUpperCase() : 'AVAILABLE',
+        });
+        created.push(asset);
+      } catch (err) {
+        console.error(`Failed to bulk create asset ${item.name}:`, err);
+      }
+    }
+    return created;
+  }
 }

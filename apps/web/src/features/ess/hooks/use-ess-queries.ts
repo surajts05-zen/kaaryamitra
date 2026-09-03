@@ -23,3 +23,17 @@ export function useUpdateMyProfile() {
     },
   });
 }
+
+export function useBulkCreateAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (items: any[]) => {
+      const res = await apiClient.post('/me/attendance/bulk', { items });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['attendance'] });
+      queryClient.invalidateQueries({ queryKey: ['me', 'attendance'] });
+    },
+  });
+}

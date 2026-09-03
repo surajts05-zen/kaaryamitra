@@ -48,4 +48,29 @@ export class HolidaysService {
       where: { id, tenantId },
     });
   }
+
+  static async bulkCreateHolidays(tenantId: string, items: Array<{ name: string; date: string; type?: 'PUBLIC' | 'OPTIONAL' }>) {
+    const created: any[] = [];
+    for (const item of items) {
+      if (!item.name || !item.date) continue;
+      const dateObj = new Date(item.date);
+      if (isNaN(dateObj.getTime())) continue;
+
+      const existing = await prisma.holiday.findFirst({
+        where: { tenantId, date: dateObj, name: item.name.trim() },
+      });
+      if (existing) continue;
+
+      const h = await prisma.holiday.create({
+        data: {
+          tenantId,
+          name: item.name.trim(),
+          date: dateObj,
+          type: item.type === 'OPTIONAL' ? 'OPTIONAL' : 'PUBLIC',
+        },
+      });
+      created.push(h);
+    }
+    return created;
+  }
 }

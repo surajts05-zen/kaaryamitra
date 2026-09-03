@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useGenerateTimesheet, useSubmitTimesheet, useTimesheet } from '@/features/company/hooks/use-timesheets-queries';
+import { useGenerateTimesheet, useSubmitTimesheet, useTimesheet, useBulkCreateTimesheets } from '@/features/company/hooks/use-timesheets-queries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { toast } from 'sonner';
-import { Send, FileClock, Clock, Loader2, CheckCircle2 } from 'lucide-react';
+import { Send, FileClock, Clock, Loader2, CheckCircle2, Upload } from 'lucide-react';
+import { CsvImportModal } from '@/components/ui/csv-import-modal';
 
 export function MyTimesheetsPage() {
   const [startDate, setStartDate] = React.useState(format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'));
@@ -70,11 +71,32 @@ export function MyTimesheetsPage() {
 
   const isEditable = timesheet?.status === 'DRAFT' || timesheet?.status === 'REJECTED';
 
+  const [isCsvModalOpen, setIsCsvModalOpen] = React.useState(false);
+  const bulkCreateMutation = useBulkCreateTimesheets();
+
+  const handleBulkImport = async (rows: Record<string, string>[]) => {
+    const items = rows.map(r => ({
+      workEmail: r.workEmail,
+      date: r.date,
+      hours: r.hours,
+      overtimeHours: r.overtimeHours,
+      description: r.description,
+    }));
+
+    const res = await bulkCreateMutation.mutateAsync(items);
+    toast.success(`Successfully imported ${res.count} timesheet entries`);
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">My Timesheets</h1>
-        <p className="text-muted-foreground">Generate, review, and submit your timesheets.</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">My Timesheets</h1>
+          <p className="text-muted-foreground">Generate, review, and submit your timesheets.</p>
+        </div>
+        <Button variant="outline" onClick={() => setIsCsvModalOpen(true)} className="gap-2">
+          <Upload className="h-4 w-4" /> Import CSV
+        </Button>
       </div>
 
       <Card>
@@ -239,6 +261,27 @@ export function MyTimesheetsPage() {
           )}
         </Card>
       )}
+
+      <CsvImportModal
+        isOpen={isCsvModalOpen}
+        onOpenChange={setIsCsvModalOpen}
+        title="Import Timesheets"
+        description="Upload a CSV file containing employee daily timesheet logs."
+        sampleFilename="timesheet_entries"
+        headers={[
+          { key: 'workEmail', label: 'Employee Work Email', required: true },
+          { key: 'date', label: 'Date (YYYY-MM-DD)', required: true },
+          { key: 'hours', label: 'Regular Hours', required: true },
+          { key: 'overtimeHours', label: 'Overtime Hours', required: false },
+          { key: 'description', label: 'Work Description / Task', required: false },
+        ]}
+        sampleRows={[
+          ['alice.smith@acme.corp', '2026-03-01', '8.0', '1.5', 'Frontend bug fixes & API integration'],
+          ['bob.johnson@acme.corp', '2026-03-01', '7.5', '0.0', 'Database index optimization'],
+        ]}
+        onImport={handleBulkImport}
+        isLoading={bulkCreateMutation.isPending}
+      />
     </div>
   );
 }

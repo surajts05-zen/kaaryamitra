@@ -64,3 +64,12 @@ export async function resetPasswordHandler(req: Request, res: Response) {
     message: `Password reset link has been sent to ${targetEmail}.` 
   });
 }
+
+export async function bulkCreateEmployeesHandler(req: Request, res: Response) {
+  const { items } = req.body;
+  if (!Array.isArray(items)) {
+    return res.status(400).json({ success: false, error: { message: 'Items must be an array' } });
+  }
+  const data = await EmployeesService.bulkCreateEmployees(req.tenantId!, items);
+  res.status(201).json({ success: true, count: data.length, data });
+}

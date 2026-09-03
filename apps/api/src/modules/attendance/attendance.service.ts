@@ -295,3 +295,70 @@ export async function requestRegularization(
 
   return correction;
 }
+
+export async function bulkCreateAttendanceRecords(
+  tenantId: string,
+  items: Array<{ workEmail: string; date: string; punchInTime?: string; punchOutTime?: string; status?: string }>
+) {
+  const created: any[] = [];
+  
+  for (const item of items) {
+    if (!item.workEmail || !item.date) continue;
+    try {
+      const emp = await prisma.employee.findFirst({
+        where: { tenantId, workEmail: item.workEmail.trim().toLowerCase() }
+      });
+      if (!emp) continue;
+
+      const dateObj = startOfDay(new Date(item.date));
+      if (isNaN(dateObj.getTime())) continue;
+
+      let punchIn: Date | null = null;
+      let punchOut: Date | null = null;
+
+      if (item.punchInTime) {
+        const [h, m] = item.punchInTime.split(':').map(Number);
+        punchIn = new Date(dateObj);
+        punchIn.setHours(h || 9, m || 0, 0, 0);
+      }
+
+      if (item.punchOutTime) {
+        const [h, m] = item.punchOutTime.split(':').map(Number);
+        punchOut = new Date(dateObj);
+        punchOut.setHours(h || 18, m || 0, 0, 0);
+      }
+
+      const totalMinutes = (punchIn && punchOut) ? Math.max(0, differenceInMinutes(punchOut, punchIn)) : null;
+
+      const record = await prisma.attendanceRecord.upsert({
+        where: {
+          tenantId_employeeId_date: {
+            tenantId,
+            employeeId: emp.id,
+            date: dateObj
+          }
+        },
+        create: {
+          tenantId,
+          employeeId: emp.id,
+          date: dateObj,
+          punchInTime: punchIn,
+          punchOutTime: punchOut,
+          totalMinutes,
+          status: (item.status ? item.status.toUpperCase() : 'PRESENT') as any,
+        },
+        update: {
+          ...(punchIn ? { punchInTime: punchIn } : {}),
+          ...(punchOut ? { punchOutTime: punchOut } : {}),
+          ...(totalMinutes !== null ? { totalMinutes } : {}),
+          status: (item.status ? item.status.toUpperCase() : 'PRESENT') as any,
+        }
+      });
+      created.push(record);
+    } catch (err) {
+      console.error(`Failed to bulk create attendance record for ${item.workEmail}:`, err);
+    }
+  }
+
+  return created;
+}

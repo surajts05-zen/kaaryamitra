@@ -13,3 +13,4 @@ meAttendanceRouter.post('/check-out', asyncHandler(controller.checkOutHandler));
 meAttendanceRouter.post('/break/start', asyncHandler(controller.startBreakHandler));
 meAttendanceRouter.post('/break/end', asyncHandler(controller.endBreakHandler));
 meAttendanceRouter.post('/regularize', asyncHandler(controller.requestRegularizationHandler));
+meAttendanceRouter.post('/bulk', asyncHandler(controller.bulkCreateAttendanceHandler));

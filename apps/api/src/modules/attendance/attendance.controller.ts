@@ -74,3 +74,13 @@ export async function requestRegularizationHandler(req: Request, res: Response) 
   const correction = await attendanceService.requestRegularization(tenantId, employeeId, userId, body);
   res.status(201).json({ success: true, data: correction });
 }
+
+export async function bulkCreateAttendanceHandler(req: Request, res: Response) {
+  const tenantId = req.tenantId!;
+  const { items } = req.body;
+  if (!Array.isArray(items)) {
+    return res.status(400).json({ success: false, error: { message: 'Items must be an array' } });
+  }
+  const data = await attendanceService.bulkCreateAttendanceRecords(tenantId, items);
+  res.status(201).json({ success: true, count: data.length, data });
+}

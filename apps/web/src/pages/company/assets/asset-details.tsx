@@ -15,7 +15,7 @@ export default function AssetDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: asset, isLoading } = useAssetDetails(id!);
-  const { data: employees } = useEmployees({});
+  const { data: employees } = useEmployees();
 
   const assignAsset = useAssignAsset();
   const returnAsset = useReturnAsset();

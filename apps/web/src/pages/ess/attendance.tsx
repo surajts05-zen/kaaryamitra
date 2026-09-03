@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { toast } from 'sonner';
 import { useCompanySettings } from '@/features/company/hooks/use-org-queries';
 
+
 export function MyAttendancePage() {
   const { data: settings } = useCompanySettings();
   const { data: records, isLoading } = useMyAttendance();
