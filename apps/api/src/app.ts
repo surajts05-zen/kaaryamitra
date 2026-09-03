@@ -30,6 +30,8 @@ import { holidaysRouter } from './modules/holidays/holidays.router.js';
 import { helpdeskAdminRouter, helpdeskEssRouter } from './modules/helpdesk/helpdesk.router.js';
 import { performanceRouter } from './modules/performance/performance.router.js';
 import { dashboardRouter } from './modules/dashboard/dashboard.router.js';
+import { compensationRouter } from './modules/compensation/compensation.router.js';
+import { payrollRouter } from './modules/payroll/payroll.router.js';
 import { requireAuth, requireSuperAdmin, resolveTenant } from './middleware/auth.js';
 
 export function createApp() {
@@ -175,6 +177,12 @@ export function createApp() {
 
   // Tenant-scoped Performance routes
   app.use('/api/v1/t/:slug/performance', requireAuth, resolveTenant, performanceRouter);
+
+  // Tenant-scoped Compensation routes
+  app.use('/api/v1/t/:slug/compensation', requireAuth, resolveTenant, compensationRouter);
+
+  // Tenant-scoped Payroll routes
+  app.use('/api/v1/t/:slug/payroll', requireAuth, resolveTenant, payrollRouter);
 
   // Notifications (user-scoped, no tenant resolution needed — userId from JWT is enough)
   app.use('/api/v1/notifications', requireAuth, notificationsRouter);

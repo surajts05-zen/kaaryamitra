@@ -63,6 +63,17 @@ import AssetDirectory from '@/pages/company/assets';
 import AssetDetails from '@/pages/company/assets/asset-details';
 import MyAssets from '@/pages/ess/assets';
 
+// Phase 28 - Compensation
+import SalaryComponentsPage from '@/pages/company/compensation/salary-components';
+import SalaryStructuresPage from '@/pages/company/compensation/salary-structures';
+import MyCompensationPage from '@/pages/ess/compensation';
+import MyPayslipsPage from '@/pages/ess/payslips';
+
+// Phase 29 - Payroll
+import PayrollRunsPage from '@/pages/company/payroll/payroll-runs';
+import PayrollRunDetailPage from '@/pages/company/payroll/payroll-run-detail';
+import { StatutorySettingsPage } from '@/pages/company/settings/statutory';
+
 // Help & Resources
 import { UserGuidePage } from '@/pages/user-guide';
 
@@ -103,9 +114,16 @@ export function App() {
             <Route path="settings/checklists" element={<ChecklistSettings />} />
             <Route path="settings/holidays" element={<HolidaysSettingsPage />} />
             <Route path="settings/helpdesk" element={<HelpdeskSettingsPage />} />
+            <Route path="settings/salary-components" element={<SalaryComponentsPage />} />
+            <Route path="settings/salary-structures" element={<SalaryStructuresPage />} />
+            <Route path="settings/statutory" element={<StatutorySettingsPage />} />
 
             {/* Phase 7 - Leave Management */}
             <Route path="approvals/leave" element={<LeaveApprovalsPage />} />
+
+            {/* Phase 29 - Payroll Admin */}
+            <Route path="payroll" element={<PayrollRunsPage />} />
+            <Route path="payroll/:id" element={<PayrollRunDetailPage />} />
 
             {/* Phase 8 - Workflow Engine */}
             <Route path="approvals" element={<ApprovalsInboxPage />} />
@@ -150,6 +168,8 @@ export function App() {
               <Route path="helpdesk" element={<EssHelpdeskPage />} />
               <Route path="helpdesk/:id" element={<EssHelpdeskThreadPage />} />
               <Route path="assets" element={<MyAssets />} />
+              <Route path="compensation" element={<MyCompensationPage />} />
+              <Route path="payslips" element={<MyPayslipsPage />} />
               
               {/* Phase 16 - Performance */}
               <Route path="performance/goals" element={<EssMyGoalsPage />} />

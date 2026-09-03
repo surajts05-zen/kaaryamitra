@@ -24,7 +24,9 @@
 11. [Directory Structure](#11-directory-structure)
 12. [Getting Started](#12-getting-started)
 13. [Development Guidelines](#13-development-guidelines)
-14. [Long-Term Product Direction](#14-long-term-product-direction)
+14. [Feature Status Model](#14-feature-status-model)
+15. [Long-Term Product Direction](#15-long-term-product-direction)
+16. [Master Development Rules](#16-master-development-rules)
 
 ---
 
@@ -660,6 +662,108 @@ Platform (KaaryaMitra)
 
 ---
 
+### 📋 Phase 26 — Policy & Content Platform
+> *Additive — see Section 12 of the Implementation Plan*
+
+**Goal:** Policy lifecycle management, rich content authoring, and employee acknowledgement.
+
+- [ ] Policy data model and permissions
+- [ ] Standard policy template library (25+ templates: Leave, Attendance, WFH, IT, Data Privacy, Code of Conduct, etc.)
+- [ ] Rich block-based Page Builder (drag-and-drop sections, headings, paragraphs, images, tables, callouts, FAQs, accordions, buttons)
+- [ ] Policy editor (create, edit, preview, publish, unpublish)
+- [ ] Policy versioning with effective dates — preserve all historical versions
+- [ ] Policy approval workflow (integrated with existing Workflow Engine)
+- [ ] Employee acknowledgement tracking (Pending / Acknowledged / Overdue per version)
+- [ ] Automated acknowledgement reminder notifications
+- [ ] Employee Handbook builder (combine policies into branded handbook with TOC, search, PDF export)
+- [ ] Full audit history for policy events
+- [ ] Tenant branding applied to published policies and handbooks
+
+---
+
+### 🤖 Phase 27 — AI Policy Assistant
+> *Additive — see Section 12.3 and 15 of the Implementation Plan*
+
+**Goal:** AI-assisted policy drafting with human approval safeguards.
+
+- [ ] AI policy drafting from natural-language descriptions
+- [ ] Policy content refinement (formal, concise, friendly or employee-oriented tone)
+- [ ] Add/remove sections from existing drafts
+- [ ] Generate employee FAQs from policy content
+- [ ] Summarize policies
+- [ ] Compare versions and explain changes
+- [ ] Suggest missing sections or ambiguities
+- [ ] Generate employee announcement messages
+- [ ] Translation support (where available)
+- [ ] **AI must never publish automatically** — all output remains Draft until human approval
+
+---
+
+### 💰 Phase 28 — Compensation Management
+> *Additive — see Section 13 of the Implementation Plan*
+
+**Goal:** Full compensation profiles, salary structures, and revision history.
+
+- [ ] Compensation profile per employee (basic, HRA, allowances, employer/employee contributions, variable pay, bonuses)
+- [ ] Salary Structure Builder (fixed, percentage-based, formula-based components; monthly / annual / one-time)
+- [ ] Configurable taxable/non-taxable attributes
+- [ ] Compensation history — never overwrite historical records; record effective date, reason, approver
+- [ ] Compensation revision workflow (integrated with Workflow Engine)
+- [ ] Compensation change notifications to employees
+- [ ] Complete audit history for all compensation events
+- [ ] Granular permissions: `compensation.view`, `compensation.create`, `compensation.approve`, `compensation.export`
+
+---
+
+### ⚙️ Phase 29 — Payroll Engine
+> *Additive — see Section 13.4–13.5 of the Implementation Plan*
+
+**Goal:** Configurable, auditable payroll calculation and processing.
+
+- [ ] Payroll periods (monthly, bi-weekly, weekly, custom)
+- [ ] Payroll lifecycle: Draft → Processing → Review → Approved → Finalized → Paid
+- [ ] Payroll inputs from compensation, attendance, leave, overtime, bonuses, reimbursements, deductions
+- [ ] New-joiner and exit proration
+- [ ] Salary revision proration
+- [ ] Unpaid leave deductions
+- [ ] Overtime and variable pay calculations
+- [ ] Arrears and retroactive adjustments
+- [ ] One-time earnings and deductions
+- [ ] Payroll exceptions and validation before finalization
+- [ ] **Finalized payroll is immutable** — post-finalization corrections require controlled adjustment/reversal with full audit trail
+- [ ] Country-agnostic architecture — country-specific rules as configurable, effective-date-based rule sets
+- [ ] Granular permissions: `payroll.view`, `payroll.create`, `payroll.process`, `payroll.approve`, `payroll.finalize`, `payroll.export`
+
+---
+
+### 🧾 Phase 30 — Payslips & Payroll Self-Service
+> *Additive — see Section 13.6–13.8 of the Implementation Plan*
+
+**Goal:** Professional payslip generation and employee payroll self-service.
+
+- [ ] Branded PDF payslip generator (company info/logo, employee info, payroll period, earnings, deductions, gross, net, employer contributions, amount in words, secure reference ID)
+- [ ] Bulk payslip generation
+- [ ] Employee payslip history — view, download, print
+- [ ] Employee view of authorized compensation information and year-to-date earnings
+- [ ] Payroll dashboard (status, total cost, gross, net, deductions, exceptions, department/cost-center analysis)
+- [ ] Payroll reports: register, salary summary, compensation, bonus/incentive, overtime, variance, YTD, employee cost
+- [ ] Excel / CSV / PDF exports (reuse existing Custom Report Builder)
+
+---
+
+### 🌍 Phase 31 — Payroll Localization & Integrations
+> *Additive — see Section 13.9–13.11 of the Implementation Plan*
+
+**Goal:** Country/jurisdiction rules and external system integrations.
+
+- [ ] Country/jurisdiction statutory configuration (effective-date-based rules, no hard-coding into core)
+- [ ] Bank/payment integrations (bank file export, payment advice)
+- [ ] Accounting system integrations (journal entry export)
+- [ ] Payroll provider integrations (API/webhook support)
+- [ ] First country implementation (India — PF, ESI, PT, TDS) — without changing core model
+
+---
+
 ## 8. MVP Scope
 
 The **first production-quality release** must include the following (Phases 0–7 + Notifications):
@@ -701,6 +805,8 @@ These **cross-cutting engines** must be built correctly from Phase 0 and extende
 | **Custom Fields Engine** | Dynamic schema extension per tenant, type-safe field system |
 | **Reporting / Analytics Engine** | Query builder, aggregation, export pipeline |
 | **Feature Flag System** | Per-tenant plan enforcement, gradual feature rollout |
+| **Payroll Engine** | Tenant-isolated, country-agnostic, immutable finalization |
+| **Policy / Content Engine** | Versioned policies, page builder, acknowledgement tracking |
 
 ---
 
@@ -749,8 +855,10 @@ kaaryamitra/
 │   │   │   ├── features/            # Feature-scoped MODULES
 │   │   │   │   ├── employee/        # Employee module
 │   │   │   │   ├── leave/           # Leave module
-│   │   │   │   ├── attendance/      # Attendance module (AT Global logic ported)
-│   │   │   │   ├── ai/              # AI assistant module (Phase 10.5)
+│   │   │   │   ├── attendance/      # Attendance module
+│   │   │   │   ├── payroll/         # Payroll & compensation module
+│   │   │   │   ├── policy/          # Policy & content module
+│   │   │   │   ├── ai/              # AI assistant module
 │   │   │   │   └── .../            # One folder per domain
 │   │   │   ├── hooks/               # Shared React hooks
 │   │   │   ├── lib/                 # Utilities, API client, config
@@ -762,8 +870,10 @@ kaaryamitra/
 │       │   ├── modules/             # Feature MODULES (self-contained)
 │       │   │   ├── employee/        #  employee.router / controller / service / schema
 │       │   │   ├── leave/           #  leave.router / controller / service / schema
-│       │   │   ├── attendance/      #  attendance module (geofence, QR, punch)
-│       │   │   ├── ai/              #  AI module (Gemini, Phase 10.5)
+│       │   │   ├── attendance/      #  attendance module
+│       │   │   ├── payroll/         #  payroll engine module
+│       │   │   ├── policy/          #  policy & content module
+│       │   │   ├── ai/              #  AI module
 │       │   │   └── .../            #  One folder per domain
 │       │   ├── middleware/          # Auth, tenant resolution, RBAC, rate-limit
 │       │   ├── services/            # Cross-cutting services (email, storage, audit)
@@ -844,6 +954,29 @@ npm run dev --workspace=apps/api    # http://localhost:3000
 git push origin main
 ```
 
+### 7. Payroll User Guide
+
+KaaryaMitra's Payroll Engine allows you to automate payslip generation and manage payroll lifecycles.
+
+**How to Run Payroll:**
+1. Navigate to the **Payroll Processing** module in the Company Admin Dashboard.
+2. Click **Run Payroll** and enter the details for the new run (e.g., Run Name, Period Start/End, Payment Date, Frequency).
+3. The system will automatically fetch eligible employees, calculate their prorated working days, and apply their compensation profile components (Basic, HRA, Statutory Rules) to generate **DRAFT** payslips.
+
+**How to Update / Override Payroll (CSV Upload):**
+If you need to bulk update earnings/deductions or provide custom figures for a DRAFT run:
+1. In the **Payroll Processing** module, click **View** on a **DRAFT** payroll run.
+2. Click **Upload CSV**.
+3. Upload a CSV containing the following columns: `EmployeeEmail`, `WorkingDays`, `GrossEarnings`, `TotalDeductions`, `NetPay`. Any additional columns will be treated dynamically as earning/deduction line items (positive = earning, negative = deduction).
+4. The system will process the file, match employees by email, add custom line items, and update the payroll run totals accordingly.
+
+**Payroll Lifecycle:**
+- **DRAFT:** Initial state. Payslips can be reviewed and overridden via CSV.
+- **REVIEW:** Submitted for finance review.
+- **APPROVED:** Approved for processing.
+- **FINALIZED:** Locked. Cannot be altered.
+- **PAID:** Marked as paid out to employees.
+
 ---
 
 ## 13. Development Guidelines
@@ -857,6 +990,8 @@ git push origin main
 5. **Maintain database migrations** — no destructive schema resets
 6. **Every feature = its own module** — `apps/api/src/modules/{feature}/` + `apps/web/src/features/{feature}/`
 7. **No cross-module direct imports** — share through `packages/shared-types/` only
+8. **Inspect before implementing** — check what already exists; never create duplicates
+9. **Enhance rather than replace** — if a feature exists, extend it
 
 ### Code Standards
 
@@ -868,10 +1003,11 @@ git push origin main
 
 ### Testing Requirements
 
-- Unit tests for all **business logic** (especially leave calculations)
+- Unit tests for all **business logic** (especially leave calculations, payroll engine, accrual rules)
 - Integration tests for **tenant isolation** and **permission enforcement**
-- E2E tests for critical user flows (login, leave application, approval)
+- E2E tests for critical user flows (login, leave application, approval, payroll finalization)
 - All tests must pass before phase completion
+- Regression tests required for all modified business rules
 
 ### Architecture Decision Records (ADRs)
 
@@ -883,7 +1019,7 @@ All significant architectural decisions must be documented in `/docs/adr/` using
 ### Naming Conventions
 
 | Type | Convention | Example |
-|------|-----------|---------|
+|------|-----------|---------| 
 | Components | PascalCase | `EmployeeCard.tsx` |
 | Hooks | camelCase with `use` prefix | `useLeaveBalance.ts` |
 | API routes | kebab-case | `/api/v1/leave-types` |
@@ -893,33 +1029,88 @@ All significant architectural decisions must be documented in `/docs/adr/` using
 
 ---
 
-## 14. Long-Term Product Direction
+## 14. Feature Status Model
 
-The final KaaryaMitra product will combine the **HR depth** of traditional enterprise HRMS platforms with the **simplicity and polish** of modern SaaS products.
+Every feature in the roadmap is tracked using one of the following statuses:
+
+| Status | Meaning |
+|--------|---------|
+| ✅ **Implemented** | Production-ready functionality already present |
+| 🔧 **Implemented / Needs Enhancement** | Existing functionality that will receive additional capabilities |
+| 🚧 **Partially Implemented** | Some functionality exists and must be completed |
+| 📋 **Planned** | Not yet implemented — on the roadmap |
+| 🔮 **Future Extension** | Deliberately reserved for later development |
+| ⚠️ **Deprecated** | Only when explicitly approved; never remove silently |
+
+> **Rule:** Before implementing any feature, check the codebase. If the feature exists, mark it as **Implemented** or **Needs Enhancement** and extend it — never recreate it.
+
+---
+
+## 15. Long-Term Product Direction
+
+KaaryaMitra should evolve into a **complete employee operating platform** combining:
+
+- Core HR & Employee Self-Service
+- Leave, Attendance & Shifts
+- Workflow Automation
+- Documents & Policy Management
+- Compensation & Payroll (country-agnostic engine, localization-ready)
+- Analytics & Custom Reporting
+- Integrations (Google Workspace, Microsoft 365, Slack, payroll systems, biometrics)
+- AI HR Assistant (policy drafting, payroll Q&A, workforce insights)
 
 ### Key Differentiators
 
 | Differentiator | Description |
 |----------------|-------------|
 | 🌴 **Leave Management** | Industry-leading flexibility — accruals, pro-rata, carry-forward, encashment, multi-policy |
-| 👤 **Employee Self-Service** | Beautiful, mobile-first self-service portal employees actually want to use |
+| 👤 **Employee Self-Service** | Beautiful, mobile-first portal employees actually want to use |
 | ⚙️ **Workflow Automation** | Configurable approval chains for any HR process without code |
 | 🎨 **Tenant Branding** | Full white-label capability with per-tenant logo, colors, and domain |
 | 📊 **Analytics** | Role-appropriate dashboards with actionable workforce insights |
+| 💰 **Compensation & Payroll** | Country-agnostic, immutable, auditable payroll engine |
+| 📋 **Policy Platform** | AI-assisted policy authoring with employee acknowledgement and handbook builder |
 | 🤖 **AI HR Assistant** | Natural-language access to HR data with human-in-the-loop safeguards |
 
 ### The North Star
 
 > *"A tool that HR teams love to configure, employees love to use, and executives trust for workforce decisions."*
 
+The product must remain extensible so future modules — benefits administration, recruitment, ATS, expense management, workforce planning, learning management, tax localization, accounting integrations, and additional AI capabilities — can be introduced **without redesigning** the core tenant, employee, permission, workflow, document, reporting, and audit architecture.
+
+---
+
+## 16. Master Development Rules
+
+> These rules govern **all** future development work on KaaryaMitra.
+
+1. **Inspect before implementing** — check the existing codebase before writing code.
+2. **Never assume a roadmap item is unimplemented** merely because it appears in the plan.
+3. **Prefer enhancement over replacement** — extend what exists; don't recreate it.
+4. **Never remove an existing feature** unless explicitly instructed.
+5. **No duplicate systems** — never introduce duplicate employee, tenant, workflow, notification, document, reporting, or permission systems.
+6. **Reuse existing components** — services, hooks, utilities, and architectural abstractions first.
+7. **Database migrations only** — no destructive schema resets for feature development.
+8. **Preserve API compatibility** wherever practical.
+9. **Preserve existing UI/UX** unless the request explicitly requires redesign.
+10. **Run existing tests** before and after significant changes.
+11. **Add regression tests** for modified business rules.
+12. **Tenant isolation is non-negotiable** — all tenant-owned data must remain tenant-scoped.
+13. **Payroll and compensation are highly restricted** — enforce server-side RBAC; never expose to unauthorized users.
+14. **AI must respect RBAC** — AI features must not expose data that the requesting user is not authorized to see.
+15. **AI must never take irreversible actions automatically** — all AI recommendations require human confirmation.
+16. **Finalized payroll is immutable** — post-finalization corrections use controlled adjustment/reversal with full audit trail.
+17. **Policy AI output stays Draft** — AI-generated content must never be auto-published.
+18. **Feature flags for new modules** — enable new capabilities per tenant without exposing to all.
+19. **Keep the application runnable** after every completed phase.
+20. **Document architectural decisions** that affect future extensibility in `/docs/adr/`.
+
 ---
 
 ## Implementation Principle
 
-> **Architect broadly. Implement deliberately. Test every phase.**
+> **Preserve what works. Extend what exists. Architect broadly. Implement deliberately. Never remove existing capabilities. Test every phase.**
 
 ---
 
-*Last updated: August 2026 | KaaryaMitra HRMS v1.0 Roadmap*
-#   k a a r y a m i t r a  
- 
+*Last updated: September 2026 | KaaryaMitra HRMS — Full Roadmap (Phases 0–31)*

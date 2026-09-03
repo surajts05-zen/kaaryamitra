@@ -188,6 +188,43 @@ enum ResignationStatus {
   WITHDRAWN
 }
 
+enum SalaryComponentType {
+  EARNING
+  DEDUCTION
+  EMPLOYER_CONTRIBUTION
+  EMPLOYEE_CONTRIBUTION
+}
+
+enum SalaryComponentFrequency {
+  MONTHLY
+  ANNUAL
+  ONE_TIME
+}
+
+enum CompensationRevisionStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+}
+
+enum PayrollStatus {
+  DRAFT
+  PROCESSING
+  REVIEW
+  APPROVED
+  FINALIZED
+  PAID
+}
+
+enum PayrollLineItemType {
+  EARNING
+  DEDUCTION
+  EMPLOYER_CONTRIBUTION
+  TAX
+  STATUTORY
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // PERFORMANCE MANAGEMENT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -265,34 +302,40 @@ model Tenant {
   updatedAt DateTime @updatedAt
 
   // Relations
-  users              User[]
-  departments        Department[]
-  teams              Team[]
-  locations          Location[]
-  designations       Designation[]
-  employees          Employee[]
-  leaveTypes         LeaveType[]
-  notifications      Notification[]
-  auditLogs          AuditLog[]
-  roles              Role[]
-  workflowTemplates  WorkflowTemplate[]
-  jobLevels          JobLevel[]
-  holidays           Holiday[]
-  companySettings    CompanySettings?
-  shifts             Shift[]
-  documentCategories DocumentCategory[]
-  documents          Document[]
-  assetCategories    AssetCategory[]
-  assets             Asset[]
-  checklistTemplates ChecklistTemplate[]
-  employeeChecklists EmployeeChecklist[]
-  resignations       Resignation[]
-  helpdeskCategories HelpdeskCategory[]
-  helpdeskTickets    HelpdeskTicket[]
-  AssetAssignment    AssetAssignment[]
-  goals              Goal[]
-  reviewCycles       ReviewCycle[]
-  performanceReviews PerformanceReview[]
+  users                User[]
+  departments          Department[]
+  teams                Team[]
+  locations            Location[]
+  designations         Designation[]
+  employees            Employee[]
+  leaveTypes           LeaveType[]
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+  roles                Role[]
+  workflowTemplates    WorkflowTemplate[]
+  jobLevels            JobLevel[]
+  holidays             Holiday[]
+  companySettings      CompanySettings?
+  shifts               Shift[]
+  documentCategories   DocumentCategory[]
+  documents            Document[]
+  assetCategories      AssetCategory[]
+  assets               Asset[]
+  checklistTemplates   ChecklistTemplate[]
+  employeeChecklists   EmployeeChecklist[]
+  resignations         Resignation[]
+  helpdeskCategories   HelpdeskCategory[]
+  helpdeskTickets      HelpdeskTicket[]
+  AssetAssignment      AssetAssignment[]
+  goals                Goal[]
+  reviewCycles         ReviewCycle[]
+  performanceReviews   PerformanceReview[]
+  salaryComponents     SalaryComponent[]
+  salaryStructures     SalaryStructure[]
+  compensationProfiles CompensationProfile[]
+  compensationHistory  CompensationHistory[]
+  payrollRuns          PayrollRun[]
+  statutoryRules       StatutoryRule[]
 
   @@map("tenants")
 }
@@ -612,77 +655,77 @@ model AssetAssignment {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Goal {
-  id           String     @id @default(cuid())
-  tenantId     String
-  title        String
-  description  String?
-  type         GoalType   @default(SMART_GOAL)
-  status       GoalStatus @default(NOT_STARTED)
-  progress     Int        @default(0) // 0-100%
-  startDate    DateTime
-  dueDate      DateTime
-  
+  id          String     @id @default(cuid())
+  tenantId    String
+  title       String
+  description String?
+  type        GoalType   @default(SMART_GOAL)
+  status      GoalStatus @default(NOT_STARTED)
+  progress    Int        @default(0) // 0-100%
+  startDate   DateTime
+  dueDate     DateTime
+
   parentGoalId String?
   employeeId   String?
   departmentId String?
-  companyWide  Boolean    @default(false)
+  companyWide  Boolean @default(false)
 
-  tenant       Tenant      @relation(fields: [tenantId], references: [id])
-  parentGoal   Goal?       @relation("GoalHierarchy", fields: [parentGoalId], references: [id], onDelete: SetNull)
-  childGoals   Goal[]      @relation("GoalHierarchy")
-  employee     Employee?   @relation("EmployeeGoals", fields: [employeeId], references: [id], onDelete: SetNull)
-  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  parentGoal Goal?       @relation("GoalHierarchy", fields: [parentGoalId], references: [id], onDelete: SetNull)
+  childGoals Goal[]      @relation("GoalHierarchy")
+  employee   Employee?   @relation("EmployeeGoals", fields: [employeeId], references: [id], onDelete: SetNull)
+  department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("goals")
 }
 
 model ReviewCycle {
-  id           String          @id @default(cuid())
-  tenantId     String
-  title        String
-  type         ReviewCycleType
-  status       String          @default("DRAFT") // DRAFT, ACTIVE, COMPLETED, CLOSED
-  startDate    DateTime
-  endDate      DateTime
-  is360Degree  Boolean         @default(false)
+  id          String          @id @default(cuid())
+  tenantId    String
+  title       String
+  type        ReviewCycleType
+  status      String          @default("DRAFT") // DRAFT, ACTIVE, COMPLETED, CLOSED
+  startDate   DateTime
+  endDate     DateTime
+  is360Degree Boolean         @default(false)
 
-  tenant       Tenant              @relation(fields: [tenantId], references: [id])
-  reviews      PerformanceReview[]
+  tenant  Tenant              @relation(fields: [tenantId], references: [id])
+  reviews PerformanceReview[]
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("review_cycles")
 }
 
 model PerformanceReview {
-  id              String       @id @default(cuid())
-  tenantId        String
-  reviewCycleId   String
-  employeeId      String
-  status          ReviewStatus @default(NOT_STARTED)
-  
-  selfRating      Int?         // 1-5 scale
+  id            String       @id @default(cuid())
+  tenantId      String
+  reviewCycleId String
+  employeeId    String
+  status        ReviewStatus @default(NOT_STARTED)
+
+  selfRating      Int? // 1-5 scale
   selfComments    String?
   selfSubmittedAt DateTime?
-  
-  managerRating      Int?      // 1-5 scale
+
+  managerRating      Int? // 1-5 scale
   managerComments    String?
   managerSubmittedAt DateTime?
 
-  hrComments      String?
-  finalRating     Int?
+  hrComments  String?
+  finalRating Int?
 
-  tenant          Tenant             @relation(fields: [tenantId], references: [id])
-  reviewCycle     ReviewCycle        @relation(fields: [reviewCycleId], references: [id], onDelete: Cascade)
-  employee        Employee           @relation("EmployeeReviews", fields: [employeeId], references: [id], onDelete: Cascade)
-  feedbacks       ReviewFeedback[]
+  tenant      Tenant           @relation(fields: [tenantId], references: [id])
+  reviewCycle ReviewCycle      @relation(fields: [reviewCycleId], references: [id], onDelete: Cascade)
+  employee    Employee         @relation("EmployeeReviews", fields: [employeeId], references: [id], onDelete: Cascade)
+  feedbacks   ReviewFeedback[]
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([reviewCycleId, employeeId])
   @@map("performance_reviews")
@@ -693,13 +736,13 @@ model ReviewFeedback {
   performanceReviewId String
   reviewerId          String
   type                FeedbackType @default(PEER)
-  rating              Int?         // 1-5 scale
+  rating              Int? // 1-5 scale
   comments            String
   isAnonymous         Boolean      @default(true)
   submittedAt         DateTime     @default(now())
 
-  review              PerformanceReview @relation(fields: [performanceReviewId], references: [id], onDelete: Cascade)
-  reviewer            Employee          @relation("ReviewFeedbacksProvided", fields: [reviewerId], references: [id], onDelete: Cascade)
+  review   PerformanceReview @relation(fields: [performanceReviewId], references: [id], onDelete: Cascade)
+  reviewer Employee          @relation("ReviewFeedbacksProvided", fields: [reviewerId], references: [id], onDelete: Cascade)
 
   @@unique([performanceReviewId, reviewerId])
   @@map("review_feedbacks")
@@ -825,38 +868,41 @@ model Employee {
   updatedAt DateTime @updatedAt
 
   // Relations
-  tenant             Tenant              @relation(fields: [tenantId], references: [id])
-  user               User                @relation(fields: [userId], references: [id])
-  department         Department?         @relation(fields: [departmentId], references: [id])
-  team               Team?               @relation(fields: [teamId], references: [id])
-  location           Location?           @relation(fields: [locationId], references: [id])
-  designation        Designation?        @relation(fields: [designationId], references: [id])
-  jobLevelId         String?
-  jobLevel           JobLevel?           @relation(fields: [jobLevelId], references: [id])
-  manager            Employee?           @relation("ManagerReportees", fields: [managerId], references: [id])
-  reportees          Employee[]          @relation("ManagerReportees")
-  departmentHeads    Department[]        @relation("DepartmentHead")
-  teamLeads          Team[]              @relation("TeamLead")
-  leaveApplications  LeaveApplication[]
-  leaveBalances      LeaveBalance[]
-  assets             Asset[]
-  assignedAssets     AssetAssignment[]   @relation("AssetAssignee")
-  assetsAssignedByMe AssetAssignment[]   @relation("AssetAssignedBy")
-  checklists         EmployeeChecklist[]
-  resignations       Resignation[]
-  attendanceRecords  AttendanceRecord[]
-  notifications      Notification[]      @relation("EmployeeNotifications")
-  employeeShifts     EmployeeShift[]
-  timesheets         Timesheet[]
-  requestedSwaps     ShiftSwapRequest[]  @relation("RequestedSwaps")
-  targetSwaps        ShiftSwapRequest[]  @relation("TargetSwaps")
-  documents          Document[]
-  requestedTickets   HelpdeskTicket[]    @relation("RequestedTickets")
-  assignedTickets    HelpdeskTicket[]    @relation("AssignedTickets")
-  goals              Goal[]              @relation("EmployeeGoals")
-  performanceReviews PerformanceReview[] @relation("EmployeeReviews")
-  feedbacksProvided  ReviewFeedback[]    @relation("ReviewFeedbacksProvided")
-  helpdeskComments   HelpdeskComment[]
+  tenant              Tenant                @relation(fields: [tenantId], references: [id])
+  user                User                  @relation(fields: [userId], references: [id])
+  department          Department?           @relation(fields: [departmentId], references: [id])
+  team                Team?                 @relation(fields: [teamId], references: [id])
+  location            Location?             @relation(fields: [locationId], references: [id])
+  designation         Designation?          @relation(fields: [designationId], references: [id])
+  jobLevelId          String?
+  jobLevel            JobLevel?             @relation(fields: [jobLevelId], references: [id])
+  manager             Employee?             @relation("ManagerReportees", fields: [managerId], references: [id])
+  reportees           Employee[]            @relation("ManagerReportees")
+  departmentHeads     Department[]          @relation("DepartmentHead")
+  teamLeads           Team[]                @relation("TeamLead")
+  leaveApplications   LeaveApplication[]
+  leaveBalances       LeaveBalance[]
+  assets              Asset[]
+  assignedAssets      AssetAssignment[]     @relation("AssetAssignee")
+  assetsAssignedByMe  AssetAssignment[]     @relation("AssetAssignedBy")
+  checklists          EmployeeChecklist[]
+  resignations        Resignation[]
+  attendanceRecords   AttendanceRecord[]
+  notifications       Notification[]        @relation("EmployeeNotifications")
+  employeeShifts      EmployeeShift[]
+  timesheets          Timesheet[]
+  requestedSwaps      ShiftSwapRequest[]    @relation("RequestedSwaps")
+  targetSwaps         ShiftSwapRequest[]    @relation("TargetSwaps")
+  documents           Document[]
+  requestedTickets    HelpdeskTicket[]      @relation("RequestedTickets")
+  assignedTickets     HelpdeskTicket[]      @relation("AssignedTickets")
+  goals               Goal[]                @relation("EmployeeGoals")
+  performanceReviews  PerformanceReview[]   @relation("EmployeeReviews")
+  feedbacksProvided   ReviewFeedback[]      @relation("ReviewFeedbacksProvided")
+  helpdeskComments    HelpdeskComment[]
+  compensationProfile CompensationProfile?
+  compensationHistory CompensationHistory[]
+  payrollEntries      PayrollEntry[]
 
   @@index([tenantId])
   @@index([managerId])
@@ -1430,4 +1476,221 @@ model PlatformSettings {
   updatedAt    DateTime @updatedAt
 
   @@map("platform_settings")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPENSATION (Phase 28)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Reusable salary component definitions per tenant
+model SalaryComponent {
+  id          String                   @id @default(cuid())
+  tenantId    String
+  name        String // "Basic Salary", "HRA", "PF Employer"
+  code        String // "BASIC", "HRA", "PF_EMP"
+  type        SalaryComponentType
+  frequency   SalaryComponentFrequency @default(MONTHLY)
+  isTaxable   Boolean                  @default(true)
+  isActive    Boolean                  @default(true)
+  description String?
+
+  tenant            Tenant                    @relation(fields: [tenantId], references: [id])
+  structureItems    SalaryStructureItem[]
+  compensationItems CompensationProfileItem[]
+  payrollLineItems  PayrollLineItem[]
+
+  @@unique([tenantId, code])
+  @@map("salary_components")
+}
+
+// Reusable salary structure templates (by grade/designation/department)
+model SalaryStructure {
+  id          String  @id @default(cuid())
+  tenantId    String
+  name        String // "L3 Engineer Structure"
+  description String?
+  isActive    Boolean @default(true)
+
+  tenant   Tenant                @relation(fields: [tenantId], references: [id])
+  items    SalaryStructureItem[]
+  profiles CompensationProfile[]
+
+  @@map("salary_structures")
+}
+
+model SalaryStructureItem {
+  id              String  @id @default(cuid())
+  structureId     String
+  componentId     String
+  calculationType String  @default("FIXED") // FIXED | PERCENTAGE | FORMULA
+  value           Decimal // amount or percentage
+  percentageBase  String? // e.g. "BASIC" for HRA = 40% of Basic
+  formula         String?
+
+  structure SalaryStructure @relation(fields: [structureId], references: [id], onDelete: Cascade)
+  component SalaryComponent @relation(fields: [componentId], references: [id])
+
+  @@map("salary_structure_items")
+}
+
+// Per-employee active compensation profile
+model CompensationProfile {
+  id            String   @id @default(cuid())
+  tenantId      String
+  employeeId    String   @unique // one active profile per employee
+  structureId   String?
+  effectiveFrom DateTime
+  annualCTC     Decimal
+  monthlyGross  Decimal
+
+  // Bank Details
+  bankName      String?
+  accountNumber String?
+  routingNumber String? // IFSC in India
+  accountType   String? // Savings / Current
+
+  tenant    Tenant                    @relation(fields: [tenantId], references: [id])
+  employee  Employee                  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  structure SalaryStructure?          @relation(fields: [structureId], references: [id])
+  items     CompensationProfileItem[]
+  history   CompensationHistory[]
+
+  @@map("compensation_profiles")
+}
+
+model CompensationProfileItem {
+  id          String  @id @default(cuid())
+  profileId   String
+  componentId String
+  amount      Decimal // computed or overridden monthly amount
+
+  profile   CompensationProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  component SalaryComponent     @relation(fields: [componentId], references: [id])
+
+  @@map("compensation_profile_items")
+}
+
+// Immutable history — one row per approved revision
+model CompensationHistory {
+  id            String                     @id @default(cuid())
+  tenantId      String
+  employeeId    String
+  profileId     String
+  effectiveDate DateTime
+  reason        String
+  previousCTC   Decimal?
+  newCTC        Decimal
+  approvedById  String?
+  status        CompensationRevisionStatus @default(DRAFT)
+
+  createdAt DateTime @default(now())
+
+  tenant   Tenant              @relation(fields: [tenantId], references: [id])
+  employee Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  profile  CompensationProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("compensation_history")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAYROLL (Phase 29, 30)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// A payroll run for a given period
+model PayrollRun {
+  id        String        @id @default(cuid())
+  tenantId  String
+  name      String        @default("Payroll Run")
+  period    String        // "2026-09" (YYYY-MM)
+  periodStart DateTime    @default(now())
+  periodEnd   DateTime    @default(now())
+  paymentDate DateTime    @default(now())
+  frequency String        @default("MONTHLY") // MONTHLY | BIWEEKLY | WEEKLY
+  status    PayrollStatus @default(DRAFT)
+
+  totalGross                 Decimal?
+  totalNet                   Decimal?
+  totalDeductions            Decimal?
+  totalEmployerContributions Decimal?
+
+  processedAt  DateTime?
+  approvedAt   DateTime?
+  finalizedAt  DateTime?
+  paidAt       DateTime?
+  approvedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant  Tenant         @relation(fields: [tenantId], references: [id])
+  entries PayrollEntry[]
+
+  @@unique([tenantId, period, frequency])
+  @@map("payroll_runs")
+}
+
+// One entry per employee per payroll run
+model PayrollEntry {
+  id           String @id @default(cuid())
+  payrollRunId String
+  employeeId   String
+  tenantId     String
+
+  grossEarnings         Decimal
+  totalDeductions       Decimal
+  netPay                Decimal
+  employerContributions Decimal @default(0)
+
+  workingDays   Int
+  lopDays       Int     @default(0) // Loss of Pay
+  overtimeHours Decimal @default(0)
+
+  isFinalized Boolean @default(false) // IMMUTABLE once true
+
+  payrollRun PayrollRun        @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  employee   Employee          @relation(fields: [employeeId], references: [id])
+  lineItems  PayrollLineItem[]
+
+  @@unique([payrollRunId, employeeId])
+  @@map("payroll_entries")
+}
+
+// Individual earning/deduction lines per entry
+model PayrollLineItem {
+  id          String              @id @default(cuid())
+  entryId     String
+  componentId String? // links to SalaryComponent
+  type        PayrollLineItemType
+  name        String // snapshot label at time of calculation
+  amount      Decimal
+  notes       String?
+
+  entry     PayrollEntry     @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  component SalaryComponent? @relation(fields: [componentId], references: [id])
+
+  @@map("payroll_line_items")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATUTORY RULES (Phase 31)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Country-agnostic statutory rule configuration
+model StatutoryRule {
+  id            String    @id @default(cuid())
+  tenantId      String
+  countryCode   String // "IN", "US", "UK"
+  name          String // "PF Employee", "ESI Employer", "PT Karnataka"
+  code          String // "PF_EMP", "ESI_EMP", "PT_KA"
+  type          String // "PERCENTAGE_OF_COMPONENT" | "FIXED_SLAB" | "CUSTOM_FORMULA"
+  baseComponent String? // component code used as base (e.g. "BASIC")
+  rateOrAmount  Decimal
+  cappedAt      Decimal? // earnings cap above which rule doesn't apply
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  isActive      Boolean   @default(true)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("statutory_rules")
 }

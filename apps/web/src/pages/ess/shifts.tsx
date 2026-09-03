@@ -151,18 +151,18 @@ export function MyShiftsPage() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {shifts?.map((es) => (
                 <Card key={es.id} className="relative overflow-hidden transition-all hover:shadow-md">
-                  <div className="absolute left-0 top-0 h-full w-1.5" style={{ backgroundColor: es.shift.color }} />
+                  <div className="absolute left-0 top-0 h-full w-1.5" style={{ backgroundColor: es.shift?.color || '#6366f1' }} />
                   <CardHeader className="pb-3 pl-6">
-                    <CardTitle className="text-lg">{es.shift.name}</CardTitle>
+                    <CardTitle className="text-lg">{es.shift?.name || 'Assigned Shift'}</CardTitle>
                     <CardDescription className="mt-1">
-                      {es.shift.type} Shift
+                      {es.shift?.type || 'Standard'} Shift
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pl-6">
                     <div className="flex items-center gap-2 text-sm">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">
-                        {es.shift.startTime} - {es.shift.endTime}
+                        {es.shift?.startTime || '--:--'} - {es.shift?.endTime || '--:--'}
                       </span>
                     </div>
                     <div className="mt-4 text-xs text-muted-foreground">

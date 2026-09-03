@@ -11,8 +11,8 @@ import { ArrowLeft, Mail, Phone, Building2, MapPin, Briefcase, Calendar, CheckCi
 import { format } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EmployeeDocumentsTab } from './employee-documents-tab';
-import { EmployeeAssetsTab } from './employee-assets-tab';
 import { EmployeeChecklistsTab } from './employee-checklists-tab';
+import { EmployeeCompensationTab } from './employee-compensation-tab';
 
 export function EmployeeProfilePage() {
   const { id } = useParams();
@@ -111,6 +111,7 @@ export function EmployeeProfilePage() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="assets">Assets</TabsTrigger>
+          <TabsTrigger value="compensation">Compensation</TabsTrigger>
           <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
           <TabsTrigger value="offboarding">Offboarding</TabsTrigger>
         </TabsList>
@@ -256,6 +257,12 @@ export function EmployeeProfilePage() {
         <TabsContent value="assets">
           <div className="mt-6">
             <EmployeeAssetsTab employeeId={id as string} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="compensation">
+          <div className="mt-6">
+            <EmployeeCompensationTab employeeId={id as string} />
           </div>
         </TabsContent>
 

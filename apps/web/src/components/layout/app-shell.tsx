@@ -29,7 +29,11 @@ import {
   Target,
   ChevronDown,
   ChevronRight,
-  BookOpen
+  BookOpen,
+  IndianRupee,
+  Banknote,
+  Receipt,
+  ShieldAlert
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/button';
@@ -61,6 +65,8 @@ const navItems: NavItem[] = [
   { icon: Timer, label: 'My Timesheets', path: 'me/timesheets', group: 'My Workspace' },
   { icon: Laptop, label: 'My Assets', path: 'me/assets', group: 'My Workspace' },
   { icon: DoorOpen, label: 'My Resignation', path: 'me/resignation', group: 'My Workspace' },
+  { icon: IndianRupee, label: 'My Compensation', path: 'me/compensation', group: 'My Workspace' },
+  { icon: Receipt, label: 'My Payslips', path: 'me/payslips', group: 'My Workspace' },
   { icon: Headset, label: 'My Helpdesk', path: 'me/helpdesk', group: 'My Workspace' },
   { icon: Target, label: 'My Goals', path: 'me/performance/goals', group: 'My Workspace' },
   { icon: Target, label: 'My Reviews', path: 'me/performance/reviews', group: 'My Workspace' },
@@ -71,6 +77,7 @@ const navItems: NavItem[] = [
   { icon: MapPin,    label: 'Locations',     path: 'locations',         allowedRoles: HR_ROLES, group: 'Organization' },
   { icon: Briefcase, label: 'Designations',  path: 'designations',      allowedRoles: HR_ROLES, group: 'Organization' },
   
+  { icon: Banknote,  label: 'Payroll',       path: 'payroll',           allowedRoles: HR_ROLES, group: 'Management' },
   { icon: Laptop,        label: 'Assets',        path: 'assets',            allowedRoles: HR_ROLES, group: 'Management' },
   { icon: UserMinus, label: 'Resignations',  path: 'resignations',      allowedRoles: HR_ROLES, group: 'Management' },
   { icon: Headset,       label: 'Helpdesk',      path: 'helpdesk',          allowedRoles: HR_ROLES, group: 'Management' },
@@ -80,6 +87,9 @@ const navItems: NavItem[] = [
   // Admin-only configuration
   { icon: GitBranch, label: 'Workflows',        path: 'settings/workflows', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: Shield,    label: 'Roles & Permissions', path: 'settings/roles', allowedRoles: ADMIN_ROLES, group: 'Settings' },
+  { icon: IndianRupee, label: 'Salary Components', path: 'settings/salary-components', allowedRoles: ADMIN_ROLES, group: 'Settings' },
+  { icon: IndianRupee, label: 'Salary Structures', path: 'settings/salary-structures', allowedRoles: ADMIN_ROLES, group: 'Settings' },
+  { icon: ShieldAlert, label: 'Statutory Compliances', path: 'settings/statutory', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: Settings,  label: 'Settings',      path: 'settings',          allowedRoles: ADMIN_ROLES, group: 'Settings' },
   
   // Help & Resources

@@ -62,6 +62,9 @@ export function UserGuidePage() {
             <button onClick={() => scrollToSection('user-roles')} className="text-left text-sm text-muted-foreground hover:text-primary transition-colors">
               6. User Types & Roles Matrix
             </button>
+            <button onClick={() => scrollToSection('payroll')} className="text-left text-sm text-muted-foreground hover:text-primary transition-colors">
+              7. Payroll & Compensation
+            </button>
           </nav>
         </div>
 
@@ -434,6 +437,62 @@ export function UserGuidePage() {
                     <p className="text-xs text-foreground/80 font-medium">
                       👉 <strong>When to use:</strong> Daily work activities, requesting time off, logging weekly work hours, and self-evaluations.
                     </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Section 7: Payroll & Compensation */}
+          <section id="payroll" className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">7</div>
+              <h3 className="text-2xl font-semibold tracking-tight">Payroll & Compensation</h3>
+            </div>
+            <p className="text-muted-foreground ml-11">
+              The Payroll module automates payslip generation, statutory compliance, and payroll lifecycle management.
+            </p>
+            <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
+              <div className="h-64 bg-muted/30 border-b flex items-center justify-center border-dashed">
+                <div className="flex flex-col items-center text-muted-foreground/50">
+                  <ImageIcon className="h-10 w-10 mb-2" />
+                  <span>Insert Payroll Module Screenshot Here</span>
+                </div>
+              </div>
+              <CardContent className="p-6 bg-card">
+                <h4 className="font-semibold flex items-center gap-2 text-lg mb-4">
+                  <Target className="h-5 w-5 text-primary" />
+                  Step-by-Step: Managing Payroll
+                </h4>
+                
+                <div className="space-y-6">
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">How to Run Payroll</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Navigate to <strong>Payroll {'>'} Payroll Runs</strong>.</li>
+                      <li className="pl-2">Click <strong>Run Payroll</strong> and provide details such as Name, Period, and Payment Date.</li>
+                      <li className="pl-2">The system will process eligible employees, calculate their prorated working days, apply statutory rules, and generate DRAFT payslips.</li>
+                    </ol>
+                  </div>
+
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">How to Update/Override a DRAFT Payroll (CSV Upload)</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Click <strong>View</strong> on a DRAFT payroll run.</li>
+                      <li className="pl-2">Click the <strong>Upload CSV</strong> button.</li>
+                      <li className="pl-2">Upload a CSV containing <code className="text-xs bg-muted p-0.5 rounded">EmployeeEmail</code>, <code className="text-xs bg-muted p-0.5 rounded">WorkingDays</code>, <code className="text-xs bg-muted p-0.5 rounded">GrossEarnings</code>, <code className="text-xs bg-muted p-0.5 rounded">TotalDeductions</code>, <code className="text-xs bg-muted p-0.5 rounded">NetPay</code> and any additional columns for dynamic components.</li>
+                      <li className="pl-2">The system will validate the file, apply updates, and show you a summary of successful or skipped records.</li>
+                    </ol>
+                  </div>
+
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">How to Finalize Payroll</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Once accurate, change the DRAFT status to <strong>REVIEW</strong>.</li>
+                      <li className="pl-2">After finance review, update to <strong>APPROVED</strong>.</li>
+                      <li className="pl-2">Click <strong>Finalize (Lock)</strong> to freeze the records permanently. No further edits can be made.</li>
+                      <li className="pl-2">Finally, mark it as <strong>PAID</strong> once salaries are disbursed.</li>
+                    </ol>
                   </div>
                 </div>
               </CardContent>
