@@ -80,7 +80,8 @@ export class ReviewsService {
     return prisma.performanceReview.findMany({
       where: { tenantId, employeeId },
       include: {
-        reviewCycle: true
+        reviewCycle: true,
+        feedbacks: { select: { id: true } }, // For peer feedback count
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -159,7 +160,8 @@ export class ReviewsService {
         selfRating: data.rating,
         selfComments: data.comments,
         selfSubmittedAt: new Date(),
-        status: review.status === 'NOT_STARTED' ? 'MANAGER_EVALUATION' : review.status,
+        // Progress: NOT_STARTED → SELF_EVALUATION, keep other statuses unchanged
+        status: review.status === 'NOT_STARTED' ? 'SELF_EVALUATION' : review.status,
       }
     });
   }

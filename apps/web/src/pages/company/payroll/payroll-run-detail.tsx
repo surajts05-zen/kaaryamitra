@@ -45,6 +45,46 @@ export default function PayrollRunDetailPage() {
     }
   };
 
+  const handleBankExport = () => {
+    if (!run || !run.entries) return;
+
+    // Build CSV headers
+    const headers = [
+      'Employee Name',
+      'Employee Email',
+      'Bank Name',
+      'Account Number',
+      'IFSC/Routing Number',
+      'Account Type',
+      'Net Pay'
+    ];
+
+    // Build rows
+    const rows = run.entries.map((entry: any) => {
+      const emp = entry.employee;
+      const comp = emp?.compensationProfile;
+      return [
+        `"${emp?.firstName || ''} ${emp?.lastName || ''}"`,
+        `"${emp?.workEmail || ''}"`,
+        `"${comp?.bankName || ''}"`,
+        `"${comp?.accountNumber || ''}"`,
+        `"${comp?.routingNumber || ''}"`,
+        `"${comp?.accountType || ''}"`,
+        entry.netPay || 0
+      ].join(',');
+    });
+
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `bank_export_${run.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (isLoading) {
     return <div className="p-10 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
   }
@@ -106,7 +146,7 @@ export default function PayrollRunDetailPage() {
               <Clock className="w-4 h-4 mr-2" /> Mark as Paid
             </Button>
           )}
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleBankExport}>
             <Download className="w-4 h-4 mr-2" /> Bank Export
           </Button>
         </div>
@@ -144,7 +184,7 @@ export default function PayrollRunDetailPage() {
       <Card>
         <CardHeader>
           <CardTitle>Employee Breakdown</CardTitle>
-          <CardDescription>{run.entries.length} employees processed in this run</CardDescription>
+          <CardDescription>{run.entries?.length ?? 0} employees processed in this run</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -158,7 +198,7 @@ export default function PayrollRunDetailPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {run.entries.map((entry: any) => (
+              {(run.entries ?? []).map((entry: any) => (
                 <TableRow key={entry.id}>
                   <TableCell className="font-medium">
                     {entry.employee.firstName} {entry.employee.lastName}

@@ -175,8 +175,10 @@ export function createApp() {
   app.use('/api/v1/t/:slug/helpdesk', requireAuth, resolveTenant, helpdeskAdminRouter);
   app.use('/api/v1/t/:slug/me/helpdesk', requireAuth, resolveTenant, helpdeskEssRouter);
 
-  // Tenant-scoped Performance routes
+  // Tenant-scoped Performance routes (admin/hr)
   app.use('/api/v1/t/:slug/performance', requireAuth, resolveTenant, performanceRouter);
+  // Tenant-scoped Performance routes (ESS — me/performance/*)
+  app.use('/api/v1/t/:slug/me/performance', requireAuth, resolveTenant, performanceRouter);
 
   // Tenant-scoped Compensation routes
   app.use('/api/v1/t/:slug/compensation', requireAuth, resolveTenant, compensationRouter);

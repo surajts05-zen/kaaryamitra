@@ -25,7 +25,11 @@ export class PayrollService {
       include: {
         entries: {
           include: {
-            employee: true,
+            employee: {
+              include: {
+                compensationProfile: true
+              }
+            },
             lineItems: true
           }
         }

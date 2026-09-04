@@ -105,7 +105,11 @@ const adminNavItems: NavItem[] = [
 export function AppShell() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [expandedGroups, setExpandedGroups] = React.useState<Record<string, boolean>>({
-    'My Workspace': true
+    'My Workspace': true,
+    'Organization': true,
+    'Management': true,
+    'Settings': true,
+    'Help & Resources': true,
   });
   const { theme, setTheme } = useTheme();
   const location = useLocation();

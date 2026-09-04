@@ -107,7 +107,7 @@ export default function PayrollRunsPage() {
                         : run.period}
                     </TableCell>
                     <TableCell>{run.paymentDate ? format(new Date(run.paymentDate), 'MMM d, yyyy') : 'N/A'}</TableCell>
-                    <TableCell>{run._count.entries}</TableCell>
+                    <TableCell>{run._count?.entries ?? 0}</TableCell>
                     <TableCell className="text-right font-medium">{formatCurrency(run.totalNet)}</TableCell>
                     <TableCell>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(run.status)}`}>
