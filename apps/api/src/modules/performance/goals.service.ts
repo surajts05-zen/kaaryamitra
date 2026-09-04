@@ -72,18 +72,21 @@ export class GoalsService {
   static async updateGoal(tenantId: string, id: string, data: any) {
     const goal = await this.getGoalById(tenantId, id);
 
+    const updateData: any = {
+      title: data.title,
+      description: data.description,
+      type: data.type,
+      status: data.status,
+      progress: data.progress !== undefined ? parseInt(data.progress, 10) : undefined,
+      startDate: data.startDate ? new Date(data.startDate) : undefined,
+      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+      parentGoalId: data.parentGoalId,
+    };
+    Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
+
     return prisma.goal.update({
       where: { id: goal.id },
-      data: {
-        title: data.title !== undefined ? data.title : undefined,
-        description: data.description !== undefined ? data.description : undefined,
-        type: data.type !== undefined ? data.type : undefined,
-        status: data.status !== undefined ? data.status : undefined,
-        progress: data.progress !== undefined ? parseInt(data.progress, 10) : undefined,
-        startDate: data.startDate ? new Date(data.startDate) : undefined,
-        dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
-        parentGoalId: data.parentGoalId !== undefined ? (data.parentGoalId as string | null) : undefined,
-      },
+      data: updateData,
     });
   }
 

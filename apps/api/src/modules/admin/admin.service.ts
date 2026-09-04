@@ -5,6 +5,7 @@ import type { CreateTenantInput, UpdateTenantInput, UpdatePlatformSettingsInput 
 import crypto from 'node:crypto';
 import { SYSTEM_ROLES } from '../roles/roles.service.js';
 import { sendEmail, buildEmailHtml } from '../notifications/notification.service.js';
+import { PoliciesService } from '../policies/policies.service.js';
 
 export class AdminService {
   // ── Tenant Management ────────────────────────────────────────────────────────
@@ -109,6 +110,7 @@ export class AdminService {
       const adminPassword = crypto.randomBytes(8).toString('hex');
       const adminPasswordHash = await hashPassword(adminPassword);
 
+
       // 3. Create Tenant Admin User
       const adminUser = await tx.user.create({
         data: {
@@ -183,7 +185,11 @@ export class AdminService {
       };
     });
 
+    // Seed standard policies and handbook for the new tenant
+    await PoliciesService.seedStandardPoliciesForTenant(tenant.id);
+
     // 5. Send Welcome Email with all credentials to the Tenant Admin
+
     try {
       const title = `Welcome to KaaryaMitra - ${input.name}`;
       const htmlBody = `

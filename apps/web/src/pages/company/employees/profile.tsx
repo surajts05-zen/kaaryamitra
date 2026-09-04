@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EmployeeDocumentsTab } from './employee-documents-tab';
 import { EmployeeChecklistsTab } from './employee-checklists-tab';
 import { EmployeeCompensationTab } from './employee-compensation-tab';
+import { EmployeeAssetsTab } from './employee-assets-tab';
 
 export function EmployeeProfilePage() {
   const { id } = useParams();

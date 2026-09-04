@@ -50,4 +50,7 @@ main().catch((err) => {
   console.error('Fatal startup error:', err);
   process.exit(1);
 });
+// Trigger reload for policy AI & template routes
+
+
  

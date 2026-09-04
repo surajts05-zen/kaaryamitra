@@ -143,7 +143,7 @@ export class DashboardService {
     recentTickets.forEach((t) => {
       activityFeed.push({
         id: `ticket-${t.id}`,
-        action: `Helpdesk ticket (${t.category?.name ?? 'Support'}): ${t.title}`,
+        action: `Helpdesk ticket (${t.category?.name ?? 'Support'}): ${t.subject}`,
         actorEmail: t.employee.workEmail,
         createdAt: t.createdAt,
       });

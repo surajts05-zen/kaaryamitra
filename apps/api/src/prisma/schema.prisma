@@ -302,40 +302,46 @@ model Tenant {
   updatedAt DateTime @updatedAt
 
   // Relations
-  users                User[]
-  departments          Department[]
-  teams                Team[]
-  locations            Location[]
-  designations         Designation[]
-  employees            Employee[]
-  leaveTypes           LeaveType[]
-  notifications        Notification[]
-  auditLogs            AuditLog[]
-  roles                Role[]
-  workflowTemplates    WorkflowTemplate[]
-  jobLevels            JobLevel[]
-  holidays             Holiday[]
-  companySettings      CompanySettings?
-  shifts               Shift[]
-  documentCategories   DocumentCategory[]
-  documents            Document[]
-  assetCategories      AssetCategory[]
-  assets               Asset[]
-  checklistTemplates   ChecklistTemplate[]
-  employeeChecklists   EmployeeChecklist[]
-  resignations         Resignation[]
-  helpdeskCategories   HelpdeskCategory[]
-  helpdeskTickets      HelpdeskTicket[]
-  AssetAssignment      AssetAssignment[]
-  goals                Goal[]
-  reviewCycles         ReviewCycle[]
-  performanceReviews   PerformanceReview[]
-  salaryComponents     SalaryComponent[]
-  salaryStructures     SalaryStructure[]
-  compensationProfiles CompensationProfile[]
-  compensationHistory  CompensationHistory[]
-  payrollRuns          PayrollRun[]
-  statutoryRules       StatutoryRule[]
+  users                  User[]
+  departments            Department[]
+  teams                  Team[]
+  locations              Location[]
+  designations           Designation[]
+  employees              Employee[]
+  leaveTypes             LeaveType[]
+  notifications          Notification[]
+  auditLogs              AuditLog[]
+  roles                  Role[]
+  workflowTemplates      WorkflowTemplate[]
+  jobLevels              JobLevel[]
+  holidays               Holiday[]
+  companySettings        CompanySettings?
+  shifts                 Shift[]
+  documentCategories     DocumentCategory[]
+  documents              Document[]
+  assetCategories        AssetCategory[]
+  assets                 Asset[]
+  checklistTemplates     ChecklistTemplate[]
+  employeeChecklists     EmployeeChecklist[]
+  resignations           Resignation[]
+  helpdeskCategories     HelpdeskCategory[]
+  helpdeskTickets        HelpdeskTicket[]
+  AssetAssignment        AssetAssignment[]
+  goals                  Goal[]
+  reviewCycles           ReviewCycle[]
+  performanceReviews     PerformanceReview[]
+  salaryComponents       SalaryComponent[]
+  salaryStructures       SalaryStructure[]
+  compensationProfiles   CompensationProfile[]
+  compensationHistory    CompensationHistory[]
+  payrollRuns            PayrollRun[]
+  statutoryRules         StatutoryRule[]
+  policyCategories       PolicyCategory[]
+  policies               Policy[]
+  policyVersions         PolicyVersion[]
+  policyAcknowledgements PolicyAcknowledgement[]
+  LibraryFolder          LibraryFolder[]
+  LibraryItem            LibraryItem[]
 
   @@map("tenants")
 }
@@ -368,14 +374,17 @@ model User {
   lastLoginAt DateTime?
 
   // Relations
-  tenant        Tenant?           @relation(fields: [tenantId], references: [id])
-  employee      Employee? // 1-to-1: user <-> employee record
-  sessions      Session[]
-  userRoles     UserRole[]
-  notifications Notification[]
-  auditLogs     AuditLog[]
-  verifiedDocs  Document[]        @relation("DocumentVerifier")
-  uploadedDocs  DocumentVersion[] @relation("DocumentUploader")
+  tenant            Tenant?           @relation(fields: [tenantId], references: [id])
+  employee          Employee? // 1-to-1: user <-> employee record
+  sessions          Session[]
+  userRoles         UserRole[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  verifiedDocs      Document[]        @relation("DocumentVerifier")
+  uploadedDocs      DocumentVersion[] @relation("DocumentUploader")
+  publishedPolicies PolicyVersion[]   @relation("PolicyPublisher")
+  LibraryFolder     LibraryFolder[]
+  LibraryItem       LibraryItem[]
 
   @@index([tenantId])
   @@map("users")
@@ -868,41 +877,42 @@ model Employee {
   updatedAt DateTime @updatedAt
 
   // Relations
-  tenant              Tenant                @relation(fields: [tenantId], references: [id])
-  user                User                  @relation(fields: [userId], references: [id])
-  department          Department?           @relation(fields: [departmentId], references: [id])
-  team                Team?                 @relation(fields: [teamId], references: [id])
-  location            Location?             @relation(fields: [locationId], references: [id])
-  designation         Designation?          @relation(fields: [designationId], references: [id])
-  jobLevelId          String?
-  jobLevel            JobLevel?             @relation(fields: [jobLevelId], references: [id])
-  manager             Employee?             @relation("ManagerReportees", fields: [managerId], references: [id])
-  reportees           Employee[]            @relation("ManagerReportees")
-  departmentHeads     Department[]          @relation("DepartmentHead")
-  teamLeads           Team[]                @relation("TeamLead")
-  leaveApplications   LeaveApplication[]
-  leaveBalances       LeaveBalance[]
-  assets              Asset[]
-  assignedAssets      AssetAssignment[]     @relation("AssetAssignee")
-  assetsAssignedByMe  AssetAssignment[]     @relation("AssetAssignedBy")
-  checklists          EmployeeChecklist[]
-  resignations        Resignation[]
-  attendanceRecords   AttendanceRecord[]
-  notifications       Notification[]        @relation("EmployeeNotifications")
-  employeeShifts      EmployeeShift[]
-  timesheets          Timesheet[]
-  requestedSwaps      ShiftSwapRequest[]    @relation("RequestedSwaps")
-  targetSwaps         ShiftSwapRequest[]    @relation("TargetSwaps")
-  documents           Document[]
-  requestedTickets    HelpdeskTicket[]      @relation("RequestedTickets")
-  assignedTickets     HelpdeskTicket[]      @relation("AssignedTickets")
-  goals               Goal[]                @relation("EmployeeGoals")
-  performanceReviews  PerformanceReview[]   @relation("EmployeeReviews")
-  feedbacksProvided   ReviewFeedback[]      @relation("ReviewFeedbacksProvided")
-  helpdeskComments    HelpdeskComment[]
-  compensationProfile CompensationProfile?
-  compensationHistory CompensationHistory[]
-  payrollEntries      PayrollEntry[]
+  tenant                 Tenant                  @relation(fields: [tenantId], references: [id])
+  user                   User                    @relation(fields: [userId], references: [id])
+  department             Department?             @relation(fields: [departmentId], references: [id])
+  team                   Team?                   @relation(fields: [teamId], references: [id])
+  location               Location?               @relation(fields: [locationId], references: [id])
+  designation            Designation?            @relation(fields: [designationId], references: [id])
+  jobLevelId             String?
+  jobLevel               JobLevel?               @relation(fields: [jobLevelId], references: [id])
+  manager                Employee?               @relation("ManagerReportees", fields: [managerId], references: [id])
+  reportees              Employee[]              @relation("ManagerReportees")
+  departmentHeads        Department[]            @relation("DepartmentHead")
+  teamLeads              Team[]                  @relation("TeamLead")
+  leaveApplications      LeaveApplication[]
+  leaveBalances          LeaveBalance[]
+  assets                 Asset[]
+  assignedAssets         AssetAssignment[]       @relation("AssetAssignee")
+  assetsAssignedByMe     AssetAssignment[]       @relation("AssetAssignedBy")
+  checklists             EmployeeChecklist[]
+  resignations           Resignation[]
+  attendanceRecords      AttendanceRecord[]
+  notifications          Notification[]          @relation("EmployeeNotifications")
+  employeeShifts         EmployeeShift[]
+  timesheets             Timesheet[]
+  requestedSwaps         ShiftSwapRequest[]      @relation("RequestedSwaps")
+  targetSwaps            ShiftSwapRequest[]      @relation("TargetSwaps")
+  documents              Document[]
+  requestedTickets       HelpdeskTicket[]        @relation("RequestedTickets")
+  assignedTickets        HelpdeskTicket[]        @relation("AssignedTickets")
+  goals                  Goal[]                  @relation("EmployeeGoals")
+  performanceReviews     PerformanceReview[]     @relation("EmployeeReviews")
+  feedbacksProvided      ReviewFeedback[]        @relation("ReviewFeedbacksProvided")
+  helpdeskComments       HelpdeskComment[]
+  compensationProfile    CompensationProfile?
+  compensationHistory    CompensationHistory[]
+  payrollEntries         PayrollEntry[]
+  policyAcknowledgements PolicyAcknowledgement[]
 
   @@index([tenantId])
   @@index([managerId])
@@ -1598,15 +1608,15 @@ model CompensationHistory {
 
 // A payroll run for a given period
 model PayrollRun {
-  id        String        @id @default(cuid())
-  tenantId  String
-  name      String        @default("Payroll Run")
-  period    String        // "2026-09" (YYYY-MM)
-  periodStart DateTime    @default(now())
-  periodEnd   DateTime    @default(now())
-  paymentDate DateTime    @default(now())
-  frequency String        @default("MONTHLY") // MONTHLY | BIWEEKLY | WEEKLY
-  status    PayrollStatus @default(DRAFT)
+  id          String        @id @default(cuid())
+  tenantId    String
+  name        String        @default("Payroll Run")
+  period      String // "2026-09" (YYYY-MM)
+  periodStart DateTime      @default(now())
+  periodEnd   DateTime      @default(now())
+  paymentDate DateTime      @default(now())
+  frequency   String        @default("MONTHLY") // MONTHLY | BIWEEKLY | WEEKLY
+  status      PayrollStatus @default(DRAFT)
 
   totalGross                 Decimal?
   totalNet                   Decimal?
@@ -1693,4 +1703,132 @@ model StatutoryRule {
   tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@map("statutory_rules")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POLICIES (Phase 26)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PolicyCategory {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  policies Policy[]
+
+  @@unique([tenantId, name])
+  @@map("policy_categories")
+}
+
+model Policy {
+  id          String   @id @default(cuid())
+  tenantId    String
+  categoryId  String
+  title       String
+  description String?
+  isPublished Boolean  @default(false)
+  requiresAck Boolean  @default(false) // Requires employee acknowledgement
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant   Tenant          @relation(fields: [tenantId], references: [id])
+  category PolicyCategory  @relation(fields: [categoryId], references: [id])
+  versions PolicyVersion[]
+
+  @@map("policies")
+}
+
+model PolicyVersion {
+  id            String    @id @default(cuid())
+  tenantId      String
+  policyId      String
+  versionNumber Int
+  blocks        Json // Stores the rich blocks array
+  status        String    @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  publishedAt   DateTime?
+  publishedById String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  tenant           Tenant                  @relation(fields: [tenantId], references: [id])
+  policy           Policy                  @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  publisher        User?                   @relation("PolicyPublisher", fields: [publishedById], references: [id])
+  acknowledgements PolicyAcknowledgement[]
+
+  @@unique([policyId, versionNumber])
+  @@map("policy_versions")
+}
+
+model PolicyAcknowledgement {
+  id              String    @id @default(cuid())
+  tenantId        String
+  policyVersionId String
+  employeeId      String
+  status          String    @default("PENDING") // PENDING, ACKNOWLEDGED
+  acknowledgedAt  DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenant        Tenant        @relation(fields: [tenantId], references: [id])
+  policyVersion PolicyVersion @relation(fields: [policyVersionId], references: [id], onDelete: Cascade)
+  employee      Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([policyVersionId, employeeId])
+  @@map("policy_acknowledgements")
+}
+
+enum LibraryItemType {
+  FILE
+  ARTICLE
+  ANNOUNCEMENT
+}
+
+model LibraryFolder {
+  id        String   @id @default(uuid())
+  tenantId  String
+  name      String
+  parentId  String?
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant   Tenant          @relation(fields: [tenantId], references: [id])
+  parent   LibraryFolder?  @relation("FolderHierarchy", fields: [parentId], references: [id])
+  children LibraryFolder[] @relation("FolderHierarchy")
+  items    LibraryItem[]
+  creator  User            @relation(fields: [createdBy], references: [id])
+
+  @@index([tenantId, parentId])
+  @@map("library_folders")
+}
+
+model LibraryItem {
+  id        String          @id @default(uuid())
+  tenantId  String
+  folderId  String?
+  type      LibraryItemType
+  title     String
+  content   String?
+  fileUrl   String?
+  fileKey   String?
+  mimeType  String?
+  sizeBytes Int?
+  tags      String[]
+  isPinned  Boolean         @default(false)
+  createdBy String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  tenant  Tenant         @relation(fields: [tenantId], references: [id])
+  folder  LibraryFolder? @relation(fields: [folderId], references: [id])
+  creator User           @relation(fields: [createdBy], references: [id])
+
+  @@index([tenantId, type])
+  @@index([tenantId, isPinned])
+  @@index([tenantId, folderId])
+  @@map("library_items")
 }

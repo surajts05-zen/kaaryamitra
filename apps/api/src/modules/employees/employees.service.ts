@@ -201,7 +201,34 @@ export class EmployeesService {
       }
     }
 
+    // Automatically assign active policies that require acknowledgement
+    try {
+      const activePolicies = await prisma.policy.findMany({
+        where: { tenantId, isPublished: true, requiresAck: true },
+        include: { versions: { where: { status: 'PUBLISHED' }, take: 1 } }
+      });
+
+      const acksToCreate = activePolicies
+        .filter(p => p.versions.length > 0)
+        .map(p => ({
+          tenantId,
+          policyVersionId: p.versions[0]!.id,
+          employeeId: employee.id,
+          status: 'PENDING'
+        }));
+
+      if (acksToCreate.length > 0) {
+        await prisma.policyAcknowledgement.createMany({
+          data: acksToCreate,
+          skipDuplicates: true
+        });
+      }
+    } catch (err) {
+      console.error(`Failed to assign policies to new employee ${employee.id}:`, err);
+    }
+
     return employee;
+
   }
 
   static async updateEmployee(tenantId: string, employeeId: string, data: any) {

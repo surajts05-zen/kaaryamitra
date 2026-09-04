@@ -77,6 +77,16 @@ import { StatutorySettingsPage } from '@/pages/company/settings/statutory';
 // Help & Resources
 import { UserGuidePage } from '@/pages/user-guide';
 
+// Phase 26 - Policies
+import { PoliciesAdminList } from '@/pages/company/settings/policies/index';
+import { PolicyEditor } from '@/pages/company/settings/policies/editor';
+import { ESSPoliciesList } from '@/pages/ess/policies/index';
+import { ESSPolicyViewer } from '@/pages/ess/policies/viewer';
+
+// Phase 30 - Content Library
+import { LibraryExplorerPage } from '@/pages/company/library';
+import { LibraryEditorPage } from '@/pages/company/library/editor';
+
 /**
  * KaaryaMitra App Router
  */
@@ -117,6 +127,14 @@ export function App() {
             <Route path="settings/salary-components" element={<SalaryComponentsPage />} />
             <Route path="settings/salary-structures" element={<SalaryStructuresPage />} />
             <Route path="settings/statutory" element={<StatutorySettingsPage />} />
+            {/* Phase 26 - Policies */}
+            <Route path="settings/policies" element={<PoliciesAdminList />} />
+            <Route path="settings/policies/:id/edit" element={<PolicyEditor />} />
+            
+            {/* Content Library */}
+            <Route path="library" element={<LibraryExplorerPage />} />
+            <Route path="library/editor" element={<LibraryEditorPage />} />
+            <Route path="library/editor/:id" element={<LibraryEditorPage />} />
 
             {/* Phase 7 - Leave Management */}
             <Route path="approvals/leave" element={<LeaveApprovalsPage />} />
@@ -170,10 +188,16 @@ export function App() {
               <Route path="assets" element={<MyAssets />} />
               <Route path="compensation" element={<MyCompensationPage />} />
               <Route path="payslips" element={<MyPayslipsPage />} />
-              
+
               {/* Phase 16 - Performance */}
               <Route path="performance/goals" element={<EssMyGoalsPage />} />
               <Route path="performance/reviews" element={<EssMyReviewsPage />} />
+            </Route>
+
+            {/* Phase 26 - Policies (ESS) */}
+            <Route path="my-policies">
+              <Route index element={<ESSPoliciesList />} />
+              <Route path=":versionId" element={<ESSPolicyViewer />} />
             </Route>
           </Route>
         </Route>

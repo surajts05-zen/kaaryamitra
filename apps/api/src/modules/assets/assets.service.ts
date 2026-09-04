@@ -67,7 +67,7 @@ export class AssetsService {
       },
     });
 
-    if (!asset) throw new AppError('Asset not found', 404);
+    if (!asset) throw AppError.notFound('Asset');
     return asset;
   }
 
@@ -90,9 +90,9 @@ export class AssetsService {
   static async deleteAsset(tenantId: string, assetId: string) {
     // Check if it's currently assigned
     const asset = await prisma.asset.findUnique({ where: { id: assetId, tenantId } });
-    if (!asset) throw new AppError('Asset not found', 404);
+    if (!asset) throw AppError.notFound('Asset');
     if (asset.status === AssetStatus.ASSIGNED) {
-      throw new AppError('Cannot delete an asset that is currently assigned', 400);
+      throw AppError.badRequest('Cannot delete an asset that is currently assigned');
     }
 
     return prisma.asset.delete({
@@ -104,9 +104,9 @@ export class AssetsService {
 
   static async assignAsset(tenantId: string, assetId: string, employeeId: string, assignedById: string, notes?: string) {
     const asset = await prisma.asset.findUnique({ where: { id: assetId, tenantId } });
-    if (!asset) throw new AppError('Asset not found', 404);
+    if (!asset) throw AppError.notFound('Asset');
     if (asset.status === AssetStatus.ASSIGNED) {
-      throw new AppError('Asset is already assigned', 400);
+      throw AppError.badRequest('Asset is already assigned');
     }
 
     // Use a transaction to create assignment and update asset
@@ -117,7 +117,7 @@ export class AssetsService {
           assetId,
           employeeId,
           assignedById,
-          notes,
+          notes: notes ?? null,
           status: AssetAssignmentStatus.PENDING_ACKNOWLEDGEMENT,
         },
       });
@@ -147,7 +147,7 @@ export class AssetsService {
     });
 
     if (!assignment) {
-      throw new AppError('No pending assignment found to acknowledge', 404);
+      throw AppError.notFound('No pending assignment found to acknowledge');
     }
 
     return prisma.assetAssignment.update({
@@ -161,9 +161,9 @@ export class AssetsService {
 
   static async returnAsset(tenantId: string, assetId: string, returnCondition: string, notes?: string) {
     const asset = await prisma.asset.findUnique({ where: { id: assetId, tenantId } });
-    if (!asset) throw new AppError('Asset not found', 404);
+    if (!asset) throw AppError.notFound('Asset');
     if (asset.status !== AssetStatus.ASSIGNED) {
-      throw new AppError('Asset is not currently assigned', 400);
+      throw AppError.badRequest('Asset is not currently assigned');
     }
 
     // Find the current active assignment

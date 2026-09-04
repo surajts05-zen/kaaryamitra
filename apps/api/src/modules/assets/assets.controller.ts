@@ -57,7 +57,7 @@ export class AssetsController {
   static async assignAsset(req: Request, res: Response) {
     // Current user must be HR/Admin, meaning we need their employee ID for `assignedBy`
     const me = await prisma.employee.findUnique({ where: { userId: req.auth!.userId } });
-    if (!me) throw new AppError('Employee profile not found', 404);
+    if (!me) throw AppError.notFound('Employee profile not found');
 
     const { employeeId, notes } = req.body;
     const result = await AssetsService.assignAsset(req.tenantId!, req.params.id as string, employeeId, me.id, notes);
@@ -74,7 +74,7 @@ export class AssetsController {
 
   static async getMyAssets(req: Request, res: Response) {
     const me = await prisma.employee.findUnique({ where: { userId: req.auth!.userId } });
-    if (!me) throw new AppError('Employee profile not found', 404);
+    if (!me) throw AppError.notFound('Employee profile not found');
 
     const assets = await AssetsService.getEmployeeAssets(req.tenantId!, me.id);
     res.json({ data: assets });
@@ -82,7 +82,7 @@ export class AssetsController {
 
   static async acknowledgeAsset(req: Request, res: Response) {
     const me = await prisma.employee.findUnique({ where: { userId: req.auth!.userId } });
-    if (!me) throw new AppError('Employee profile not found', 404);
+    if (!me) throw AppError.notFound('Employee profile not found');
 
     const assignment = await AssetsService.acknowledgeAsset(req.tenantId!, req.params.id as string, me.id);
     res.json({ data: assignment });

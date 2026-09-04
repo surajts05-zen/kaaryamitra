@@ -340,3 +340,44 @@ export async function extractDocumentData(tenantId: string, fileBuffer: Buffer, 
   }
 }
 
+export async function generatePolicyBlocks(tenantId: string, userPrompt: string) {
+  const ai = await getAiClient(tenantId);
+  if (!ai) return null;
+
+  const systemInstruction = `You are an expert HR Policy drafter. 
+Generate structured blocks for a company policy based on the user's prompt. 
+Each block MUST be an object with one of these schema types:
+1. Heading block: { "id": "b1", "type": "heading", "level": 1, "content": "Title text" }
+2. Paragraph block: { "id": "b2", "type": "paragraph", "content": "Detailed text content..." }
+3. Callout/Alert block: { "id": "b3", "type": "alert", "alertType": "info", "content": "Important note or highlight" }
+4. List block: { "id": "b4", "type": "list", "items": ["Item 1", "Item 2"] }
+5. FAQ block: { "id": "b5", "type": "faq", "items": [{ "question": "Q?", "answer": "A." }] }
+
+Return a JSON object containing:
+{
+  "title": "Suggested Policy Title",
+  "description": "Short 1-sentence policy summary",
+  "blocks": [ ... array of block objects ...]
+}
+IMPORTANT: Return ONLY raw valid JSON. Do not include markdown code block formatting like \`\`\`json.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: userPrompt,
+      config: {
+        systemInstruction,
+        responseMimeType: 'application/json',
+      }
+    });
+
+    const text = response.text || '{}';
+    const cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(cleanedText);
+  } catch (error) {
+    console.error('Gemini generatePolicyBlocks Error:', error);
+    return null;
+  }
+}
+
+

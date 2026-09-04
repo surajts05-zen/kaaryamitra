@@ -59,6 +59,7 @@ const navItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', path: 'dashboard' },
   { icon: Inbox,     label: 'Approvals Inbox', path: 'approvals',       allowedRoles: APPROVER_ROLES },
 
+  { icon: FileText,  label: 'Company Policies', path: 'my-policies', group: 'My Workspace' },
   { icon: Clock,     label: 'My Attendance',    path: 'me/attendance', group: 'My Workspace' },
   { icon: CalendarDays, label: 'My Leaves', path: 'me/leave', group: 'My Workspace' },
   { icon: CalendarClock, label: 'My Shifts', path: 'me/shifts', group: 'My Workspace' },
@@ -84,8 +85,9 @@ const navItems: NavItem[] = [
   { icon: Target,        label: 'Goals',         path: 'performance/goals', allowedRoles: HR_ROLES, group: 'Management' },
   { icon: Target,        label: 'Review Cycles', path: 'performance/reviews', allowedRoles: HR_ROLES, group: 'Management' },
 
-  // Admin-only configuration
+  { icon: FileText,      label: 'Content Library', path: 'library', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: GitBranch, label: 'Workflows',        path: 'settings/workflows', allowedRoles: ADMIN_ROLES, group: 'Settings' },
+  { icon: FileText,  label: 'Policies & Content', path: 'settings/policies', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: Shield,    label: 'Roles & Permissions', path: 'settings/roles', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: IndianRupee, label: 'Salary Components', path: 'settings/salary-components', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: IndianRupee, label: 'Salary Structures', path: 'settings/salary-structures', allowedRoles: ADMIN_ROLES, group: 'Settings' },
