@@ -86,6 +86,8 @@ import { ESSPolicyViewer } from '@/pages/ess/policies/viewer';
 // Phase 30 - Content Library
 import { LibraryExplorerPage } from '@/pages/company/library';
 import { LibraryEditorPage } from '@/pages/company/library/editor';
+import ReportsDashboard from '@/pages/company/reports/index';
+import ReportBuilder from '@/pages/company/reports/builder';
 
 /**
  * KaaryaMitra App Router
@@ -135,6 +137,10 @@ export function App() {
             <Route path="library" element={<LibraryExplorerPage />} />
             <Route path="library/editor" element={<LibraryEditorPage />} />
             <Route path="library/editor/:id" element={<LibraryEditorPage />} />
+
+            {/* Reports */}
+            <Route path="reports" element={<ReportsDashboard />} />
+            <Route path="reports/builder" element={<ReportBuilder />} />
 
             {/* Phase 7 - Leave Management */}
             <Route path="approvals/leave" element={<LeaveApprovalsPage />} />

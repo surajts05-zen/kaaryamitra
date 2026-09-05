@@ -37,8 +37,18 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
     const status = error.response?.status;
 
-    // If 401 and not a refresh call itself — attempt token refresh
-    if (status === 401 && originalRequest && !(originalRequest as { _retry?: boolean })._retry) {
+    // If 401, check if we already retried after a refresh
+    if (status === 401 && originalRequest) {
+      if ((originalRequest as { _retry?: boolean })._retry) {
+        // Token was already refreshed once but request still failed with 401 — session is invalid
+        localStorage.removeItem('km_access_token');
+        window.dispatchEvent(new CustomEvent('auth:logout'));
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
+      }
+
       if (isRefreshing) {
         // Queue the request until refresh completes
         return new Promise((resolve, reject) => {

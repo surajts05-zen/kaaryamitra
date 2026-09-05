@@ -342,6 +342,7 @@ model Tenant {
   policyAcknowledgements PolicyAcknowledgement[]
   LibraryFolder          LibraryFolder[]
   LibraryItem            LibraryItem[]
+  savedReports           SavedReport[]
 
   @@map("tenants")
 }
@@ -1831,4 +1832,22 @@ model LibraryItem {
   @@index([tenantId, isPinned])
   @@index([tenantId, folderId])
   @@map("library_items")
+}
+
+model SavedReport {
+  id           String   @id @default(cuid())
+  tenantId     String
+  name         String
+  description  String?
+  dataset      String
+  config       Json
+  isScheduled  Boolean  @default(false)
+  cronSchedule String?
+  emails       String?
+  createdBy    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  @@map("saved_reports")
 }

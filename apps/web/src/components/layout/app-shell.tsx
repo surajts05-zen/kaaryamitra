@@ -73,6 +73,8 @@ const navItems: NavItem[] = [
   { icon: Target,        label: 'Goals',         path: 'performance/goals', allowedRoles: HR_ROLES, group: 'Management' },
   { icon: Target,        label: 'Review Cycles', path: 'performance/reviews', allowedRoles: HR_ROLES, group: 'Management' },
 
+  { icon: LayoutDashboard, label: 'Reports', path: 'reports', allowedRoles: HR_ROLES, group: 'Data & Analytics' },
+
   { icon: FileText,      label: 'Content Library', path: 'library', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: GitBranch, label: 'Workflows',        path: 'settings/workflows', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: FileText,  label: 'Policies & Content', path: 'settings/policies', allowedRoles: ADMIN_ROLES, group: 'Settings' },
@@ -98,7 +100,8 @@ export function AppShell() {
     'My Workspace': true,
     'Organization': true,
     'Management': true,
-    'Settings': true,
+    'Data & Analytics': true,
+    'Settings': false,
     'Help & Resources': true,
   });
   const { theme, setTheme } = useTheme();

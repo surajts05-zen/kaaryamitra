@@ -34,6 +34,7 @@ import { compensationRouter } from './modules/compensation/compensation.router.j
 import { payrollRouter } from './modules/payroll/payroll.router.js';
 import { policiesRouter } from './modules/policies/policies.router.js';
 import { libraryRouter } from './modules/library/library.router.js';
+import { reportsRouter } from './modules/reports/reports.router.js';
 import { requireAuth, requireSuperAdmin, resolveTenant } from './middleware/auth.js';
 
 export function createApp() {
@@ -194,6 +195,9 @@ export function createApp() {
   // Tenant-scoped Library routes
   app.use('/api/v1/library', requireAuth, resolveTenant, libraryRouter);
   app.use('/api/v1/t/:slug/library', requireAuth, resolveTenant, libraryRouter);
+
+  // Reports
+  app.use('/api/v1/t/:slug/reports', requireAuth, resolveTenant, reportsRouter);
 
   // Notifications (user-scoped, no tenant resolution needed — userId from JWT is enough)
   app.use('/api/v1/notifications', requireAuth, notificationsRouter);
