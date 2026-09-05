@@ -26,6 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { CalendarClock, RefreshCw, Clock, ArrowRightLeft } from 'lucide-react';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 export function MyShiftsPage() {
   const { user } = useAuthStore();
@@ -60,6 +61,7 @@ export function MyShiftsPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: 'My Shifts' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">My Shifts</h1>

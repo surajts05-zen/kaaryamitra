@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Loader2, Download, Receipt, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 function PayslipPreviewModal({ payslipId, open, onOpenChange }: { payslipId: string | null, open: boolean, onOpenChange: (o: boolean) => void }) {
   const { data: payslip, isLoading } = useMyPayslipDetails(payslipId || '');
@@ -123,6 +124,7 @@ export default function MyPayslipsPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
+      <Breadcrumb items={[{ label: 'My Payslips' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div>
         <h1 className="text-3xl font-bold tracking-tight">My Payslips</h1>
         <p className="text-muted-foreground mt-1">

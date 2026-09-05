@@ -9,6 +9,7 @@ import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { toast } from 'sonner';
 import { Send, FileClock, Clock, Loader2, CheckCircle2, Upload } from 'lucide-react';
 import { CsvImportModal } from '@/components/ui/csv-import-modal';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 export function MyTimesheetsPage() {
   const [startDate, setStartDate] = React.useState(format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'));
@@ -89,6 +90,7 @@ export function MyTimesheetsPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: 'My Timesheets' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">My Timesheets</h1>

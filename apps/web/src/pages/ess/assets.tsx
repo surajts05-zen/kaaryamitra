@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Laptop, AlertTriangle, Monitor, Smartphone, Key, Info } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 export default function MyAssets() {
   const { slug } = useParams();
@@ -23,6 +24,7 @@ export default function MyAssets() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
+      <Breadcrumb items={[{ label: 'My Assets' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div>
         <h1 className="text-3xl font-bold tracking-tight">My Assets</h1>
         <p className="text-muted-foreground mt-1">Manage equipment and access cards assigned to you.</p>

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, AlertTriangle, Clock } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 export function EssMyGoalsPage() {
   const { slug } = useParams();
@@ -38,6 +39,7 @@ export function EssMyGoalsPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: 'My Goals' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div>
         <h2 className="text-3xl font-bold tracking-tight">My Goals & OKRs</h2>
         <p className="text-muted-foreground">Track your individual performance targets and assigned company OKRs.</p>

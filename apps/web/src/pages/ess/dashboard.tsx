@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/store/auth.store';
-import { Calendar, Clock, Bell, CalendarDays, UserPlus, Headset, UserMinus, Activity, FileText, Megaphone, Laptop, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, Bell, CalendarDays, UserPlus, Headset, UserMinus, Activity, FileText, Megaphone, Laptop, ArrowRight, CalendarClock, Timer, DoorOpen, IndianRupee, Receipt, Target } from 'lucide-react';
 import { AttendanceWidget } from '@/features/attendance/components/AttendanceWidget';
 import { useDashboardStats } from '@/features/dashboard/hooks/use-dashboard-queries';
 import { usePinnedAnnouncements } from '@/features/library/hooks/use-library-queries';
@@ -24,10 +24,18 @@ function getActivityMeta(action: string) {
 }
 
 const QUICK_LINKS = [
-  { title: 'Apply Leave', icon: CalendarDays, href: 'leave', color: 'bg-blue-500/10 text-blue-600' },
-  { title: 'View Policies', icon: FileText, href: '../my-policies', color: 'bg-purple-500/10 text-purple-600' },
-  { title: 'Helpdesk', icon: Headset, href: 'helpdesk', color: 'bg-orange-500/10 text-orange-600' },
+  { title: 'Company Policies', icon: FileText, href: '../my-policies', color: 'bg-purple-500/10 text-purple-600' },
+  { title: 'My Attendance', icon: Clock, href: 'attendance', color: 'bg-blue-500/10 text-blue-600' },
+  { title: 'My Leaves', icon: CalendarDays, href: 'leave', color: 'bg-emerald-500/10 text-emerald-600' },
+  { title: 'My Shifts', icon: CalendarClock, href: 'shifts', color: 'bg-indigo-500/10 text-indigo-600' },
+  { title: 'My Timesheets', icon: Timer, href: 'timesheets', color: 'bg-orange-500/10 text-orange-600' },
   { title: 'My Assets', icon: Laptop, href: 'assets', color: 'bg-teal-500/10 text-teal-600' },
+  { title: 'My Resignation', icon: DoorOpen, href: 'resignation', color: 'bg-rose-500/10 text-rose-600' },
+  { title: 'My Compensation', icon: IndianRupee, href: 'compensation', color: 'bg-green-500/10 text-green-600' },
+  { title: 'My Payslips', icon: Receipt, href: 'payslips', color: 'bg-blue-500/10 text-blue-600' },
+  { title: 'My Helpdesk', icon: Headset, href: 'helpdesk', color: 'bg-yellow-500/10 text-yellow-600' },
+  { title: 'My Goals', icon: Target, href: 'performance/goals', color: 'bg-cyan-500/10 text-cyan-600' },
+  { title: 'My Reviews', icon: Target, href: 'performance/reviews', color: 'bg-pink-500/10 text-pink-600' },
 ];
 
 export function EssDashboardPage() {

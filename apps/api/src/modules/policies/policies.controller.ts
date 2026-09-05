@@ -83,6 +83,13 @@ export class PoliciesController {
     res.json(version);
   }
 
+  static async submitForReview(req: Request, res: Response) {
+    const id = req.params['id'] as string;
+    const versionId = req.params['versionId'] as string;
+    const version = await PoliciesService.submitForReview(req.tenantId!, id, versionId);
+    res.json(version);
+  }
+
   static async publishVersion(req: Request, res: Response) {
     const id = req.params['id'] as string;
     const versionId = req.params['versionId'] as string;
@@ -127,8 +134,48 @@ export class PoliciesController {
     if (!prompt) throw AppError.badRequest('Prompt is required');
     const { generatePolicyBlocks } = await import('../ai/ai.service.js');
     const result = await generatePolicyBlocks(req.tenantId!, prompt);
-    if (!result) throw AppError.badRequest('Failed to generate policy content via AI. Check Gemini API key configuration.');
+    if (!result) throw AppError.badRequest('Failed to generate policy content via AI.');
     res.json(result);
+  }
+
+  static async aiRefine(req: Request, res: Response) {
+    const { text, instruction } = req.body;
+    if (!text || !instruction) throw AppError.badRequest('Text and instruction are required');
+    const { refinePolicyText } = await import('../ai/ai.service.js');
+    const result = await refinePolicyText(req.tenantId!, text, instruction);
+    res.json({ text: result });
+  }
+
+  static async aiSummarize(req: Request, res: Response) {
+    const { blocks } = req.body;
+    if (!blocks || !Array.isArray(blocks)) throw AppError.badRequest('Blocks array is required');
+    const { summarizePolicy } = await import('../ai/ai.service.js');
+    const summary = await summarizePolicy(req.tenantId!, blocks);
+    res.json({ summary });
+  }
+
+  static async aiGenerateFAQ(req: Request, res: Response) {
+    const { blocks } = req.body;
+    if (!blocks || !Array.isArray(blocks)) throw AppError.badRequest('Blocks array is required');
+    const { generatePolicyFAQ } = await import('../ai/ai.service.js');
+    const faq = await generatePolicyFAQ(req.tenantId!, blocks);
+    res.json({ faq });
+  }
+
+  static async aiCompare(req: Request, res: Response) {
+    const { oldBlocks, newBlocks } = req.body;
+    if (!oldBlocks || !newBlocks) throw AppError.badRequest('oldBlocks and newBlocks are required');
+    const { comparePolicyVersions } = await import('../ai/ai.service.js');
+    const changes = await comparePolicyVersions(req.tenantId!, oldBlocks, newBlocks);
+    res.json({ changes });
+  }
+
+  static async aiDraftComm(req: Request, res: Response) {
+    const { policyName, summary } = req.body;
+    if (!policyName || !summary) throw AppError.badRequest('policyName and summary are required');
+    const { draftEmployeeCommunication } = await import('../ai/ai.service.js');
+    const draft = await draftEmployeeCommunication(req.tenantId!, policyName, summary);
+    res.json({ draft });
   }
 }
 

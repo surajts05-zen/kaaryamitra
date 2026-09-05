@@ -5,7 +5,12 @@ import {
   useSaveDraftVersion,
   usePublishVersion,
   useCreateDraftVersion,
-  useAiGeneratePolicy
+  useAiGeneratePolicy,
+  useAiRefinePolicyText,
+  useAiGenerateFAQ,
+  useSubmitPolicyForReview,
+  useAiDraftComm,
+  useAiComparePolicies
 } from '@/features/company/hooks/use-policies-queries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,15 +42,29 @@ export function PolicyEditor() {
   const publishVersion = usePublishVersion();
   const createDraft = useCreateDraftVersion();
   const aiGenerate = useAiGeneratePolicy();
+  const aiRefine = useAiRefinePolicyText();
+  const aiFaq = useAiGenerateFAQ();
+  const submitForReview = useSubmitPolicyForReview();
+  const draftComm = useAiDraftComm();
+  const aiCompare = useAiComparePolicies();
 
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [isPreview, setIsPreview] = useState(false);
   const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [refineModalOpen, setRefineModalOpen] = useState(false);
+  const [refineBlockId, setRefineBlockId] = useState<string | null>(null);
+  const [refineInstruction, setRefineInstruction] = useState('');
+  const [draftCommModalOpen, setDraftCommModalOpen] = useState(false);
+  const [commDraft, setCommDraft] = useState('');
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiGeneratedResult, setAiGeneratedResult] = useState<any>(null);
+  const [compareModalOpen, setCompareModalOpen] = useState(false);
+  const [compareChanges, setCompareChanges] = useState<string | null>(null);
 
   const latestVersion = policy?.versions?.[0];
   const isDraft = latestVersion?.status === 'DRAFT';
+  const isPendingReview = latestVersion?.status === 'PENDING_REVIEW';
+  const canEdit = isDraft || isPendingReview;
 
   useEffect(() => {
     if (latestVersion?.blocks) {
@@ -101,20 +120,116 @@ export function PolicyEditor() {
     if (!confirm('Are you sure you want to publish this version? This will become the active policy.')) return;
     
     try {
-      await saveDraft.mutateAsync({
-        policyId: policyId!,
-        versionId: latestVersion.id,
-        blocks
-      });
+      if (isDraft) {
+        await saveDraft.mutateAsync({
+          policyId: policyId!,
+          versionId: latestVersion.id,
+          blocks
+        });
+      }
       
       await publishVersion.mutateAsync({
         policyId: policyId!,
         versionId: latestVersion.id
       });
       toast.success('Policy published successfully');
-      navigate(`/t/${slug}/settings/policies`);
+      setDraftCommModalOpen(true);
     } catch (err: any) {
       toast.error('Failed to publish');
+    }
+  };
+
+  const handleSubmitForReview = async () => {
+    if (!latestVersion) return;
+    try {
+      await saveDraft.mutateAsync({
+        policyId: policyId!,
+        versionId: latestVersion.id,
+        blocks
+      });
+      await submitForReview.mutateAsync({
+        policyId: policyId!,
+        versionId: latestVersion.id
+      });
+      toast.success('Submitted for review');
+      refetch();
+    } catch (err: any) {
+      toast.error('Failed to submit for review');
+    }
+  };
+
+  const handleRefineBlock = async () => {
+    if (!refineBlockId || !refineInstruction.trim()) return;
+    const block = blocks.find(b => b.id === refineBlockId);
+    if (!block || !block.content) return;
+
+    try {
+      const res = await aiRefine.mutateAsync({
+        text: block.content,
+        instruction: refineInstruction
+      });
+      updateBlock(refineBlockId, { content: res.text });
+      toast.success('Block refined');
+      setRefineModalOpen(false);
+      setRefineInstruction('');
+    } catch (err: any) {
+      toast.error('Failed to refine block');
+    }
+  };
+
+  const handleGenerateFAQ = async () => {
+    if (blocks.length === 0) return toast.error('Add some policy content first to generate FAQs');
+    try {
+      const res = await aiFaq.mutateAsync({
+        policyId: policyId!,
+        versionId: latestVersion!.id,
+        blocks
+      });
+      if (res.faq && Array.isArray(res.faq)) {
+        const newBlocks: Block[] = res.faq.map((item: any) => ({
+          id: Math.random().toString(36).substring(7),
+          type: 'faq',
+          question: item.question,
+          answer: item.answer
+        }));
+        setBlocks([...blocks, ...newBlocks]);
+        toast.success(`Generated ${newBlocks.length} FAQs`);
+      }
+    } catch (err: any) {
+      toast.error('Failed to generate FAQs');
+    }
+  };
+
+  const handleCompare = async () => {
+    if ((policy?.versions?.length || 0) < 2) return;
+    try {
+      setCompareModalOpen(true);
+      setCompareChanges(null);
+      const res = await aiCompare.mutateAsync({
+        policyId: policyId!,
+        oldBlocks: policy!.versions[1].blocks as any[],
+        newBlocks: blocks,
+      });
+      setCompareChanges(res.changes);
+    } catch (err: any) {
+      toast.error('Failed to compare versions');
+      setCompareModalOpen(false);
+    }
+  };
+
+  const handleDraftComm = async () => {
+    try {
+      // In a real app, you might auto-summarize first
+      const summary = "A new policy version has been published.";
+      const res = await draftComm.mutateAsync({
+        policyId: policyId!,
+        versionId: latestVersion!.id,
+        policyName: policy.title,
+        summary
+      });
+      setCommDraft(res.draft);
+    } catch (err: any) {
+      toast.error('Failed to draft communication');
     }
   };
 
@@ -243,29 +358,49 @@ export function PolicyEditor() {
             {isPreview ? 'Edit Mode' : 'Preview'}
           </Button>
 
-          {!isDraft ? (
+          {!canEdit ? (
             <Button onClick={handleCreateDraft}>
               <Plus className="w-4 h-4 mr-2" /> New Draft Version
             </Button>
           ) : (
             <>
-              <Button variant="outline" onClick={handleSave} disabled={saveDraft.isPending || publishVersion.isPending}>
-                {saveDraft.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Save Draft
-              </Button>
-              <Button onClick={handlePublish} disabled={saveDraft.isPending || publishVersion.isPending}>
-                <Send className="w-4 h-4 mr-2" /> Publish Version
+              {isDraft && (
+                <>
+                  <Button variant="outline" onClick={handleSave} disabled={saveDraft.isPending}>
+                    {saveDraft.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                    Save Draft
+                  </Button>
+                  {(policy?.versions?.length || 0) > 1 && (
+                    <Button variant="outline" onClick={handleCompare} disabled={aiCompare.isPending}>
+                      <Sparkles className="w-4 h-4 mr-2 text-purple-600" /> Compare
+                    </Button>
+                  )}
+                  <Button variant="outline" onClick={handleSubmitForReview} disabled={saveDraft.isPending || submitForReview.isPending} className="border-amber-200 text-amber-700 hover:bg-amber-50">
+                    Submit for Review
+                  </Button>
+                </>
+              )}
+              {isPendingReview && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-amber-600 font-medium px-2 py-1 bg-amber-50 rounded">Pending Review</span>
+                  <Button variant="outline" onClick={handleSave} disabled={saveDraft.isPending}>
+                    Save Changes
+                  </Button>
+                </div>
+              )}
+              <Button onClick={handlePublish} disabled={saveDraft.isPending || publishVersion.isPending} className={isPendingReview ? 'bg-green-600 hover:bg-green-700 text-white' : ''}>
+                <Send className="w-4 h-4 mr-2" /> {isPendingReview ? 'Approve & Publish' : 'Publish Version'}
               </Button>
             </>
           )}
         </div>
       </div>
 
-      {!isDraft && !isPreview && (
+      {!canEdit && !isPreview && (
         <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg flex gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
           <div>
-            <h4 className="font-medium text-amber-900 dark:text-amber-200">This version is Published</h4>
+            <h4 className="font-medium text-amber-900 dark:text-amber-200">This version is Published/Archived</h4>
             <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">You cannot edit a published version. Click "New Draft Version" to make changes.</p>
           </div>
         </div>
@@ -300,10 +435,17 @@ export function PolicyEditor() {
                   <GripVertical className="w-4 h-4 opacity-50" />
                   {block.type.toUpperCase()}
                 </div>
-                {isDraft && (
-                  <Button variant="ghost" size="sm" onClick={() => removeBlock(block.id)} className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                {canEdit && (
+                  <div className="flex items-center gap-1">
+                    {(block.type === 'paragraph' || block.type === 'heading') && (
+                      <Button variant="ghost" size="sm" onClick={() => { setRefineBlockId(block.id); setRefineModalOpen(true); }} className="h-8 w-8 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/50">
+                        <Sparkles className="w-4 h-4" />
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="sm" onClick={() => removeBlock(block.id)} className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 )}
               </div>
 
@@ -379,7 +521,7 @@ export function PolicyEditor() {
                       />
                     </div>
                   ))}
-                  {isDraft && (
+                  {canEdit && (
                     <Button variant="ghost" size="sm" onClick={() => updateBlock(block.id, { items: [...(block.items || []), ''] })} className="ml-8 mt-1 h-7">
                       <Plus className="w-3 h-3 mr-1" /> Add item
                     </Button>
@@ -389,17 +531,102 @@ export function PolicyEditor() {
             </div>
           ))}
 
-          {isDraft && (
+          {canEdit && (
             <div className="flex flex-wrap gap-2 pt-4 border-t">
               <Button variant="outline" onClick={() => addBlock('heading')} size="sm">Add Heading</Button>
               <Button variant="outline" onClick={() => addBlock('paragraph')} size="sm">Add Paragraph</Button>
               <Button variant="outline" onClick={() => addBlock('list')} size="sm">Add List</Button>
               <Button variant="outline" onClick={() => addBlock('alert')} size="sm">Add Alert</Button>
               <Button variant="outline" onClick={() => addBlock('faq')} size="sm">Add FAQ</Button>
+              <Button variant="outline" onClick={handleGenerateFAQ} size="sm" className="ml-auto text-purple-600 border-purple-200 hover:bg-purple-50">
+                <Sparkles className="w-3 h-3 mr-1" /> Auto-Generate FAQ
+              </Button>
             </div>
           )}
         </div>
       )}
+
+      {/* Refine Modal */}
+      <Dialog open={refineModalOpen} onOpenChange={setRefineModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-purple-600" /> Refine Text with AI</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Instruction</Label>
+              <Input 
+                placeholder="e.g. Make it more formal, Translate to Spanish, Make it shorter..." 
+                value={refineInstruction} 
+                onChange={(e) => setRefineInstruction(e.target.value)} 
+              />
+            </div>
+            <Button onClick={handleRefineBlock} disabled={aiRefine.isPending || !refineInstruction.trim()} className="w-full bg-purple-600 hover:bg-purple-700">
+              {aiRefine.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+              Refine text
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Draft Communication Modal */}
+      <Dialog open={draftCommModalOpen} onOpenChange={setDraftCommModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Draft Employee Announcement</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <p className="text-sm text-muted-foreground">The policy has been published! Would you like AI to draft an email or announcement to share with your team?</p>
+            {!commDraft ? (
+              <Button onClick={handleDraftComm} disabled={draftComm.isPending} className="w-full">
+                {draftComm.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                Draft Announcement
+              </Button>
+            ) : (
+              <div className="space-y-4">
+                <Textarea value={commDraft} onChange={(e) => setCommDraft(e.target.value)} className="min-h-[300px] font-mono text-sm" />
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" onClick={() => setDraftCommModalOpen(false)}>Close</Button>
+                  <Button onClick={() => {
+                    navigator.clipboard.writeText(commDraft);
+                    toast.success("Copied to clipboard! Go to Dashboard -> Library to create an announcement.");
+                    setDraftCommModalOpen(false);
+                    navigate(`/t/${slug}/library`);
+                  }}>
+                    Copy & Go to Announcements
+                  </Button>
+                </div>
+              </div>
+            )}
+            {!commDraft && (
+              <div className="flex justify-end pt-4">
+                <Button variant="ghost" onClick={() => { setDraftCommModalOpen(false); navigate(`/t/${slug}/settings/policies`); }}>Skip</Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Compare Modal */}
+      <Dialog open={compareModalOpen} onOpenChange={setCompareModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-purple-600" /> AI Changes Summary</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            {!compareChanges ? (
+              <div className="flex justify-center p-10"><Loader2 className="w-8 h-8 animate-spin" /></div>
+            ) : (
+              <div className="whitespace-pre-wrap text-sm border p-4 rounded-lg bg-muted/30">
+                {compareChanges}
+              </div>
+            )}
+            <div className="flex justify-end pt-2">
+              <Button onClick={() => setCompareModalOpen(false)}>Close</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

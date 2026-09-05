@@ -204,3 +204,68 @@ export function useAcknowledgePolicy() {
   });
 }
 
+// AI Assistants
+export function useAiRefinePolicyText() {
+  const { slug } = useParams();
+  return useMutation({
+    mutationFn: async ({ text, instruction }: { text: string; instruction: string }) => {
+      const res = await apiClient.post(`/t/${slug}/policies/ai-refine`, { text, instruction });
+      return res.data;
+    }
+  });
+}
+
+export function useAiSummarizePolicy() {
+  const { slug } = useParams();
+  return useMutation({
+    mutationFn: async ({ policyId, versionId, blocks }: { policyId: string; versionId: string; blocks: any[] }) => {
+      const res = await apiClient.post(`/t/${slug}/policies/${policyId}/versions/${versionId}/ai-summarize`, { blocks });
+      return res.data;
+    }
+  });
+}
+
+export function useAiGenerateFAQ() {
+  const { slug } = useParams();
+  return useMutation({
+    mutationFn: async ({ policyId, versionId, blocks }: { policyId: string; versionId: string; blocks: any[] }) => {
+      const res = await apiClient.post(`/t/${slug}/policies/${policyId}/versions/${versionId}/ai-faq`, { blocks });
+      return res.data;
+    }
+  });
+}
+
+export function useAiComparePolicies() {
+  const { slug } = useParams();
+  return useMutation({
+    mutationFn: async ({ policyId, oldBlocks, newBlocks }: { policyId: string; oldBlocks: any[]; newBlocks: any[] }) => {
+      const res = await apiClient.post(`/t/${slug}/policies/${policyId}/compare`, { oldBlocks, newBlocks });
+      return res.data;
+    }
+  });
+}
+
+export function useAiDraftComm() {
+  const { slug } = useParams();
+  return useMutation({
+    mutationFn: async ({ policyId, versionId, policyName, summary }: { policyId: string; versionId: string; policyName: string; summary: string }) => {
+      const res = await apiClient.post(`/t/${slug}/policies/${policyId}/versions/${versionId}/ai-draft-comm`, { policyName, summary });
+      return res.data;
+    }
+  });
+}
+
+export function useSubmitPolicyForReview() {
+  const { slug } = useParams();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ policyId, versionId }: { policyId: string; versionId: string }) => {
+      const res = await apiClient.post(`/t/${slug}/policies/${policyId}/versions/${versionId}/submit-review`);
+      return res.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-policy', slug, variables.policyId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-policies', slug] });
+    }
+  });
+}

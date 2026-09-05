@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/store/auth.store';
-import { Building2, Users, MapPin, Briefcase, CalendarDays, Headset, UserMinus, UserPlus, Activity, Bot, Sparkles, FileText, Folder, Megaphone, Laptop, ArrowRight } from 'lucide-react';
+import { Building2, Users, MapPin, Briefcase, CalendarDays, Headset, UserMinus, UserPlus, Activity, Bot, Sparkles, FileText, Folder, Megaphone, Laptop, ArrowRight, Clock, CalendarClock, Timer, DoorOpen, IndianRupee, Receipt, Target } from 'lucide-react';
 import { useDashboardStats } from '@/features/dashboard/hooks/use-dashboard-queries';
 import { usePinnedAnnouncements } from '@/features/library/hooks/use-library-queries';
 import { format } from 'date-fns';
@@ -25,12 +25,20 @@ function getActivityMeta(action: string) {
 }
 
 const QUICK_LINKS = [
-  { title: 'Apply Leave', icon: CalendarDays, href: '../me/leave', color: 'bg-blue-500/10 text-blue-600' },
   { title: 'Company Policies', icon: FileText, href: '../my-policies', color: 'bg-purple-500/10 text-purple-600' },
-  { title: 'Content Library', icon: Folder, href: 'library', color: 'bg-emerald-500/10 text-emerald-600' },
-  { title: 'Helpdesk', icon: Headset, href: '../me/helpdesk', color: 'bg-orange-500/10 text-orange-600' },
+  { title: 'My Attendance', icon: Clock, href: '../me/attendance', color: 'bg-blue-500/10 text-blue-600' },
+  { title: 'My Leaves', icon: CalendarDays, href: '../me/leave', color: 'bg-emerald-500/10 text-emerald-600' },
+  { title: 'My Shifts', icon: CalendarClock, href: '../me/shifts', color: 'bg-indigo-500/10 text-indigo-600' },
+  { title: 'My Timesheets', icon: Timer, href: '../me/timesheets', color: 'bg-orange-500/10 text-orange-600' },
   { title: 'My Assets', icon: Laptop, href: '../me/assets', color: 'bg-teal-500/10 text-teal-600' },
-  { title: 'Directory', icon: Users, href: 'directory', color: 'bg-indigo-500/10 text-indigo-600' },
+  { title: 'My Resignation', icon: DoorOpen, href: '../me/resignation', color: 'bg-rose-500/10 text-rose-600' },
+  { title: 'My Compensation', icon: IndianRupee, href: '../me/compensation', color: 'bg-green-500/10 text-green-600' },
+  { title: 'My Payslips', icon: Receipt, href: '../me/payslips', color: 'bg-blue-500/10 text-blue-600' },
+  { title: 'My Helpdesk', icon: Headset, href: '../me/helpdesk', color: 'bg-yellow-500/10 text-yellow-600' },
+  { title: 'My Goals', icon: Target, href: '../me/performance/goals', color: 'bg-cyan-500/10 text-cyan-600' },
+  { title: 'My Reviews', icon: Target, href: '../me/performance/reviews', color: 'bg-pink-500/10 text-pink-600' },
+  { title: 'Content Library', icon: Folder, href: '../library', color: 'bg-emerald-500/10 text-emerald-600' },
+  { title: 'Directory', icon: Users, href: '../directory', color: 'bg-indigo-500/10 text-indigo-600' },
 ];
 
 export function DashboardPage() {
@@ -86,7 +94,7 @@ export function DashboardPage() {
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <Megaphone className="h-5 w-5 text-km-forest" /> Company News & Announcements
               </h3>
-              <Link to="library" className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1">
+              <Link to="../library" className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1">
                 View Library <ArrowRight className="h-4 w-4" />
               </Link>
             </div>

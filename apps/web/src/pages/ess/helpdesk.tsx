@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useMyTickets, useCreateMyTicket, useEssHelpdeskCategories } from '@/features/company/hooks/use-helpdesk-queries';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 export function EssHelpdeskPage() {
   const { data: tickets, isLoading } = useMyTickets();
@@ -76,6 +77,7 @@ export function EssHelpdeskPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: 'My Helpdesk' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">My Helpdesk</h2>

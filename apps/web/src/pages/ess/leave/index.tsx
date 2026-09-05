@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 export function EssLeavePage() {
   const { data: balances, isLoading: loadingBalances } = useMyLeaveBalances();
@@ -66,6 +67,7 @@ export function EssLeavePage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: 'My Leaves' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">My Leaves</h1>

@@ -28,10 +28,16 @@ router.put('/:id', adminRole, asyncHandler(PoliciesController.updatePolicy));
 router.post('/:id/versions', adminRole, asyncHandler(PoliciesController.createDraftVersion));
 router.get('/:id/versions/:versionId', adminRole, asyncHandler(PoliciesController.getVersion));
 router.put('/:id/versions/:versionId', adminRole, asyncHandler(PoliciesController.saveDraftVersion));
+router.post('/:id/versions/:versionId/submit-review', adminRole, asyncHandler(PoliciesController.submitForReview));
 router.post('/:id/versions/:versionId/publish', adminRole, asyncHandler(PoliciesController.publishVersion));
 // Templates & AI Assist
 router.post('/seed-templates', adminRole, asyncHandler(PoliciesController.seedTemplates));
 router.post('/ai-generate', adminRole, asyncHandler(PoliciesController.aiGenerate));
+router.post('/ai-refine', adminRole, asyncHandler(PoliciesController.aiRefine));
+router.post('/:id/versions/:versionId/ai-summarize', adminRole, asyncHandler(PoliciesController.aiSummarize));
+router.post('/:id/versions/:versionId/ai-faq', adminRole, asyncHandler(PoliciesController.aiGenerateFAQ));
+router.post('/:id/compare', adminRole, asyncHandler(PoliciesController.aiCompare));
+router.post('/:id/versions/:versionId/ai-draft-comm', adminRole, asyncHandler(PoliciesController.aiDraftComm));
 
 export { router as policiesRouter };
 

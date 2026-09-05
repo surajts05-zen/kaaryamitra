@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { useCompanySettings } from '@/features/company/hooks/use-org-queries';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 export function MyAttendancePage() {
   const { data: settings } = useCompanySettings();
@@ -93,6 +94,7 @@ export function MyAttendancePage() {
 
   return (
     <div className="flex-1 space-y-6 p-8 pt-6">
+      <Breadcrumb items={[{ label: 'My Attendance' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">My Attendance</h2>
       </div>

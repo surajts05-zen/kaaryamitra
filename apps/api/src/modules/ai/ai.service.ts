@@ -380,4 +380,97 @@ IMPORTANT: Return ONLY raw valid JSON. Do not include markdown code block format
   }
 }
 
+export async function refinePolicyText(tenantId: string, text: string, instruction: string) {
+  const ai = await getAiClient(tenantId);
+  if (!ai) return null;
 
+  const prompt = `You are an expert HR Policy drafter. Refine the following policy text based on this instruction: "${instruction}".\n\nOriginal Text:\n${text}\n\nReturn ONLY the refined text without any quotes or markdown formatting block unless the text itself requires markdown.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt
+    });
+    return response.text?.trim() || null;
+  } catch (error) {
+    console.error('Gemini refinePolicyText Error:', error);
+    return null;
+  }
+}
+
+export async function summarizePolicy(tenantId: string, blocks: any[]) {
+  const ai = await getAiClient(tenantId);
+  if (!ai) return null;
+
+  const contentStr = JSON.stringify(blocks);
+  const prompt = `You are an expert HR. Read this policy content and write a concise 1-2 sentence summary of its main points.\n\nContent:\n${contentStr}\n\nReturn ONLY the summary text.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt
+    });
+    return response.text?.trim() || null;
+  } catch (error) {
+    console.error('Gemini summarizePolicy Error:', error);
+    return null;
+  }
+}
+
+export async function generatePolicyFAQ(tenantId: string, blocks: any[]) {
+  const ai = await getAiClient(tenantId);
+  if (!ai) return null;
+
+  const contentStr = JSON.stringify(blocks);
+  const prompt = `You are an expert HR. Read this policy content and generate 3 to 5 frequently asked questions (FAQs) and their answers.\n\nContent:\n${contentStr}\n\nReturn ONLY a valid JSON array of objects with "question" and "answer" string fields. Do not include markdown \`\`\`json.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: { responseMimeType: 'application/json' }
+    });
+    const text = response.text || '[]';
+    const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(cleaned);
+  } catch (error) {
+    console.error('Gemini generatePolicyFAQ Error:', error);
+    return null;
+  }
+}
+
+export async function comparePolicyVersions(tenantId: string, oldBlocks: any[], newBlocks: any[]) {
+  const ai = await getAiClient(tenantId);
+  if (!ai) return null;
+
+  const prompt = `You are an expert HR. Compare the old policy content with the new policy content and provide a concise bulleted list of the main changes.\n\nOld Content:\n${JSON.stringify(oldBlocks)}\n\nNew Content:\n${JSON.stringify(newBlocks)}\n\nReturn ONLY the bulleted list as plain text.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt
+    });
+    return response.text?.trim() || null;
+  } catch (error) {
+    console.error('Gemini comparePolicyVersions Error:', error);
+    return null;
+  }
+}
+
+export async function draftEmployeeCommunication(tenantId: string, policyName: string, summary: string) {
+  const ai = await getAiClient(tenantId);
+  if (!ai) return null;
+
+  const prompt = `You are an expert internal communications manager. Write an announcement for all employees regarding a new or updated policy: "${policyName}".\nSummary of the policy: ${summary}\n\nThe tone should be professional but friendly. It should have a subject line (e.g. Subject: ...) and a body. Return ONLY the drafted email text.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt
+    });
+    return response.text?.trim() || null;
+  } catch (error) {
+    console.error('Gemini draftEmployeeCommunication Error:', error);
+    return null;
+  }
+}

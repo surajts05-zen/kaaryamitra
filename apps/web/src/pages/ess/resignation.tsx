@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 export function MyResignationPage() {
   const { data: resignation, isLoading } = useMyResignation();
@@ -30,6 +31,7 @@ export function MyResignationPage() {
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6 max-w-2xl mx-auto">
+      <Breadcrumb items={[{ label: 'My Resignation' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">My Resignation</h2>
       </div>

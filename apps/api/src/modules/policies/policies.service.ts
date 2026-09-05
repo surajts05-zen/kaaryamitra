@@ -11,112 +11,291 @@ import {
 
 export const STANDARD_POLICY_TEMPLATES = [
   {
-    categoryName: 'Code of Conduct & Ethics',
-
-    categoryDescription: 'Business conduct, ethics, workplace behavior, anti-harassment',
-    title: 'Code of Business Conduct & Ethics',
-    description: 'Core rules governing employee conduct, professional ethics, anti-harassment, and conflict of interest.',
+    categoryName: 'Attendance & Leave',
+    categoryDescription: 'Standard guidelines for Attendance & Leave',
+    title: 'Leave Policy',
+    description: 'Standard guidelines and rules for the Leave Policy.',
     requiresAck: true,
     blocks: [
-      { id: '1', type: 'heading', level: 1, content: '1. Objective & Purpose' },
-      { id: '2', type: 'paragraph', content: 'This policy outlines the ethical standards and expected behavior of all employees at KaaryaMitra. We are committed to maintaining a respectful, inclusive, and professional environment free from harassment or discrimination.' },
-      { id: '3', type: 'alert', alertType: 'warning', content: 'Compliance with this Code of Conduct is mandatory for all full-time, part-time, and contract personnel.' },
-      { id: '4', type: 'heading', level: 2, content: '2. Professional Integrity & Anti-Harassment' },
-      { id: '5', type: 'list', items: [
-        'Maintain zero tolerance for discrimination, sexual harassment, or verbal abuse.',
-        'Protect company confidential information and client data at all times.',
-        'Avoid real or perceived conflicts of interest in all business dealings.'
-      ]},
-      { id: '6', type: 'heading', level: 2, content: '3. Reporting Violations' },
-      { id: '7', type: 'paragraph', content: 'Any employee who observes a violation of this code should report it immediately to their Manager or HR. Whistleblowers are protected against retaliation.' }
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Leave Policy for KaaryaMitra employees.' }
     ]
   },
   {
     categoryName: 'Attendance & Leave',
-    categoryDescription: 'Working hours, leave policies, holidays, remote work rules',
-    title: 'Employee Attendance & Leave Policy',
-    description: 'Guidelines on working hours, leave types, accrual rules, and remote work arrangements.',
+    categoryDescription: 'Standard guidelines for Attendance & Leave',
+    title: 'Attendance Policy',
+    description: 'Standard guidelines and rules for the Attendance Policy.',
     requiresAck: true,
     blocks: [
-      { id: '1', type: 'heading', level: 1, content: '1. Standard Working Hours' },
-      { id: '2', type: 'paragraph', content: 'Standard working hours are 9:00 AM to 6:00 PM, Monday through Friday, with a 1-hour lunch break. Core collaboration hours are 10:00 AM to 4:00 PM.' },
-      { id: '3', type: 'heading', level: 2, content: '2. Leave Entitlements' },
-      { id: '4', type: 'list', items: [
-        'Earned / Privilege Leave: Accrued monthly up to 18 days per year.',
-        'Casual & Sick Leave: 12 days per year allotted on joining.',
-        'Maternity / Paternity Leave: Provided in accordance with statutory labor laws.'
-      ]},
-      { id: '5', type: 'alert', alertType: 'info', content: 'Leave applications must be submitted in advance through the ESS portal for Manager approval.' }
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Attendance Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'Attendance & Leave',
+    categoryDescription: 'Standard guidelines for Attendance & Leave',
+    title: 'Work From Home / Hybrid Work Policy',
+    description: 'Standard guidelines and rules for the Work From Home / Hybrid Work Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Work From Home / Hybrid Work Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'Attendance & Leave',
+    categoryDescription: 'Standard guidelines for Attendance & Leave',
+    title: 'Working Hours Policy',
+    description: 'Standard guidelines and rules for the Working Hours Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Working Hours Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'Attendance & Leave',
+    categoryDescription: 'Standard guidelines for Attendance & Leave',
+    title: 'Overtime Policy',
+    description: 'Standard guidelines and rules for the Overtime Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Overtime Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'Code of Conduct & Ethics',
+    categoryDescription: 'Standard guidelines for Code of Conduct & Ethics',
+    title: 'Work Ethic and Code of Conduct',
+    description: 'Standard guidelines and rules for the Work Ethic and Code of Conduct.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Work Ethic and Code of Conduct for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'Code of Conduct & Ethics',
+    categoryDescription: 'Standard guidelines for Code of Conduct & Ethics',
+    title: 'Employee Code of Ethics',
+    description: 'Standard guidelines and rules for the Employee Code of Ethics.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Employee Code of Ethics for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'Code of Conduct & Ethics',
+    categoryDescription: 'Standard guidelines for Code of Conduct & Ethics',
+    title: 'Anti-Harassment / Workplace Conduct Policy',
+    description: 'Standard guidelines and rules for the Anti-Harassment / Workplace Conduct Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Anti-Harassment / Workplace Conduct Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'Code of Conduct & Ethics',
+    categoryDescription: 'Standard guidelines for Code of Conduct & Ethics',
+    title: 'Equal Opportunity Policy',
+    description: 'Standard guidelines and rules for the Equal Opportunity Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Equal Opportunity Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'Code of Conduct & Ethics',
+    categoryDescription: 'Standard guidelines for Code of Conduct & Ethics',
+    title: 'Conflict of Interest Policy',
+    description: 'Standard guidelines and rules for the Conflict of Interest Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Conflict of Interest Policy for KaaryaMitra employees.' }
     ]
   },
   {
     categoryName: 'IT & Data Security',
-    categoryDescription: 'Acceptable use, password safety, device management, confidentiality',
-    title: 'IT & Data Security Policy',
-    description: 'Security practices for device management, passwords, phishing awareness, and data protection.',
+    categoryDescription: 'Standard guidelines for IT & Data Security',
+    title: 'IT / Acceptable Use Policy',
+    description: 'Standard guidelines and rules for the IT / Acceptable Use Policy.',
     requiresAck: true,
     blocks: [
-      { id: '1', type: 'heading', level: 1, content: '1. Device Security & Access Control' },
-      { id: '2', type: 'paragraph', content: 'All laptops and company devices must be encrypted and protected by a strong password or biometric lock. Devices must lock automatically after 5 minutes of inactivity.' },
-      { id: '3', type: 'heading', level: 2, content: '2. Password & Multi-Factor Authentication' },
-      { id: '4', type: 'list', items: [
-        'Passwords must be at least 12 characters long and changed every 90 days.',
-        'Multi-Factor Authentication (MFA) must be enabled on all corporate email and cloud accounts.',
-        'Never share passwords or OTPs with anyone, including internal IT staff.'
-      ]},
-      { id: '5', type: 'alert', alertType: 'warning', content: 'Report suspicious emails or phishing attempts immediately to IT Security.' }
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard IT / Acceptable Use Policy for KaaryaMitra employees.' }
     ]
   },
   {
-    categoryName: 'Health & Safety',
-    categoryDescription: 'Workplace safety, emergency procedures, health guidelines',
-    title: 'Workplace Health & Emergency Safety Policy',
-    description: 'Emergency response procedures, office safety protocols, and health resources.',
-    requiresAck: false,
+    categoryName: 'IT & Data Security',
+    categoryDescription: 'Standard guidelines for IT & Data Security',
+    title: 'Information Security Policy',
+    description: 'Standard guidelines and rules for the Information Security Policy.',
+    requiresAck: true,
     blocks: [
-      { id: '1', type: 'heading', level: 1, content: '1. Workplace Health & Hygiene' },
-      { id: '2', type: 'paragraph', content: 'We are committed to providing a clean, safe, and ergonomic working environment for all team members.' },
-      { id: '3', type: 'heading', level: 2, content: '2. Emergency Evacuation Procedures' },
-      { id: '4', type: 'list', items: [
-        'Locate the nearest emergency exits on your floor map upon joining.',
-        'In case of fire alarm, exit calmly using stairs. Do not use elevators.',
-        'Gather at the designated Assembly Area outside the main entrance.'
-      ]}
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Information Security Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'IT & Data Security',
+    categoryDescription: 'Standard guidelines for IT & Data Security',
+    title: 'Data Privacy Policy',
+    description: 'Standard guidelines and rules for the Data Privacy Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Data Privacy Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'IT & Data Security',
+    categoryDescription: 'Standard guidelines for IT & Data Security',
+    title: 'Social Media Policy',
+    description: 'Standard guidelines and rules for the Social Media Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Social Media Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'IT & Data Security',
+    categoryDescription: 'Standard guidelines for IT & Data Security',
+    title: 'Asset Usage Policy',
+    description: 'Standard guidelines and rules for the Asset Usage Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Asset Usage Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'Performance & Appraisals',
+    categoryDescription: 'Standard guidelines for Performance & Appraisals',
+    title: 'Performance Management Policy',
+    description: 'Standard guidelines and rules for the Performance Management Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Performance Management Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'Performance & Appraisals',
+    categoryDescription: 'Standard guidelines for Performance & Appraisals',
+    title: 'Promotion Policy',
+    description: 'Standard guidelines and rules for the Promotion Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Promotion Policy for KaaryaMitra employees.' }
     ]
   },
   {
     categoryName: 'Compensation & Benefits',
-    categoryDescription: 'Payroll, reimbursements, perks, performance appraisals',
-    title: 'Compensation & Expense Reimbursement Guidelines',
-    description: 'Overview of payroll disbursement schedule, expense claims, and employee benefits.',
+    categoryDescription: 'Standard guidelines for Compensation & Benefits',
+    title: 'Compensation and Benefits Policy',
+    description: 'Standard guidelines and rules for the Compensation and Benefits Policy.',
     requiresAck: true,
     blocks: [
-      { id: '1', type: 'heading', level: 1, content: '1. Payroll Processing Schedule' },
-      { id: '2', type: 'paragraph', content: 'Monthly salaries are disbursed directly into employee bank accounts on or before the last working day of each calendar month.' },
-      { id: '3', type: 'heading', level: 2, content: '2. Business Expense Claims' },
-      { id: '4', type: 'list', items: [
-        'Reimbursement requests for travel, client meals, or supplies must be submitted within 30 days.',
-        'Valid tax receipts/invoices are mandatory for all claim approvals.'
-      ]}
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Compensation and Benefits Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'Compensation & Benefits',
+    categoryDescription: 'Standard guidelines for Compensation & Benefits',
+    title: 'Travel and Expense Policy',
+    description: 'Standard guidelines and rules for the Travel and Expense Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Travel and Expense Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'Employee Relations',
+    categoryDescription: 'Standard guidelines for Employee Relations',
+    title: 'Grievance Policy',
+    description: 'Standard guidelines and rules for the Grievance Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Grievance Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'Employee Relations',
+    categoryDescription: 'Standard guidelines for Employee Relations',
+    title: 'Disciplinary Policy',
+    description: 'Standard guidelines and rules for the Disciplinary Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Disciplinary Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'Employee Relations',
+    categoryDescription: 'Standard guidelines for Employee Relations',
+    title: 'Whistleblower Policy',
+    description: 'Standard guidelines and rules for the Whistleblower Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Whistleblower Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'Health & Safety',
+    categoryDescription: 'Standard guidelines for Health & Safety',
+    title: 'Health and Safety Policy',
+    description: 'Standard guidelines and rules for the Health and Safety Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Health and Safety Policy for KaaryaMitra employees.' }
     ]
   },
   {
     categoryName: 'Onboarding & Offboarding',
-    categoryDescription: 'Joining formalities, probation, exit procedures',
-    title: 'Onboarding & Exit Formalities Policy',
-    description: 'Guidelines for new hire orientation, probation evaluation, notice period, and asset clearance during offboarding.',
+    categoryDescription: 'Standard guidelines for Onboarding & Offboarding',
+    title: 'Probation Policy',
+    description: 'Standard guidelines and rules for the Probation Policy.',
     requiresAck: true,
     blocks: [
-      { id: '1', type: 'heading', level: 1, content: '1. Onboarding & Probation' },
-      { id: '2', type: 'paragraph', content: 'All new hires undergo a standard probation period of 3 to 6 months. Performance reviews are conducted at 30, 60, and 90 days.' },
-      { id: '3', type: 'heading', level: 2, content: '2. Notice Period & Exit Formalities' },
-      { id: '4', type: 'list', items: [
-        'Employees resigning must serve a 30 to 60 day notice period as per employment contract.',
-        'All company laptops, access cards, and documents must be returned prior to the last working day.',
-        'No Due Certificate (Clearance) must be completed to initiate Final & Full (F&F) settlement.'
-      ]}
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Probation Policy for KaaryaMitra employees.' }
     ]
-  }
+  },
+  {
+    categoryName: 'Onboarding & Offboarding',
+    categoryDescription: 'Standard guidelines for Onboarding & Offboarding',
+    title: 'Employee Separation / Exit Policy',
+    description: 'Standard guidelines and rules for the Employee Separation / Exit Policy.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard Employee Separation / Exit Policy for KaaryaMitra employees.' }
+    ]
+  },
+  {
+    categoryName: 'General',
+    categoryDescription: 'Standard guidelines for General',
+    title: 'General Employee Handbook',
+    description: 'Standard guidelines and rules for the General Employee Handbook.',
+    requiresAck: true,
+    blocks: [
+      { id: '1', type: 'heading', level: 1, content: '1. Overview' },
+      { id: '2', type: 'paragraph', content: 'This is the standard General Employee Handbook for KaaryaMitra employees.' }
+    ]
+  },
 ];
 
 export class PoliciesService {
@@ -383,13 +562,24 @@ export class PoliciesService {
     });
   }
 
+  static async submitForReview(tenantId: string, policyId: string, versionId: string) {
+    const version = await prisma.policyVersion.findFirst({ where: { id: versionId, policyId, tenantId } });
+    if (!version) throw AppError.notFound('Policy version');
+    if (version.status !== 'DRAFT') throw AppError.badRequest('Can only submit DRAFT versions for review');
+
+    return prisma.policyVersion.update({
+      where: { id: versionId },
+      data: { status: 'PENDING_REVIEW' }
+    });
+  }
+
   static async publishVersion(tenantId: string, policyId: string, versionId: string, userId: string) {
     const policy = await prisma.policy.findFirst({ where: { id: policyId, tenantId } });
     if (!policy) throw AppError.notFound('Policy');
 
     const version = await prisma.policyVersion.findFirst({ where: { id: versionId, policyId, tenantId } });
     if (!version) throw AppError.notFound('Policy version');
-    if (version.status !== 'DRAFT') throw AppError.badRequest('Can only publish DRAFT versions');
+    if (version.status !== 'DRAFT' && version.status !== 'PENDING_REVIEW') throw AppError.badRequest('Can only publish DRAFT or PENDING_REVIEW versions');
 
     return prisma.$transaction(async (tx) => {
       // Archive existing published versions

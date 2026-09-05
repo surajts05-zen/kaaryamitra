@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, History, IndianRupee, ShieldCheck } from 'lucide-react';
 import { format } from 'date-fns';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 export default function MyCompensationPage() {
   const { data: profile, isLoading } = useMyCompensation();
@@ -23,6 +24,7 @@ export default function MyCompensationPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
+      <Breadcrumb items={[{ label: 'My Compensation' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div>
         <h1 className="text-3xl font-bold tracking-tight">My Compensation</h1>
         <p className="text-muted-foreground mt-1">

@@ -59,18 +59,6 @@ const navItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', path: 'dashboard' },
   { icon: Inbox,     label: 'Approvals Inbox', path: 'approvals',       allowedRoles: APPROVER_ROLES },
 
-  { icon: FileText,  label: 'Company Policies', path: 'my-policies', group: 'My Workspace' },
-  { icon: Clock,     label: 'My Attendance',    path: 'me/attendance', group: 'My Workspace' },
-  { icon: CalendarDays, label: 'My Leaves', path: 'me/leave', group: 'My Workspace' },
-  { icon: CalendarClock, label: 'My Shifts', path: 'me/shifts', group: 'My Workspace' },
-  { icon: Timer, label: 'My Timesheets', path: 'me/timesheets', group: 'My Workspace' },
-  { icon: Laptop, label: 'My Assets', path: 'me/assets', group: 'My Workspace' },
-  { icon: DoorOpen, label: 'My Resignation', path: 'me/resignation', group: 'My Workspace' },
-  { icon: IndianRupee, label: 'My Compensation', path: 'me/compensation', group: 'My Workspace' },
-  { icon: Receipt, label: 'My Payslips', path: 'me/payslips', group: 'My Workspace' },
-  { icon: Headset, label: 'My Helpdesk', path: 'me/helpdesk', group: 'My Workspace' },
-  { icon: Target, label: 'My Goals', path: 'me/performance/goals', group: 'My Workspace' },
-  { icon: Target, label: 'My Reviews', path: 'me/performance/reviews', group: 'My Workspace' },
 
   // HR / Admin
   { icon: Users,     label: 'Emp Directory',     path: 'directory',         allowedRoles: HR_ROLES, group: 'Organization' },

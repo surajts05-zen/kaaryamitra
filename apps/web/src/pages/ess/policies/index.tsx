@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { useESSPolicies } from '@/features/company/hooks/use-policies-queries';
 
 export function ESSPoliciesList() {
@@ -30,6 +31,7 @@ export function ESSPoliciesList() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
+      <Breadcrumb items={[{ label: 'Company Policies' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Company Policies</h1>
         <p className="text-muted-foreground mt-1">Review and acknowledge important company policies and guidelines.</p>

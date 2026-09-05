@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Calendar, Users } from 'lucide-react';
 import { format } from 'date-fns';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 export function EssMyReviewsPage() {
   const { slug } = useParams();
@@ -34,6 +35,7 @@ export function EssMyReviewsPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: 'My Reviews' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div>
         <h2 className="text-3xl font-bold tracking-tight">My Performance Reviews</h2>
         <p className="text-muted-foreground">Complete your self-assessments and view manager feedback.</p>
