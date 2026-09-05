@@ -343,6 +343,7 @@ model Tenant {
   LibraryFolder          LibraryFolder[]
   LibraryItem            LibraryItem[]
   savedReports           SavedReport[]
+  payrollSettings        PayrollSettings?
 
   @@map("tenants")
 }
@@ -1850,4 +1851,24 @@ model SavedReport {
 
   tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   @@map("saved_reports")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAYROLL SETTINGS (Phase 32)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PayrollSettings {
+  id                             String   @id @default(cuid())
+  tenantId                       String   @unique
+  companyLogoUrl                 String?
+  authorizedSignatoryName        String?
+  authorizedSignatoryDesignation String?
+  themeColor                     String   @default("#000000")
+  customMessage                  String?
+
+  createdAt                      DateTime @default(now())
+  updatedAt                      DateTime @updatedAt
+
+  tenant                         Tenant   @relation(fields: [tenantId], references: [id])
+  @@map("payroll_settings")
 }

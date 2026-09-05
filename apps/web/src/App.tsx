@@ -72,6 +72,7 @@ import MyPayslipsPage from '@/pages/ess/payslips';
 // Phase 29 - Payroll
 import PayrollRunsPage from '@/pages/company/payroll/payroll-runs';
 import PayrollRunDetailPage from '@/pages/company/payroll/payroll-run-detail';
+import PayrollSettingsPage from '@/pages/company/payroll/settings';
 import { StatutorySettingsPage } from '@/pages/company/settings/statutory';
 
 // Help & Resources
@@ -147,6 +148,7 @@ export function App() {
 
             {/* Phase 29 - Payroll Admin */}
             <Route path="payroll" element={<PayrollRunsPage />} />
+            <Route path="payroll/settings" element={<PayrollSettingsPage />} />
             <Route path="payroll/:id" element={<PayrollRunDetailPage />} />
 
             {/* Phase 8 - Workflow Engine */}

@@ -26,4 +26,8 @@ router.get('/statutory', requireRole(['admin', 'hr', 'hr manager', 'company admi
 router.post('/statutory', requireRole(['admin', 'hr', 'hr manager', 'company admin']), PayrollController.createStatutoryRule);
 router.patch('/statutory/:id', requireRole(['admin', 'hr', 'hr manager', 'company admin']), PayrollController.updateStatutoryRule);
 
+// Payroll Settings
+router.get('/settings', requireRole(['admin', 'hr', 'hr manager', 'company admin']), PayrollController.getPayrollSettings);
+router.put('/settings', requireRole(['admin', 'hr', 'hr manager', 'company admin']), PayrollController.updatePayrollSettings);
+
 export { router as payrollRouter };

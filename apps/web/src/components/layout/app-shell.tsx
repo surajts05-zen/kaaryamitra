@@ -82,6 +82,7 @@ const navItems: NavItem[] = [
   { icon: IndianRupee, label: 'Salary Components', path: 'settings/salary-components', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: IndianRupee, label: 'Salary Structures', path: 'settings/salary-structures', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: ShieldAlert, label: 'Statutory Compliances', path: 'settings/statutory', allowedRoles: ADMIN_ROLES, group: 'Settings' },
+  { icon: Receipt, label: 'Payslip Settings', path: 'payroll/settings', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: Settings,  label: 'Settings',      path: 'settings',          allowedRoles: ADMIN_ROLES, group: 'Settings' },
   
   // Help & Resources

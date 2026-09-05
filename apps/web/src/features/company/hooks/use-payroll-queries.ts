@@ -127,3 +127,23 @@ export function useUpdateStatutoryRule() {
     },
   });
 }
+
+export function usePayrollSettings() {
+  const tenantSlug = useTenantSlug();
+  return useQuery({
+    queryKey: [...payrollKeys.all, tenantSlug, 'settings'],
+    queryFn: () => api.get(`/t/${tenantSlug}/payroll/settings`).then((res) => res.data),
+    enabled: !!tenantSlug,
+  });
+}
+
+export function useUpdatePayrollSettings() {
+  const tenantSlug = useTenantSlug();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => api.put(`/t/${tenantSlug}/payroll/settings`, data).then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [...payrollKeys.all, tenantSlug, 'settings'] });
+    },
+  });
+}

@@ -190,8 +190,32 @@ export class PayrollService {
     if (!entry || entry.tenantId !== tenantId || entry.employeeId !== employeeId) {
       throw AppError.notFound('Payslip');
     }
+    
+    const settings = await prisma.payrollSettings.findUnique({ where: { tenantId } });
 
-    return entry;
+    return { ...entry, settings };
+  }
+
+  // ---------------------------------------------------------
+  // PAYROLL SETTINGS (Phase 32)
+  // ---------------------------------------------------------
+
+  static async getPayrollSettings(tenantId: string) {
+    let settings = await prisma.payrollSettings.findUnique({ where: { tenantId } });
+    if (!settings) {
+      settings = await prisma.payrollSettings.create({
+        data: { tenantId }
+      });
+    }
+    return settings;
+  }
+
+  static async upsertPayrollSettings(tenantId: string, data: any) {
+    return prisma.payrollSettings.upsert({
+      where: { tenantId },
+      create: { tenantId, ...data },
+      update: data
+    });
   }
 
   // ---------------------------------------------------------

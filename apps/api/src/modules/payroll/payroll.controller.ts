@@ -67,4 +67,15 @@ export class PayrollController {
     res.json(rule);
   }
 
+  static async getPayrollSettings(req: Request, res: Response) {
+    const settings = await PayrollService.getPayrollSettings(req.tenantId!);
+    res.json(settings);
+  }
+
+  static async updatePayrollSettings(req: Request, res: Response) {
+    const { updatePayrollSettingsSchema } = await import('./payroll.schema.js');
+    const data = updatePayrollSettingsSchema.parse(req.body);
+    const settings = await PayrollService.upsertPayrollSettings(req.tenantId!, data);
+    res.json(settings);
+  }
 }

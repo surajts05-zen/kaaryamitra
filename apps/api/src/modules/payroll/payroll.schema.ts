@@ -27,3 +27,11 @@ export const createStatutoryRuleSchema = z.object({
 });
 
 export const updateStatutoryRuleSchema = createStatutoryRuleSchema.partial();
+
+export const updatePayrollSettingsSchema = z.object({
+  companyLogoUrl: z.string().url().optional().nullable(),
+  authorizedSignatoryName: z.string().optional().nullable(),
+  authorizedSignatoryDesignation: z.string().optional().nullable(),
+  themeColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Must be a valid hex color').default('#000000'),
+  customMessage: z.string().optional().nullable(),
+});

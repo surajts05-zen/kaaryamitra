@@ -33,9 +33,15 @@ function PayslipPreviewModal({ payslipId, open, onOpenChange }: { payslipId: str
           <div className="py-20 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
         ) : payslip ? (
           <div className="space-y-6 print:block">
-            <div className="flex justify-between border-b pb-4">
+            <div className="flex justify-between border-b pb-4" style={{ borderColor: payslip.settings?.themeColor }}>
               <div>
-                <h3 className="font-bold text-xl">{payslip.employee?.department?.name || 'KaaryaMitra HRMS'}</h3>
+                {payslip.settings?.companyLogoUrl ? (
+                  <img src={payslip.settings.companyLogoUrl} alt="Company Logo" className="h-10 object-contain mb-2" />
+                ) : (
+                  <h3 className="font-bold text-xl" style={{ color: payslip.settings?.themeColor }}>
+                    {payslip.employee?.department?.name || 'KaaryaMitra HRMS'}
+                  </h3>
+                )}
                 <p className="text-sm text-muted-foreground">Generated on {format(new Date(), 'PP')}</p>
               </div>
               <div className="text-right text-sm">
@@ -95,12 +101,21 @@ function PayslipPreviewModal({ payslipId, open, onOpenChange }: { payslipId: str
 
             <div className="bg-primary/5 border border-primary/20 p-4 rounded-lg flex justify-between items-center mt-6">
               <span className="font-bold text-lg">Net Payable Amount</span>
-              <span className="font-bold text-2xl text-primary">{formatCurrency(payslip.netPay)}</span>
+              <span className="font-bold text-2xl" style={{ color: payslip.settings?.themeColor || 'inherit' }}>{formatCurrency(payslip.netPay)}</span>
             </div>
             
-            <p className="text-center text-xs text-muted-foreground mt-8 italic">
-              This is a system generated document. No signature is required.
-            </p>
+            <div className="mt-12 flex justify-between items-end text-sm">
+              <p className="text-xs text-muted-foreground italic w-2/3">
+                {payslip.settings?.customMessage || 'This is a system generated document. No signature is required.'}
+              </p>
+              
+              {(payslip.settings?.authorizedSignatoryName || payslip.settings?.authorizedSignatoryDesignation) && (
+                <div className="text-center w-1/3 border-t pt-2 border-dashed">
+                  <p className="font-bold">{payslip.settings?.authorizedSignatoryName}</p>
+                  <p className="text-xs text-muted-foreground">{payslip.settings?.authorizedSignatoryDesignation}</p>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="py-10 text-center text-muted-foreground">Failed to load payslip</div>
