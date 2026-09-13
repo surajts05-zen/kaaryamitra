@@ -44,12 +44,12 @@ import { useNotificationStore } from '@/store/notification.store';
 import { AiChatWidget } from '@/features/ai/components/ai-chat-widget';
 
 // ─── Role constants ────────────────────────────────────────────────────────────
-const ADMIN_ROLES = ['Company Admin'];
-const HR_ROLES = ['Company Admin', 'HR Manager'];
-const APPROVER_ROLES = ['Company Admin', 'HR Manager', 'Manager'];
-const FINANCE_ROLES = ['Company Admin', 'HR Manager', 'Project Manager', 'Finance Manager'];
+export const ADMIN_ROLES = ['Company Admin'];
+export const HR_ROLES = ['Company Admin', 'HR Manager'];
+export const APPROVER_ROLES = ['Company Admin', 'HR Manager', 'Manager'];
+export const FINANCE_ROLES = ['Company Admin', 'HR Manager', 'Project Manager', 'Finance Manager'];
 
-interface NavItem {
+export interface NavItem {
   icon: React.ElementType;
   label: string;
   path: string;
@@ -58,7 +58,7 @@ interface NavItem {
   group?: string;
 }
 
-const navItems: NavItem[] = [
+export const navItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', path: 'dashboard' },
   { icon: Inbox,     label: 'Approvals Inbox', path: 'approvals',       allowedRoles: APPROVER_ROLES },
 
@@ -94,11 +94,28 @@ const navItems: NavItem[] = [
   { icon: BookOpen,  label: 'User Guide',    path: 'user-guide',        group: 'Help & Resources' },
 ];
 
-const adminNavItems: NavItem[] = [
+export const adminNavItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Platform Dashboard', path: '/admin' },
   { icon: Building2,       label: 'Workspaces',         path: '/admin/tenants', group: 'Platform' },
   { icon: Settings,        label: 'Platform Config',    path: '/admin/settings', group: 'Platform' },
 ];
+
+export const essNavItems: NavItem[] = [
+  { icon: FileText, label: 'Company Policies', path: 'my-policies' },
+  { icon: Clock, label: 'My Attendance', path: 'me/attendance' },
+  { icon: CalendarDays, label: 'My Leaves', path: 'me/leave' },
+  { icon: CalendarClock, label: 'My Shifts', path: 'me/shifts' },
+  { icon: Timer, label: 'My Timesheets', path: 'me/timesheets' },
+  { icon: Laptop, label: 'My Assets', path: 'me/assets' },
+  { icon: IndianRupee, label: 'My Compensation', path: 'me/compensation' },
+  { icon: Receipt, label: 'My Payslips', path: 'me/payslips' },
+  { icon: Headset, label: 'My Helpdesk', path: 'me/helpdesk' },
+  { icon: Target, label: 'My Goals', path: 'me/performance/goals' },
+  { icon: Target, label: 'My Reviews', path: 'me/performance/reviews' },
+];
+
+import { CommandPalette } from '@/components/layout/command-palette';
+import { useCommandStore } from '@/store/command.store';
 
 export function AppShell() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -304,11 +321,12 @@ export function AppShell() {
             <Button
               variant="outline"
               className="hidden w-64 justify-start text-muted-foreground md:flex"
+              onClick={() => useCommandStore.getState().setOpen(true)}
             >
               <Search className="mr-2 h-4 w-4" />
               <span>Search everywhere...</span>
               <kbd className="pointer-events-none ml-auto inline-flex h-5 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                <span className="text-xs">⌘</span>K
+                <span className="text-[10px]">Ctrl</span>/
               </kbd>
             </Button>
           </div>
@@ -384,6 +402,7 @@ export function AppShell() {
       </div>
 
       <AiChatWidget />
+      <CommandPalette />
     </div>
   );
 }

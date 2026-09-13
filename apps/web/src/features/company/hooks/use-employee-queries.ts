@@ -1,13 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
-export function useEmployees() {
+export function useEmployees(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['employees'],
     queryFn: async () => {
       const res = await apiClient.get('/employees');
       return res.data.data;
     },
+    ...options,
   });
 }
 
