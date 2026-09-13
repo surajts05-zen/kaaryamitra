@@ -12,18 +12,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ArrowLeft, Save, Camera, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuthStore } from '@/store/auth.store';
 
 const schema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  employeeCode: z.string().optional(),
+  employeeCode: z.string().optional().nullable(),
   workEmail: z.string().email('Invalid email address'),
-  personalEmail: z.string().email('Invalid email').optional().or(z.literal('')),
-  phone: z.string().optional(),
-  departmentId: z.string().optional(),
-  designationId: z.string().optional(),
-  locationId: z.string().optional(),
-  managerId: z.string().optional(),
+  personalEmail: z.string().email('Invalid email').optional().nullable().or(z.literal('')),
+  phone: z.string().optional().nullable(),
+  departmentId: z.string().optional().nullable(),
+  designationId: z.string().optional().nullable(),
+  locationId: z.string().optional().nullable(),
+  managerId: z.string().optional().nullable(),
   joiningDate: z.string().min(1, 'Joining date is required'),
   employmentType: z.string().optional(),
   employmentStatus: z.string().optional(),
@@ -36,6 +37,7 @@ export function EditEmployeePage() {
   const navigate = useNavigate();
   const updateMutation = useUpdateEmployee();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user, refreshUser } = useAuthStore();
 
   const { data: employee, isLoading } = useEmployee(id as string);
   const { data: departments } = useDepartments();
@@ -91,16 +93,27 @@ export function EditEmployeePage() {
   const onSubmit = (data: FormValues) => {
     const payload: any = {
       ...data,
-      joiningDate: new Date(data.joiningDate).toISOString(),
+      departmentId: data.departmentId === 'none' ? null : data.departmentId,
+      designationId: data.designationId === 'none' ? null : data.designationId,
+      locationId: data.locationId === 'none' ? null : data.locationId,
+      managerId: data.managerId === 'none' ? null : data.managerId,
+      joiningDate: data.joiningDate ? new Date(data.joiningDate).toISOString() : new Date().toISOString(),
     };
 
-    if (avatarBase64) {
+    if (avatarPreview === null) {
+      payload.avatarUrl = null;
+    } else if (avatarBase64) {
       payload.avatarUrl = avatarBase64;
     }
 
     updateMutation.mutate({ id: id as string, data: payload }, {
-      onSuccess: () => {
+      onSuccess: async () => {
         toast.success('Employee updated successfully');
+        // Refresh auth store so dashboard name/avatar reflects any changes
+        // to the currently logged-in user's own record
+        if (user?.id === id || user?.id === employee?.userId) {
+          await refreshUser();
+        }
         navigate(`../${id}`);
       },
       onError: (err: any) => {

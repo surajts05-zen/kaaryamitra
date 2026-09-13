@@ -23,6 +23,7 @@ interface AuthState {
   login: (token: string, user: User) => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -76,6 +77,19 @@ export const useAuthStore = create<AuthState>()(
             // Keep the user logged in if it was a server/network error
             set({ isLoading: false });
           }
+        }
+      },
+      // Force re-fetch /auth/me regardless of cached state (e.g. after profile edit)
+      refreshUser: async () => {
+        const token = localStorage.getItem('km_access_token');
+        if (!token) return;
+        try {
+          const res = await apiClient.get('/auth/me');
+          if (res.data.success) {
+            set({ user: res.data.data, isAuthenticated: true });
+          }
+        } catch {
+          // Silently ignore — keep existing session state
         }
       },
     }),

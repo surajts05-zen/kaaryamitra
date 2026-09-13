@@ -48,6 +48,7 @@ export const createHolidaySchema = z.object({
 
 export const updateCompanySettingsSchema = z.object({
   body: z.object({
+    companyName: z.string().min(1, 'Company name cannot be empty').optional(),
     workingDays: z.array(z.number().min(0).max(6)).optional(),
     workHoursStart: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/).optional(),
     workHoursEnd: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/).optional(),
@@ -55,7 +56,7 @@ export const updateCompanySettingsSchema = z.object({
     timezone: z.string().optional(),
     isAttendanceEnabled: z.boolean().optional(),
     isGeolocationEnforced: z.boolean().optional(),
-    clearanceMode: z.enum(['SIMPLE', 'CHECKLIST']).optional(),
-    geminiApiKey: z.string().optional(),
+    clearanceMode: z.enum(['SIMPLE', 'CHECKLIST']).nullable().optional(),
+    geminiApiKey: z.string().nullable().optional(),
   }),
 });

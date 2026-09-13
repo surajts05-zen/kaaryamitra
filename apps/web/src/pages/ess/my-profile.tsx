@@ -3,16 +3,18 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMyProfile, useUpdateMyProfile } from '@/features/ess/hooks/use-ess-queries';
+import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Save, Mail, Phone, Building2, MapPin, Briefcase } from 'lucide-react';
+import { Save, Mail, Phone, Building2, MapPin, Briefcase, DoorOpen, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { Link, useParams } from 'react-router-dom';
 
 const schema = z.object({
-  personalEmail: z.string().email('Invalid email').optional().or(z.literal('')),
-  phone: z.string().optional().or(z.literal('')),
+  personalEmail: z.string().email('Invalid email').optional().nullable().or(z.literal('')),
+  phone: z.string().optional().nullable().or(z.literal('')),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -20,6 +22,13 @@ type FormValues = z.infer<typeof schema>;
 export function EssProfilePage() {
   const { data: profile, isLoading } = useMyProfile();
   const updateMutation = useUpdateMyProfile();
+  const { slug } = useParams();
+  const { user } = useAuthStore();
+
+  // Admins and HR managers manage resignations — they don't submit them
+  const isAdminUser = user?.roles?.some((r) =>
+    ['Company Admin', 'HR Manager'].includes(r)
+  ) ?? false;
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -140,6 +149,37 @@ export function EssProfilePage() {
             </Card>
           </form>
         </div>
+
+        {/* ── Resignation (hidden for admins/HR) ── */}
+        {!isAdminUser && (
+          <div className="md:col-span-3">
+            <Card className="border-rose-200/60 dark:border-rose-900/40 bg-rose-50/30 dark:bg-rose-950/10">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30">
+                    <DoorOpen className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base text-rose-700 dark:text-rose-300">Leaving the Organization?</CardTitle>
+                    <CardDescription className="text-xs mt-0.5">Submit a formal resignation request for HR review.</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="flex items-center justify-between gap-4">
+                <p className="text-sm text-muted-foreground max-w-xl">
+                  This will notify your manager and HR team. Your last working day will be determined based on your notice period and approval.
+                </p>
+                <Link
+                  to={slug ? `/t/${slug}/me/resignation` : '#'}
+                  className="shrink-0 inline-flex items-center gap-2 rounded-lg border border-rose-300 dark:border-rose-700 px-4 py-2 text-sm font-medium text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors"
+                >
+                  <DoorOpen className="h-4 w-4" />
+                  Go to Resignation
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );

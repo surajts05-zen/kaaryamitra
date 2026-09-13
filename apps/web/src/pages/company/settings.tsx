@@ -27,14 +27,15 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const schema = z.object({
+  companyName: z.string().min(1, 'Company name is required'),
   workHoursStart: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format (HH:MM)'),
   workHoursEnd: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format (HH:MM)'),
   probationDays: z.number().min(0),
   timezone: z.string().min(2),
   isAttendanceEnabled: z.boolean().optional(),
   isGeolocationEnforced: z.boolean().optional(),
-  clearanceMode: z.enum(['SIMPLE', 'CHECKLIST']).optional(),
-  geminiApiKey: z.string().optional(),
+  clearanceMode: z.enum(['SIMPLE', 'CHECKLIST']).optional().nullable(),
+  geminiApiKey: z.string().optional().nullable(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -53,6 +54,7 @@ export function CompanySettingsPage() {
   useEffect(() => {
     if (settings) {
       reset({
+        companyName: settings.companyName || '',
         workHoursStart: settings.workHoursStart,
         workHoursEnd: settings.workHoursEnd,
         probationDays: settings.probationDays,
@@ -60,7 +62,7 @@ export function CompanySettingsPage() {
         isAttendanceEnabled: settings.isAttendanceEnabled,
         isGeolocationEnforced: settings.isGeolocationEnforced,
         clearanceMode: settings.clearanceMode,
-        geminiApiKey: settings.geminiApiKey,
+        geminiApiKey: settings.geminiApiKey ?? '',
       });
     }
   }, [settings, reset]);
@@ -272,11 +274,22 @@ export function CompanySettingsPage() {
         <form onSubmit={handleSubmit(onSubmit)}>
           <Card className="border-border/60">
             <CardHeader>
-              <CardTitle>Work Policies & System Preferences</CardTitle>
-              <CardDescription>Configure default working hours, probation rules, attendance tracking, and AI keys.</CardDescription>
+              <CardTitle>Organization Profile & Work Policies</CardTitle>
+              <CardDescription>Configure company name, default working hours, probation rules, attendance tracking, and AI keys.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="font-semibold">Company / Organization Name</Label>
+                <Input placeholder="e.g. KaaryaMitra Inc." {...register('companyName')} />
+                {errors.companyName && <p className="text-xs text-destructive">{errors.companyName.message}</p>}
+                <p className="text-xs text-muted-foreground">
+                  This name will be displayed across the workspace dashboard, header branding, emails, and reports.
+                </p>
+              </div>
+
+              <div className="pt-4 border-t space-y-4">
+                <h3 className="text-lg font-medium">Work Hours & Timezone</h3>
+                <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Work Hours Start</Label>
                   <Input type="time" {...register('workHoursStart')} />
@@ -300,6 +313,7 @@ export function CompanySettingsPage() {
                 <Input {...register('timezone')} />
                 {errors.timezone && <p className="text-xs text-destructive">{errors.timezone.message}</p>}
               </div>
+            </div>
 
               <div className="pt-4 border-t space-y-4">
                 <h3 className="text-lg font-medium">Attendance Settings</h3>

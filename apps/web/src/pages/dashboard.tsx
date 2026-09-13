@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/store/auth.store';
-import { Building2, Users, MapPin, Briefcase, CalendarDays, Headset, UserMinus, UserPlus, Activity, Bot, Sparkles, FileText, Folder, Megaphone, Laptop, ArrowRight, Clock, CalendarClock, Timer, DoorOpen, IndianRupee, Receipt, Target } from 'lucide-react';
+import { Building2, Users, MapPin, Briefcase, CalendarDays, Headset, UserMinus, UserPlus, Activity, Bot, Sparkles, FileText, Folder, Megaphone, Laptop, ArrowRight, Clock, CalendarClock, Timer, IndianRupee, Receipt, Target } from 'lucide-react';
 import { useDashboardStats } from '@/features/dashboard/hooks/use-dashboard-queries';
 import { usePinnedAnnouncements } from '@/features/library/hooks/use-library-queries';
+import { useCompanySettings } from '@/features/company/hooks/use-org-queries';
 import { format } from 'date-fns';
 import { useAiInsights } from '@/features/ai/hooks/use-ai-chat';
 import ReactMarkdown from 'react-markdown';
@@ -31,7 +32,6 @@ const QUICK_LINKS = [
   { title: 'My Shifts', icon: CalendarClock, href: '../me/shifts', color: 'bg-indigo-500/10 text-indigo-600' },
   { title: 'My Timesheets', icon: Timer, href: '../me/timesheets', color: 'bg-orange-500/10 text-orange-600' },
   { title: 'My Assets', icon: Laptop, href: '../me/assets', color: 'bg-teal-500/10 text-teal-600' },
-  { title: 'My Resignation', icon: DoorOpen, href: '../me/resignation', color: 'bg-rose-500/10 text-rose-600' },
   { title: 'My Compensation', icon: IndianRupee, href: '../me/compensation', color: 'bg-green-500/10 text-green-600' },
   { title: 'My Payslips', icon: Receipt, href: '../me/payslips', color: 'bg-blue-500/10 text-blue-600' },
   { title: 'My Helpdesk', icon: Headset, href: '../me/helpdesk', color: 'bg-yellow-500/10 text-yellow-600' },
@@ -46,48 +46,37 @@ export function DashboardPage() {
   const { data: stats, isLoading } = useDashboardStats();
   const { data: insights, isLoading: insightsLoading } = useAiInsights();
   const { data: announcements, isLoading: announcementsLoading } = usePinnedAnnouncements();
+  const { data: companySettings } = useCompanySettings();
 
   const currentDate = format(new Date(), 'EEEE, MMMM do, yyyy');
 
   return (
     <div className="flex-1 space-y-6 pb-12">
       {/* HERO BANNER */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-km-forest to-km-forest/80 text-white p-8 shadow-lg">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-km-forest to-km-forest/80 text-white p-6 shadow-lg">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-km-lime/10 blur-3xl mix-blend-overlay"></div>
         <div className="absolute bottom-0 left-10 -mb-10 h-32 w-32 rounded-full bg-blue-500/20 blur-2xl mix-blend-overlay"></div>
         
         <div className="relative z-10 flex flex-col justify-center h-full">
-          <p className="text-km-lime font-medium mb-1 tracking-wide uppercase text-sm">{currentDate}</p>
-          <h2 className="text-4xl font-bold tracking-tight mb-2">Welcome back, {user?.firstName}</h2>
-          <p className="text-white/80 max-w-2xl text-lg">
-            Here's what's happening across the organization today.
+          <div className="flex items-center justify-between gap-4 mb-1">
+            <p className="text-km-lime font-medium tracking-wide uppercase text-xs">{currentDate}</p>
+            {companySettings?.companyName && (
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-white/10 text-white backdrop-blur-sm border border-white/15">
+                {companySettings.companyName}
+              </span>
+            )}
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight mb-1">Welcome back, {user?.firstName}</h2>
+          <p className="text-white/80 max-w-2xl text-sm">
+            Here's what's happening across {companySettings?.companyName || 'the organization'} today.
           </p>
         </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-12">
-        {/* LEFT COLUMN: News & Announcements */}
+        {/* LEFT COLUMN: News & Quick Actions */}
         <div className="md:col-span-8 space-y-6">
           
-          {/* QUICK LINKS */}
-          <section>
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-km-lime" /> Quick Actions
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              {QUICK_LINKS.map((link) => (
-                <Link key={link.title} to={link.href} className="group block">
-                  <Card className="h-full border-muted/60 bg-card hover:bg-accent/50 hover:border-km-lime/50 transition-all text-center p-4 shadow-sm group-hover:shadow-md">
-                    <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-transform group-hover:scale-110 ${link.color}`}>
-                      <link.icon className="h-6 w-6" />
-                    </div>
-                    <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">{link.title}</span>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </section>
-
           {/* ANNOUNCEMENTS FEED */}
           <section>
             <div className="flex items-center justify-between mb-4">
@@ -139,6 +128,25 @@ export function DashboardPage() {
                   </Card>
                 ))
               )}
+            </div>
+          </section>
+
+          {/* QUICK LINKS */}
+          <section>
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-km-lime" /> Quick Actions
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              {QUICK_LINKS.map((link) => (
+                <Link key={link.title} to={link.href} className="group block">
+                  <Card className="h-full border-muted/60 bg-card hover:bg-accent/50 hover:border-km-lime/50 transition-all text-center p-4 shadow-sm group-hover:shadow-md">
+                    <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-transform group-hover:scale-110 ${link.color}`}>
+                      <link.icon className="h-6 w-6" />
+                    </div>
+                    <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">{link.title}</span>
+                  </Card>
+                </Link>
+              ))}
             </div>
           </section>
 

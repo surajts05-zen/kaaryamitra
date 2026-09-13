@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/prisma.js';
 import type { Prisma } from '@prisma/client';
 import { UserStatus } from '@prisma/client';
+import { AppError } from '../../lib/errors.js';
 
 export class EmployeesService {
   static async listEmployees(tenantId: string) {
@@ -263,7 +264,7 @@ export class EmployeesService {
     });
     
     if (dateOfBirth !== undefined) updateData.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : null;
-    if (joiningDate !== undefined) updateData.joiningDate = new Date(joiningDate);
+    if (joiningDate !== undefined && joiningDate !== null) updateData.joiningDate = new Date(joiningDate);
     if (confirmationDate !== undefined) updateData.confirmationDate = confirmationDate ? new Date(confirmationDate) : null;
     if (probationEndDate !== undefined) updateData.probationEndDate = probationEndDate ? new Date(probationEndDate) : null;
 
@@ -278,6 +279,12 @@ export class EmployeesService {
       });
 
       if (user) {
+        // Check if workEmail is being changed to an existing email
+        if (workEmail && workEmail !== user.email) {
+          const emailOccupied = await prisma.user.findUnique({ where: { email: workEmail } });
+          if (emailOccupied) throw AppError.conflict('An account with this email address already exists');
+        }
+
         // Instantiate official Employee record for this user
         existingEmp = await prisma.employee.create({
           data: {
@@ -291,13 +298,13 @@ export class EmployeesService {
           },
         });
 
-        if (firstName || lastName || workEmail) {
+        if (firstName || lastName || (workEmail && workEmail !== user.email)) {
           await prisma.user.update({
             where: { id: user.id },
             data: {
               ...(firstName && { firstName }),
               ...(lastName && { lastName }),
-              ...(workEmail && { email: workEmail }),
+              ...(workEmail && workEmail !== user.email && { email: workEmail }),
             },
           });
         }
@@ -305,18 +312,28 @@ export class EmployeesService {
         return existingEmp;
       }
 
-      throw new Error('Employee record not found');
+      throw AppError.notFound('Employee record not found');
     }
 
     if (existingEmp.userId && (firstName || lastName || workEmail)) {
-      await prisma.user.update({
-        where: { id: existingEmp.userId },
-        data: {
-          ...(firstName && { firstName }),
-          ...(lastName && { lastName }),
-          ...(workEmail && { email: workEmail }),
-        },
-      });
+      const user = await prisma.user.findUnique({ where: { id: existingEmp.userId } });
+      if (user) {
+        if (workEmail && workEmail !== user.email) {
+          const emailOccupied = await prisma.user.findUnique({ where: { email: workEmail } });
+          if (emailOccupied && emailOccupied.id !== user.id) {
+            throw AppError.conflict('An account with this email address already exists');
+          }
+        }
+
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            ...(firstName && { firstName }),
+            ...(lastName && { lastName }),
+            ...(workEmail && workEmail !== user.email && { email: workEmail }),
+          },
+        });
+      }
     }
 
     return prisma.employee.update({

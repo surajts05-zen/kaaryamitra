@@ -109,12 +109,12 @@ export class OrgService {
         data: { tenantId },
       });
     }
-    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { geminiApiKey: true } });
-    return { ...settings, geminiApiKey: tenant?.geminiApiKey };
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, geminiApiKey: true } });
+    return { ...settings, companyName: tenant?.name ?? '', geminiApiKey: tenant?.geminiApiKey };
   }
 
   static async updateCompanySettings(tenantId: string, data: z.infer<typeof updateCompanySettingsSchema>['body']) {
-    const { geminiApiKey, ...settingsData } = data;
+    const { companyName, geminiApiKey, ...settingsData } = data;
     const updateData: any = { ...settingsData };
     
     Object.keys(updateData).forEach((key) => {
@@ -123,15 +123,19 @@ export class OrgService {
       }
     });
 
-    // Update tenant's AI key if provided
-    if (geminiApiKey !== undefined) {
+    // Update tenant's name or AI key if provided
+    if (companyName !== undefined || geminiApiKey !== undefined) {
+      const tenantUpdate: any = {};
+      if (companyName !== undefined) tenantUpdate.name = companyName;
+      if (geminiApiKey !== undefined) tenantUpdate.geminiApiKey = geminiApiKey || null;
+
       await prisma.tenant.update({
         where: { id: tenantId },
-        data: { geminiApiKey: geminiApiKey || null },
+        data: tenantUpdate,
       });
     }
 
-    return prisma.companySettings.upsert({
+    const updatedSettings = await prisma.companySettings.upsert({
       where: { tenantId },
       update: updateData,
       create: {
@@ -143,6 +147,9 @@ export class OrgService {
         timezone: updateData.timezone ?? 'Asia/Kolkata',
       },
     });
+
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, geminiApiKey: true } });
+    return { ...updatedSettings, companyName: tenant?.name ?? '', geminiApiKey: tenant?.geminiApiKey };
   }
 
   static async listHolidays(tenantId: string) {

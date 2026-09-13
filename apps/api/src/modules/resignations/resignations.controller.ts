@@ -5,7 +5,18 @@ import { AppError } from '../../lib/errors.js';
 
 export const submitResignationHandler = async (req: Request, res: Response) => {
   const tenantId = req.tenantId!;
-  
+
+  // Company Admins and HR Managers manage resignations — they cannot submit one
+  const adminRoles = await prisma.userRole.findFirst({
+    where: {
+      userId: req.auth!.userId,
+      role: { name: { in: ['Company Admin', 'HR Manager'] } },
+    },
+  });
+  if (adminRoles) {
+    throw AppError.forbidden('Administrators cannot submit resignation requests.');
+  }
+
   const employee = await prisma.employee.findUnique({
     where: { userId: req.auth!.userId }
   });
