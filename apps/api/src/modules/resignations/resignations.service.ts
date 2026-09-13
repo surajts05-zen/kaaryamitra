@@ -46,7 +46,7 @@ export class ResignationsService {
   }
 
   static async updateResignationStatus(tenantId: string, id: string, data: any) {
-    return prisma.resignation.update({
+    const resignation = await prisma.resignation.update({
       where: { id, tenantId },
       data: {
         status: data.status,
@@ -55,6 +55,43 @@ export class ResignationsService {
         ...(data.exitInterviewNotes !== undefined && { exitInterviewNotes: data.exitInterviewNotes ?? null }),
       }
     });
+
+    if (data.status === 'APPROVED') {
+      try {
+        const offboardingTemplates = await prisma.checklistTemplate.findMany({
+          where: { tenantId, type: 'OFFBOARDING' },
+          include: { tasks: true },
+        });
+        for (const template of offboardingTemplates) {
+          await prisma.employeeChecklist.create({
+            data: {
+              tenantId,
+              employeeId: resignation.employeeId,
+              type: template.type,
+              tasks: {
+                create: template.tasks.map((t) => ({
+                  title: t.title,
+                  description: t.description,
+                  assigneeRole: t.assigneeRole,
+                })),
+              },
+            },
+          });
+        }
+      } catch (err) {
+        console.error(`Failed to auto-assign offboarding checklists for resignation ${id}:`, err);
+      }
+
+      // Trigger offboarding workflow if one exists
+      try {
+        const { startWorkflow } = await import('../workflows/workflow.service.js');
+        await startWorkflow(tenantId, 'OFFBOARDING_REQUEST', 'Employee', resignation.employeeId);
+      } catch (err) {
+        console.error(`Failed to start offboarding workflow for resignation ${id}:`, err);
+      }
+    }
+
+    return resignation;
   }
 
   static async updateClearance(tenantId: string, id: string, isClearanceCompleted: boolean) {

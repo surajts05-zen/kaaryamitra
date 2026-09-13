@@ -470,10 +470,8 @@ export async function processWorkflowAction(
       }).catch(() => {});
     }
   } else if (isComplete && instance.resignationId) {
-    await prisma.resignation.update({
-      where: { id: instance.resignationId },
-      data: { status: 'APPROVED' },
-    });
+    const { ResignationsService } = await import('../resignations/resignations.service.js');
+    await ResignationsService.updateResignationStatus(tenantId, instance.resignationId, { status: 'APPROVED' });
   } else if (isComplete && instance.assetAssignmentId) {
     const assetAssign = await prisma.assetAssignment.update({
       where: { id: instance.assetAssignmentId },

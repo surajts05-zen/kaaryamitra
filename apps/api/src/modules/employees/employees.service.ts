@@ -236,6 +236,32 @@ export class EmployeesService {
       console.error(`Failed to start onboarding workflow for new employee ${employee.id}:`, err);
     }
 
+    // Auto-assign all ONBOARDING checklist templates
+    try {
+      const onboardingTemplates = await prisma.checklistTemplate.findMany({
+        where: { tenantId, type: 'ONBOARDING' },
+        include: { tasks: true },
+      });
+      for (const template of onboardingTemplates) {
+        await prisma.employeeChecklist.create({
+          data: {
+            tenantId,
+            employeeId: employee.id,
+            type: template.type,
+            tasks: {
+              create: template.tasks.map((t) => ({
+                title: t.title,
+                description: t.description,
+                assigneeRole: t.assigneeRole,
+              })),
+            },
+          },
+        });
+      }
+    } catch (err) {
+      console.error(`Failed to auto-assign onboarding checklists for employee ${employee.id}:`, err);
+    }
+
     return employee;
 
   }
