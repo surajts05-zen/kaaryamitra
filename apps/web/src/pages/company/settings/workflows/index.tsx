@@ -64,6 +64,11 @@ const formSchema = z.object({
     'TIMESHEET_APPROVAL',
     'SHIFT_SWAP_REQUEST',
     'CUSTOM',
+    'ONBOARDING_WORKFLOW',
+    'ASSET_REQUEST',
+    'RESIGNATION_APPROVAL',
+    'COMPENSATION_REVISION',
+    'PAYROLL_APPROVAL',
   ]),
   steps: z.array(stepSchema).min(1, 'At least one step is required'),
 });
@@ -81,6 +86,11 @@ const TRIGGER_LABELS: Record<string, string> = {
   TIMESHEET_APPROVAL: 'Timesheet Approval',
   SHIFT_SWAP_REQUEST: 'Shift Swap Request',
   CUSTOM: 'Custom',
+  ONBOARDING_WORKFLOW: 'Onboarding Checklist / Flow',
+  ASSET_REQUEST: 'Asset Request / Assignment',
+  RESIGNATION_APPROVAL: 'Resignation Request',
+  COMPENSATION_REVISION: 'Compensation Revision',
+  PAYROLL_APPROVAL: 'Payroll Approval',
 };
 
 const ASSIGNEE_LABELS: Record<string, string> = {
@@ -100,6 +110,11 @@ const TRIGGER_ICONS: Record<string, string> = {
   TIMESHEET_APPROVAL: '📅',
   SHIFT_SWAP_REQUEST: '🔄',
   CUSTOM: '⚙️',
+  ONBOARDING_WORKFLOW: '🚀',
+  ASSET_REQUEST: '💻',
+  RESIGNATION_APPROVAL: '🚪',
+  COMPENSATION_REVISION: '💰',
+  PAYROLL_APPROVAL: '💸',
 };
 
 // ─── Workflow Form Dialog ──────────────────────────────────────────────────────

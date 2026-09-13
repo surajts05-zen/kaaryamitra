@@ -96,7 +96,15 @@ export type PermissionAction =
   | 'settings:manage'
   // Super Admin
   | 'tenant:manage'
-  | 'platform:manage';
+  | 'platform:manage'
+  // Projects & Budgets
+  | 'projects:read'
+  | 'projects:manage'
+  | 'budget:read'
+  | 'budget:request'
+  | 'budget:approve'
+  | 'budget:manage'
+  | 'cost-centers:manage';
 
 export interface Permission {
   id: string;

@@ -22,6 +22,7 @@ import {
   Sliders,
   Settings as SettingsIcon,
   Sparkles,
+  IndianRupee,
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -244,6 +245,20 @@ export function CompanySettingsPage() {
                   <CardTitle className="text-lg">Roles & Permissions</CardTitle>
                   <CardDescription className="text-xs">
                     Configure RBAC action permissions and assign roles to company employees.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+
+            <Link to="finance">
+              <Card className="hover:border-primary/50 hover:shadow-md transition-all cursor-pointer h-full border-border/60">
+                <CardHeader>
+                  <div className="p-2.5 w-fit rounded-lg bg-green-500/10 text-green-600 mb-2">
+                    <IndianRupee className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-lg">Finance & Budgets</CardTitle>
+                  <CardDescription className="text-xs">
+                    Define cost centers, budget categories, and financial hierarchies.
                   </CardDescription>
                 </CardHeader>
               </Card>

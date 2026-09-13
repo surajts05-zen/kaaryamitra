@@ -36,6 +36,14 @@ async function main() {
     { action: 'settings:manage', description: 'Manage tenant settings' },
     { action: 'tenant:manage', description: 'Manage tenants (Super Admin)' },
     { action: 'platform:manage', description: 'Platform-level management (Super Admin)' },
+    
+    // Projects & Budgets
+    { action: 'projects:read', description: 'View projects' },
+    { action: 'projects:manage', description: 'Create and manage projects' },
+    { action: 'budget:request', description: 'Submit budget requests' },
+    { action: 'budget:approve', description: 'Approve budget requests and expenses' },
+    { action: 'budget:manage', description: 'Manage budget allocations and ledger' },
+    { action: 'cost-centers:manage', description: 'Manage cost centers and budget categories' },
   ];
 
   console.log('📋 Creating permissions...');

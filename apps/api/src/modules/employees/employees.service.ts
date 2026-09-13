@@ -227,6 +227,14 @@ export class EmployeesService {
       console.error(`Failed to assign policies to new employee ${employee.id}:`, err);
     }
 
+    // Trigger onboarding workflow if one exists
+    try {
+      const { startWorkflow } = await import('../workflows/workflow.service.js');
+      await startWorkflow(tenantId, 'ONBOARDING_WORKFLOW', 'Employee', employee.id);
+    } catch (err) {
+      console.error(`Failed to start onboarding workflow for new employee ${employee.id}:`, err);
+    }
+
     return employee;
 
   }

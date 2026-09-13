@@ -35,6 +35,14 @@ import { payrollRouter } from './modules/payroll/payroll.router.js';
 import { policiesRouter } from './modules/policies/policies.router.js';
 import { libraryRouter } from './modules/library/library.router.js';
 import { reportsRouter } from './modules/reports/reports.router.js';
+import { costCentersRouter } from './modules/cost-centers/cost-centers.router.js';
+import { budgetCategoriesRouter } from './modules/budget-categories/budget-categories.router.js';
+import { projectsRouter } from './modules/projects/projects.router.js';
+import { budgetRequestsRouter } from './modules/budget-requests/budget-requests.router.js';
+import { milestonesRouter } from './modules/milestones/milestones.router.js';
+import { projectExpensesRouter } from './modules/project-expenses/project-expenses.router.js';
+import { budgetAllocationsRouter } from './modules/budget-allocations/budget-allocations.router.js';
+import { budgetDashboardRouter } from './modules/budget-dashboard/budget-dashboard.router.js';
 import { requireAuth, requireSuperAdmin, resolveTenant } from './middleware/auth.js';
 
 export function createApp() {
@@ -198,6 +206,26 @@ export function createApp() {
 
   // Reports
   app.use('/api/v1/t/:slug/reports', requireAuth, resolveTenant, reportsRouter);
+
+  // Tenant-scoped Projects & Budget Management
+  app.use('/api/v1/cost-centers', requireAuth, resolveTenant, costCentersRouter);
+  app.use('/api/v1/budget-categories', requireAuth, resolveTenant, budgetCategoriesRouter);
+  app.use('/api/v1/projects', requireAuth, resolveTenant, projectsRouter);
+  app.use('/api/v1/projects/:projectId/milestones', requireAuth, resolveTenant, milestonesRouter);
+  app.use('/api/v1/projects/:projectId/allocations', requireAuth, resolveTenant, budgetAllocationsRouter);
+  app.use('/api/v1/budget-requests', requireAuth, resolveTenant, budgetRequestsRouter);
+  app.use('/api/v1/project-expenses', requireAuth, resolveTenant, projectExpensesRouter);
+  app.use('/api/v1/budget-dashboard', requireAuth, resolveTenant, budgetDashboardRouter);
+
+  // Maintain backward compatibility for /t/:slug prefixed URLs
+  app.use('/api/v1/t/:slug/cost-centers', requireAuth, resolveTenant, costCentersRouter);
+  app.use('/api/v1/t/:slug/budget-categories', requireAuth, resolveTenant, budgetCategoriesRouter);
+  app.use('/api/v1/t/:slug/projects', requireAuth, resolveTenant, projectsRouter);
+  app.use('/api/v1/t/:slug/projects/:projectId/milestones', requireAuth, resolveTenant, milestonesRouter);
+  app.use('/api/v1/t/:slug/projects/:projectId/allocations', requireAuth, resolveTenant, budgetAllocationsRouter);
+  app.use('/api/v1/t/:slug/budget-requests', requireAuth, resolveTenant, budgetRequestsRouter);
+  app.use('/api/v1/t/:slug/project-expenses', requireAuth, resolveTenant, projectExpensesRouter);
+  app.use('/api/v1/t/:slug/budget-dashboard', requireAuth, resolveTenant, budgetDashboardRouter);
 
   // Notifications (user-scoped, no tenant resolution needed — userId from JWT is enough)
   app.use('/api/v1/notifications', requireAuth, notificationsRouter);

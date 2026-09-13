@@ -101,6 +101,35 @@ export class AdminService {
               description: r.description,
               isSystem: r.isSystem,
             }))
+          },
+          costCenters: {
+            create: [
+              { name: 'Engineering & Technology', code: 'ENG-01', isActive: true },
+              { name: 'Sales & Marketing', code: 'SLS-01', isActive: true },
+              { name: 'Human Resources', code: 'HR-01', isActive: true },
+              { name: 'Operations & Admin', code: 'OPS-01', isActive: true }
+            ]
+          },
+          budgetCategories: {
+            create: [
+              { name: 'Software Subscriptions', code: 'SW-OPEX', capexOpex: 'OPEX', isActive: true },
+              { name: 'Hardware & Equipment', code: 'HW-CAPEX', capexOpex: 'CAPEX', isActive: true },
+              { name: 'Travel & Events', code: 'TRV-OPEX', capexOpex: 'OPEX', isActive: true },
+              { name: 'Consulting & Services', code: 'CNS-OPEX', capexOpex: 'OPEX', isActive: true }
+            ]
+          },
+          projects: {
+            create: [
+              { 
+                name: 'Internal Operations FY26', 
+                code: 'INT-FY26', 
+                description: 'Default bucket for internal operational expenses',
+                status: 'ACTIVE',
+                priority: 'MEDIUM',
+                approvedBudget: 1000000,
+                currentBudget: 1000000
+              }
+            ]
           }
         },
         include: { roles: true }

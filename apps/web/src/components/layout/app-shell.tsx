@@ -16,6 +16,7 @@ import {
   MapPin,
   Briefcase,
   GitBranch,
+  FolderGit2,
   Inbox,
   Shield,
   CalendarDays,
@@ -45,6 +46,7 @@ import { AiChatWidget } from '@/features/ai/components/ai-chat-widget';
 const ADMIN_ROLES = ['Company Admin'];
 const HR_ROLES = ['Company Admin', 'HR Manager'];
 const APPROVER_ROLES = ['Company Admin', 'HR Manager', 'Manager'];
+const FINANCE_ROLES = ['Company Admin', 'HR Manager', 'Project Manager', 'Finance Manager'];
 
 interface NavItem {
   icon: React.ElementType;
@@ -72,6 +74,8 @@ const navItems: NavItem[] = [
   { icon: Headset,       label: 'Helpdesk',      path: 'helpdesk',          allowedRoles: HR_ROLES, group: 'Management' },
   { icon: Target,        label: 'Goals',         path: 'performance/goals', allowedRoles: HR_ROLES, group: 'Management' },
   { icon: Target,        label: 'Review Cycles', path: 'performance/reviews', allowedRoles: HR_ROLES, group: 'Management' },
+  { icon: FolderGit2,    label: 'Projects',      path: 'projects',          allowedRoles: FINANCE_ROLES, group: 'Management' },
+  { icon: IndianRupee,   label: 'Budgets',       path: 'budgets',           allowedRoles: FINANCE_ROLES, group: 'Management' },
 
   { icon: LayoutDashboard, label: 'Reports', path: 'reports', allowedRoles: HR_ROLES, group: 'Data & Analytics' },
 

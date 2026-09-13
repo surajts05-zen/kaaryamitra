@@ -90,6 +90,15 @@ import { LibraryEditorPage } from '@/pages/company/library/editor';
 import ReportsDashboard from '@/pages/company/reports/index';
 import ReportBuilder from '@/pages/company/reports/builder';
 
+// Projects & Budgets
+import { ProjectsPage } from '@/pages/company/projects';
+import { ProjectDetailPage } from '@/pages/company/projects/detail';
+import { BudgetsDashboardPage } from '@/pages/company/budgets';
+import { BudgetRequestsPage } from '@/pages/company/budgets/requests';
+
+// Finance Settings
+import { FinanceSettingsPage } from '@/pages/company/settings/finance';
+
 /**
  * KaaryaMitra App Router
  */
@@ -130,6 +139,7 @@ export function App() {
             <Route path="settings/salary-components" element={<SalaryComponentsPage />} />
             <Route path="settings/salary-structures" element={<SalaryStructuresPage />} />
             <Route path="settings/statutory" element={<StatutorySettingsPage />} />
+            <Route path="settings/finance" element={<FinanceSettingsPage />} />
             {/* Phase 26 - Policies */}
             <Route path="settings/policies" element={<PoliciesAdminList />} />
             <Route path="settings/policies/:id/edit" element={<PolicyEditor />} />
@@ -142,6 +152,12 @@ export function App() {
             {/* Reports */}
             <Route path="reports" element={<ReportsDashboard />} />
             <Route path="reports/builder" element={<ReportBuilder />} />
+
+            {/* Projects & Budgets */}
+            <Route path="projects" element={<ProjectsPage />} />
+            <Route path="projects/:id" element={<ProjectDetailPage />} />
+            <Route path="budgets" element={<BudgetsDashboardPage />} />
+            <Route path="budgets/requests" element={<BudgetRequestsPage />} />
 
             {/* Phase 7 - Leave Management */}
             <Route path="approvals/leave" element={<LeaveApprovalsPage />} />

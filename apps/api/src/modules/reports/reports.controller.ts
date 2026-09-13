@@ -32,21 +32,21 @@ export class ReportsController {
   static async getSavedReport(req: Request, res: Response) {
     const tenantId = req.tenantId!;
     const { id } = req.params;
-    const report = await ReportsService.getSavedReport(tenantId, id);
+    const report = await ReportsService.getSavedReport(tenantId, id as string);
     res.json({ success: true, data: report });
   }
 
   static async updateSavedReport(req: Request, res: Response) {
     const tenantId = req.tenantId!;
     const { id } = req.params;
-    const report = await ReportsService.updateSavedReport(tenantId, id, req.body);
+    const report = await ReportsService.updateSavedReport(tenantId, id as string, req.body);
     res.json({ success: true, data: report });
   }
 
   static async deleteSavedReport(req: Request, res: Response) {
     const tenantId = req.tenantId!;
     const { id } = req.params;
-    await ReportsService.deleteSavedReport(tenantId, id);
+    await ReportsService.deleteSavedReport(tenantId, id as string);
     res.json({ success: true });
   }
 }

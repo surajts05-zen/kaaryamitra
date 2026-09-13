@@ -111,6 +111,12 @@ export async function startWorkflow(
       attendanceCorrectionId: entityType === 'AttendanceCorrection' ? entityId : null,
       shiftSwapRequestId: entityType === 'ShiftSwapRequest' ? entityId : null,
       timesheetId: entityType === 'Timesheet' ? entityId : null,
+      targetEmployeeId: entityType === 'Employee' ? entityId : null,
+      resignationId: entityType === 'Resignation' ? entityId : null,
+      assetAssignmentId: entityType === 'AssetAssignment' ? entityId : null,
+      compensationHistoryId: entityType === 'CompensationHistory' ? entityId : null,
+      payrollRunId: entityType === 'PayrollRun' ? entityId : null,
+      budgetRequestId: entityType === 'BudgetRequest' ? entityId : null,
     },
   });
 
@@ -316,6 +322,30 @@ export async function processWorkflowAction(
           email: swap.requestingEmployee.user.email,
         }).catch(() => {});
       }
+    } else if (instance.resignationId) {
+      await prisma.resignation.update({
+        where: { id: instance.resignationId },
+        data: { status: 'REJECTED' },
+      });
+    } else if (instance.assetAssignmentId) {
+      await prisma.assetAssignment.delete({
+        where: { id: instance.assetAssignmentId },
+      });
+    } else if (instance.compensationHistoryId) {
+      await prisma.compensationHistory.update({
+        where: { id: instance.compensationHistoryId },
+        data: { status: 'REJECTED' },
+      });
+    } else if (instance.payrollRunId) {
+      await prisma.payrollRun.update({
+        where: { id: instance.payrollRunId },
+        data: { status: 'DRAFT' },
+      });
+    } else if (instance.budgetRequestId) {
+      await prisma.budgetRequest.update({
+        where: { id: instance.budgetRequestId },
+        data: { status: 'REJECTED' },
+      });
     }
 
     return rejected;
@@ -439,6 +469,45 @@ export async function processWorkflowAction(
         email: swap.targetEmployee.user.email,
       }).catch(() => {});
     }
+  } else if (isComplete && instance.resignationId) {
+    await prisma.resignation.update({
+      where: { id: instance.resignationId },
+      data: { status: 'APPROVED' },
+    });
+  } else if (isComplete && instance.assetAssignmentId) {
+    const assetAssign = await prisma.assetAssignment.update({
+      where: { id: instance.assetAssignmentId },
+      data: { status: 'PENDING_ACKNOWLEDGEMENT' },
+    });
+    // Mark asset as assigned
+    await prisma.asset.update({
+      where: { id: assetAssign.assetId },
+      data: {
+        status: 'ASSIGNED',
+        assignedToId: assetAssign.employeeId,
+        assignedAt: new Date(),
+      }
+    });
+  } else if (isComplete && instance.compensationHistoryId) {
+    const hist = await prisma.compensationHistory.update({
+      where: { id: instance.compensationHistoryId },
+      data: { status: 'APPROVED', approvedById: actorUserId },
+    });
+    await prisma.compensationProfile.update({
+      where: { id: hist.profileId },
+      data: { annualCTC: hist.newCTC },
+    });
+  } else if (isComplete && instance.payrollRunId) {
+    await prisma.payrollRun.update({
+      where: { id: instance.payrollRunId },
+      data: { status: 'APPROVED', approvedAt: new Date(), approvedById: actorUserId },
+    });
+  } else if (isComplete && instance.budgetRequestId) {
+    // Basic status update. Budget Allocation logic will be handled by Budget Service post-approval webhook/sync if needed.
+    await prisma.budgetRequest.update({
+      where: { id: instance.budgetRequestId },
+      data: { status: 'APPROVED' },
+    });
   }
 
   return updated;
@@ -476,6 +545,12 @@ export async function getPendingActionsForUser(tenantId: string, userId: string)
       shiftSwapRequest: {
         include: { requestingEmployee: { include: { user: true, department: true, designation: true } } }
       },
+      targetEmployee: { include: { user: true, department: true, designation: true } },
+      resignation: { include: { employee: { include: { user: true, department: true, designation: true } } } },
+      assetAssignment: { include: { employee: { include: { user: true, department: true, designation: true } } } },
+      compensationHistory: { include: { employee: { include: { user: true, department: true, designation: true } } } },
+      payrollRun: true,
+      budgetRequest: true,
     },
   });
 
@@ -489,7 +564,13 @@ export async function getPendingActionsForUser(tenantId: string, userId: string)
     const employeeId = instance.leaveApplication?.employeeId || 
                        instance.attendanceCorrection?.record.employeeId ||
                        instance.timesheet?.employeeId ||
-                       instance.shiftSwapRequest?.requestingEmployeeId;
+                       instance.shiftSwapRequest?.requestingEmployeeId ||
+                       instance.targetEmployeeId ||
+                       instance.resignation?.employeeId ||
+                       instance.assetAssignment?.employeeId ||
+                       instance.compensationHistory?.employeeId ||
+                       instance.budgetRequest?.requesterId ||
+                       (instance.payrollRunId ? 'payroll_admin' : null);
     if (!employeeId) continue;
 
     const isApprover = await isUserStepApprover(
@@ -519,6 +600,12 @@ function triggerTypeToEntityType(triggerType: string): string {
     TIMESHEET_APPROVAL: 'Timesheet',
     SHIFT_SWAP_REQUEST: 'ShiftSwapRequest',
     CUSTOM: 'Custom',
+    ONBOARDING_WORKFLOW: 'Employee',
+    ASSET_REQUEST: 'AssetAssignment',
+    RESIGNATION_APPROVAL: 'Resignation',
+    COMPENSATION_REVISION: 'CompensationHistory',
+    PAYROLL_APPROVAL: 'PayrollRun',
+    BUDGET_REQUEST: 'BudgetRequest',
   };
   return map[triggerType] ?? 'Custom';
 }

@@ -24,6 +24,16 @@ export const SYSTEM_ROLES = [
     description: 'Access to personal ESS features only.',
     isSystem: true,
   },
+  {
+    name: 'Project Manager',
+    description: 'Create and manage projects, milestones, and request budgets.',
+    isSystem: true,
+  },
+  {
+    name: 'Finance Manager',
+    description: 'Manage budget allocations, cost centers, and approve expenses.',
+    isSystem: true,
+  },
 ];
 
 // ─── Seed system roles for a tenant if not already present ────────────────────
@@ -50,6 +60,26 @@ export async function seedSystemRoles(tenantId: string) {
       .map((action) => permMap.get(action))
       .filter(Boolean) as string[],
     Employee: ['leave:apply', 'leave:read', 'attendance:checkin', 'attendance:read', 'document:read', 'document:upload']
+      .map((action) => permMap.get(action))
+      .filter(Boolean) as string[],
+    'Project Manager': [
+      'projects:read',
+      'projects:manage',
+      'budget:request',
+      'employee:read',
+      'org:read',
+    ]
+      .map((action) => permMap.get(action))
+      .filter(Boolean) as string[],
+    'Finance Manager': [
+      'projects:read',
+      'budget:read',
+      'budget:approve',
+      'budget:manage',
+      'cost-centers:manage',
+      'employee:read',
+      'org:read',
+    ]
       .map((action) => permMap.get(action))
       .filter(Boolean) as string[],
   };

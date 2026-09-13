@@ -122,6 +122,12 @@ enum WorkflowTriggerType {
   TIMESHEET_APPROVAL
   SHIFT_SWAP_REQUEST
   CUSTOM
+  ONBOARDING_WORKFLOW
+  ASSET_REQUEST
+  RESIGNATION_APPROVAL
+  COMPENSATION_REVISION
+  PAYROLL_APPROVAL
+  BUDGET_REQUEST
 }
 
 enum ShiftType {
@@ -266,6 +272,82 @@ enum FeedbackType {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// PROJECTS & BUDGET MANAGEMENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ProjectStatus {
+  PLANNING
+  PROPOSED
+  APPROVED
+  ACTIVE
+  ON_HOLD
+  AT_RISK
+  COMPLETED
+  CANCELLED
+  CLOSED
+}
+
+enum BudgetRequestStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  ALLOCATED
+  PARTIALLY_RELEASED
+  FULLY_RELEASED
+  ACTIVE
+  CLOSED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+enum MilestoneStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  COMPLETED
+  DELAYED
+  CANCELLED
+}
+
+enum BudgetTransactionType {
+  INITIAL_ALLOCATION
+  FUNDING_RELEASE
+  EXPENSE
+  COMMITMENT
+  REALLOCATION_OUT
+  REALLOCATION_IN
+  REVISION_INCREASE
+  REVISION_DECREASE
+  ADJUSTMENT
+  REVERSAL
+}
+
+enum FundingReleaseStatus {
+  REQUESTED
+  APPROVED
+  RELEASED
+  PARTIALLY_RELEASED
+  REJECTED
+  CANCELLED
+}
+
+enum CapexOpex {
+  CAPEX
+  OPEX
+}
+
+enum ProjectPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // TENANT
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -344,6 +426,14 @@ model Tenant {
   LibraryItem            LibraryItem[]
   savedReports           SavedReport[]
   payrollSettings        PayrollSettings?
+
+  costCenters        CostCenter[]
+  budgetCategories   BudgetCategory[]
+  budgetPeriods      BudgetPeriod[]
+  projects           Project[]
+  budgetRequests     BudgetRequest[]
+  projectExpenses    ProjectExpense[]
+  budgetTransactions BudgetTransaction[]
 
   @@map("tenants")
 }
@@ -653,10 +743,11 @@ model AssetAssignment {
   returnCondition String?
   notes           String?
 
-  tenant     Tenant   @relation(fields: [tenantId], references: [id])
-  asset      Asset    @relation(fields: [assetId], references: [id])
-  employee   Employee @relation("AssetAssignee", fields: [employeeId], references: [id])
-  assignedBy Employee @relation("AssetAssignedBy", fields: [assignedById], references: [id])
+  tenant           Tenant            @relation(fields: [tenantId], references: [id])
+  asset            Asset             @relation(fields: [assetId], references: [id])
+  employee         Employee          @relation("AssetAssignee", fields: [employeeId], references: [id])
+  assignedBy       Employee          @relation("AssetAssignedBy", fields: [assignedById], references: [id])
+  workflowInstance WorkflowInstance?
 
   @@map("asset_assignments")
 }
@@ -832,8 +923,9 @@ model Resignation {
   exitInterviewNotes   String?
   isClearanceCompleted Boolean @default(false)
 
-  employee Employee @relation(fields: [employeeId], references: [id])
-  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  employee         Employee          @relation(fields: [employeeId], references: [id])
+  tenant           Tenant            @relation(fields: [tenantId], references: [id])
+  workflowInstance WorkflowInstance?
 
   @@map("resignations")
 }
@@ -915,6 +1007,7 @@ model Employee {
   compensationHistory    CompensationHistory[]
   payrollEntries         PayrollEntry[]
   policyAcknowledgements PolicyAcknowledgement[]
+  workflowInstance       WorkflowInstance?
 
   @@index([tenantId])
   @@index([managerId])
@@ -1142,6 +1235,12 @@ model WorkflowInstance {
   attendanceCorrectionId String?        @unique
   timesheetId            String?        @unique
   shiftSwapRequestId     String?        @unique
+  targetEmployeeId       String?        @unique
+  resignationId          String?        @unique
+  assetAssignmentId      String?        @unique
+  compensationHistoryId  String?        @unique
+  payrollRunId           String?        @unique
+  budgetRequestId        String?        @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1151,6 +1250,12 @@ model WorkflowInstance {
   attendanceCorrection AttendanceCorrection? @relation(fields: [attendanceCorrectionId], references: [id])
   timesheet            Timesheet?            @relation(fields: [timesheetId], references: [id])
   shiftSwapRequest     ShiftSwapRequest?     @relation(fields: [shiftSwapRequestId], references: [id])
+  targetEmployee       Employee?             @relation(fields: [targetEmployeeId], references: [id])
+  resignation          Resignation?          @relation(fields: [resignationId], references: [id])
+  assetAssignment      AssetAssignment?      @relation(fields: [assetAssignmentId], references: [id])
+  compensationHistory  CompensationHistory?  @relation(fields: [compensationHistoryId], references: [id])
+  payrollRun           PayrollRun?           @relation(fields: [payrollRunId], references: [id])
+  budgetRequest        BudgetRequest?        @relation(fields: [budgetRequestId], references: [id])
   actions              WorkflowAction[]
 
   @@map("workflow_instances")
@@ -1597,9 +1702,10 @@ model CompensationHistory {
 
   createdAt DateTime @default(now())
 
-  tenant   Tenant              @relation(fields: [tenantId], references: [id])
-  employee Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  profile  CompensationProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  tenant           Tenant              @relation(fields: [tenantId], references: [id])
+  employee         Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  profile          CompensationProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  workflowInstance WorkflowInstance?
 
   @@map("compensation_history")
 }
@@ -1634,8 +1740,9 @@ model PayrollRun {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tenant  Tenant         @relation(fields: [tenantId], references: [id])
-  entries PayrollEntry[]
+  tenant           Tenant            @relation(fields: [tenantId], references: [id])
+  entries          PayrollEntry[]
+  workflowInstance WorkflowInstance?
 
   @@unique([tenantId, period, frequency])
   @@map("payroll_runs")
@@ -1849,7 +1956,8 @@ model SavedReport {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@map("saved_reports")
 }
 
@@ -1858,17 +1966,400 @@ model SavedReport {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model PayrollSettings {
-  id                             String   @id @default(cuid())
-  tenantId                       String   @unique
+  id                             String  @id @default(cuid())
+  tenantId                       String  @unique
   companyLogoUrl                 String?
   authorizedSignatoryName        String?
   authorizedSignatoryDesignation String?
-  themeColor                     String   @default("#000000")
+  themeColor                     String  @default("#000000")
   customMessage                  String?
 
-  createdAt                      DateTime @default(now())
-  updatedAt                      DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tenant                         Tenant   @relation(fields: [tenantId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
   @@map("payroll_settings")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROJECTS & BUDGET MANAGEMENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+model CostCenter {
+  id          String  @id @default(cuid())
+  tenantId    String
+  code        String
+  name        String
+  description String?
+  parentId    String?
+  managerId   String? // Employee ID
+  isActive    Boolean @default(true)
+
+  tenant         Tenant          @relation(fields: [tenantId], references: [id])
+  parent         CostCenter?     @relation("CostCenterHierarchy", fields: [parentId], references: [id])
+  children       CostCenter[]    @relation("CostCenterHierarchy")
+  budgetRequests BudgetRequest[]
+  projects       Project[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, code])
+  @@map("cost_centers")
+}
+
+model BudgetCategory {
+  id          String    @id @default(cuid())
+  tenantId    String
+  code        String
+  name        String
+  description String?
+  parentId    String?
+  capexOpex   CapexOpex @default(OPEX)
+  isActive    Boolean   @default(true)
+
+  tenant       Tenant                  @relation(fields: [tenantId], references: [id])
+  parent       BudgetCategory?         @relation("BudgetCategoryHierarchy", fields: [parentId], references: [id])
+  children     BudgetCategory[]        @relation("BudgetCategoryHierarchy")
+  requestLines BudgetRequestLineItem[]
+  allocations  BudgetAllocation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, code])
+  @@map("budget_categories")
+}
+
+model BudgetPeriod {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String // "FY26-27"
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  isActive  Boolean  @default(true)
+
+  tenant         Tenant          @relation(fields: [tenantId], references: [id])
+  budgetRequests BudgetRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, name])
+  @@map("budget_periods")
+}
+
+model Project {
+  id             String          @id @default(cuid())
+  tenantId       String
+  code           String
+  name           String
+  description    String?
+  managerId      String? // Employee ID
+  departmentId   String?
+  costCenterId   String?
+  client         String?
+  startDate      DateTime?       @db.Date
+  plannedEndDate DateTime?       @db.Date
+  actualEndDate  DateTime?       @db.Date
+  status         ProjectStatus   @default(PLANNING)
+  priority       ProjectPriority @default(MEDIUM)
+
+  // Snapshots computed from transactions
+  approvedBudget       Decimal @default(0)
+  currentBudget        Decimal @default(0)
+  actualCost           Decimal @default(0)
+  committedCost        Decimal @default(0)
+  availableBudget      Decimal @default(0)
+  completionPercentage Int     @default(0)
+
+  tenant          Tenant              @relation(fields: [tenantId], references: [id])
+  costCenter      CostCenter?         @relation(fields: [costCenterId], references: [id])
+  budgetRequests  BudgetRequest[]
+  members         ProjectMember[]
+  milestones      ProjectMilestone[]
+  transactions    BudgetTransaction[]
+  allocations     BudgetAllocation[]
+  commitments     BudgetCommitment[]
+  expenses        ProjectExpense[]
+  fundingReleases FundingRelease[]
+  revisions       BudgetRevision[]
+  forecasts       ProjectForecast[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, code])
+  @@index([tenantId, status])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id            String    @id @default(cuid())
+  projectId     String
+  employeeId    String
+  role          String
+  allocationPct Int       @default(100)
+  startDate     DateTime? @db.Date
+  endDate       DateTime? @db.Date
+  billingRate   Decimal?
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, employeeId])
+  @@map("project_members")
+}
+
+model ProjectMilestone {
+  id            String          @id @default(cuid())
+  projectId     String
+  name          String
+  description   String?
+  ownerId       String?
+  plannedStart  DateTime?       @db.Date
+  plannedEnd    DateTime?       @db.Date
+  actualStart   DateTime?       @db.Date
+  actualEnd     DateTime?       @db.Date
+  status        MilestoneStatus @default(NOT_STARTED)
+  completionPct Int             @default(0)
+
+  plannedBudget Decimal @default(0)
+  actualCost    Decimal @default(0)
+
+  project     Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  allocations BudgetAllocation[]
+  expenses    ProjectExpense[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("project_milestones")
+}
+
+model BudgetRequest {
+  id            String  @id @default(cuid())
+  tenantId      String
+  requestNumber String
+  requesterId   String // Employee ID
+  departmentId  String?
+  costCenterId  String?
+  projectId     String?
+  periodId      String?
+
+  requestType String
+  priority    ProjectPriority     @default(MEDIUM)
+  status      BudgetRequestStatus @default(DRAFT)
+
+  // Justification
+  objective             String?
+  businessJustification String?
+  expectedOutcomes      String?
+  risks                 String?
+  dependencies          String?
+
+  // Financial Summary
+  requestedAmount Decimal @default(0)
+  currency        String  @default("INR")
+  exchangeRate    Decimal @default(1.0)
+
+  tenant           Tenant                  @relation(fields: [tenantId], references: [id])
+  project          Project?                @relation(fields: [projectId], references: [id])
+  costCenter       CostCenter?             @relation(fields: [costCenterId], references: [id])
+  period           BudgetPeriod?           @relation(fields: [periodId], references: [id])
+  lineItems        BudgetRequestLineItem[]
+  workflowInstance WorkflowInstance?
+  isArchived       Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, requestNumber])
+  @@map("budget_requests")
+}
+
+model BudgetRequestLineItem {
+  id              String    @id @default(cuid())
+  budgetRequestId String
+  categoryId      String?
+  description     String
+  quantity        Decimal   @default(1)
+  unitCost        Decimal   @default(0)
+  requestedAmount Decimal   @default(0)
+  capexOpex       CapexOpex @default(OPEX)
+
+  request  BudgetRequest   @relation(fields: [budgetRequestId], references: [id], onDelete: Cascade)
+  category BudgetCategory? @relation(fields: [categoryId], references: [id])
+
+  @@map("budget_request_lines")
+}
+
+// Immutable ledger for all financial movements
+model BudgetTransaction {
+  id              String                @id @default(cuid())
+  tenantId        String
+  projectId       String
+  type            BudgetTransactionType
+  amount          Decimal
+  currency        String                @default("INR")
+  transactionDate DateTime              @default(now())
+
+  // References to source documents
+  referenceType String? // "EXPENSE", "FUNDING_RELEASE", "REVISION", "REALLOCATION"
+  referenceId   String?
+
+  description String?
+  createdBy   String // User ID
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id])
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, projectId])
+  @@index([tenantId, type])
+  @@map("budget_transactions")
+}
+
+model BudgetAllocation {
+  id          String  @id @default(cuid())
+  projectId   String
+  categoryId  String?
+  milestoneId String?
+  amount      Decimal
+  currency    String  @default("INR")
+
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  category  BudgetCategory?   @relation(fields: [categoryId], references: [id])
+  milestone ProjectMilestone? @relation(fields: [milestoneId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("budget_allocations")
+}
+
+model BudgetCommitment {
+  id            String  @id @default(cuid())
+  projectId     String
+  amount        Decimal
+  currency      String  @default("INR")
+  referenceType String // "PURCHASE_ORDER", "CONTRACT"
+  referenceId   String
+  description   String?
+  status        String  @default("OPEN") // OPEN, FULFILLED, CANCELLED
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("budget_commitments")
+}
+
+model ProjectExpense {
+  id          String  @id @default(cuid())
+  tenantId    String
+  projectId   String
+  milestoneId String?
+  employeeId  String // Submitter
+  categoryId  String?
+
+  amount      Decimal
+  currency    String   @default("INR")
+  date        DateTime @db.Date
+  description String?
+  receiptUrl  String?
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED, PAID
+
+  tenant    Tenant            @relation(fields: [tenantId], references: [id])
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  milestone ProjectMilestone? @relation(fields: [milestoneId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId, projectId])
+  @@map("project_expenses")
+}
+
+model FundingRelease {
+  id              String               @id @default(cuid())
+  projectId       String
+  amountRequested Decimal
+  amountReleased  Decimal              @default(0)
+  status          FundingReleaseStatus @default(REQUESTED)
+  reason          String?
+  requestedById   String
+  approvedById    String?
+  releaseDate     DateTime?
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("funding_releases")
+}
+
+model BudgetRevision {
+  id              String    @id @default(cuid())
+  projectId       String
+  previousAmount  Decimal
+  requestedAmount Decimal
+  revisedAmount   Decimal?
+  reason          String
+  status          String    @default("PENDING")
+  requestedById   String
+  approvedById    String?
+  approvalDate    DateTime?
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("budget_revisions")
+}
+
+model BudgetReallocation {
+  id              String    @id @default(cuid())
+  fromProjectId   String
+  toProjectId     String
+  fromCategoryId  String?
+  toCategoryId    String?
+  fromMilestoneId String?
+  toMilestoneId   String?
+  amount          Decimal
+  reason          String
+  status          String    @default("PENDING")
+  requestedById   String
+  approvedById    String?
+  approvalDate    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("budget_reallocations")
+}
+
+model ProjectForecast {
+  id                     String   @id @default(cuid())
+  projectId              String
+  forecastDate           DateTime @default(now())
+  actualCost             Decimal
+  committedCost          Decimal
+  estimatedRemainingCost Decimal
+  estimateAtCompletion   Decimal
+  forecastVariance       Decimal
+  notes                  String?
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("project_forecasts")
 }
