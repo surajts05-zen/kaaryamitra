@@ -3,12 +3,30 @@ import { AppError } from '../../lib/errors.js';
 
 export class ProjectsService {
   static async list(tenantId: string) {
-    return prisma.project.findMany({
+    const projects = await prisma.project.findMany({
       where: { tenantId },
       orderBy: { createdAt: 'desc' },
       include: {
         costCenter: { select: { name: true } },
+        milestones: { select: { actualCost: true } },
+        budgetRequests: { where: { status: 'APPROVED' }, select: { requestedAmount: true } }
       }
+    });
+
+    return projects.map(p => {
+      const baseApproved = Number(p.approvedBudget || 0);
+      const approvedRequestsSum = p.budgetRequests?.reduce((sum, req) => sum + Number(req.requestedAmount || 0), 0) || 0;
+      const approvedBudget = Math.max(baseApproved, approvedRequestsSum);
+      const milestonesActual = p.milestones?.reduce((sum, m) => sum + Number(m.actualCost || 0), 0) || 0;
+      const actualCost = Number(p.actualCost || 0) + milestonesActual;
+      const availableBudget = Math.max(0, approvedBudget - actualCost);
+
+      return {
+        ...p,
+        approvedBudget,
+        actualCost,
+        availableBudget
+      };
     });
   }
 
@@ -17,23 +35,34 @@ export class ProjectsService {
       where: { tenantId, id },
       include: {
         costCenter: true,
-        members: {
-          include: {
-            project: false // prevent circular
-          }
-        },
+        members: true,
         milestones: true,
         allocations: {
           include: { category: true }
+        },
+        budgetRequests: {
+          where: { status: 'APPROVED' }
         }
       }
     });
     
-    // Quick hack for member employee details since relation isn't direct in schema
-    // In a real app we'd query users here or fix schema
-    
     if (!project) throw AppError.notFound('Project');
-    return project;
+
+    const baseApproved = Number(project.approvedBudget || 0);
+    const approvedRequestsSum = project.budgetRequests?.reduce((sum, req) => sum + Number(req.requestedAmount || 0), 0) || 0;
+    const approvedBudget = Math.max(baseApproved, approvedRequestsSum);
+
+    const milestonesActual = project.milestones?.reduce((sum, m) => sum + Number(m.actualCost || 0), 0) || 0;
+    const actualCost = Number(project.actualCost || 0) + milestonesActual;
+
+    const availableBudget = Math.max(0, approvedBudget - actualCost);
+
+    return {
+      ...project,
+      approvedBudget,
+      actualCost,
+      availableBudget
+    };
   }
 
   static async create(tenantId: string, data: any) {
@@ -42,10 +71,17 @@ export class ProjectsService {
     });
     if (existing) throw AppError.conflict('Project code already exists');
 
+    const approvedBudget = Number(data.approvedBudget || 0);
+    const actualCost = Number(data.actualCost || 0);
+    const availableBudget = Number(data.availableBudget) || Math.max(0, approvedBudget - actualCost);
+
     return prisma.project.create({
       data: {
         ...data,
         tenantId,
+        approvedBudget,
+        actualCost,
+        availableBudget,
         startDate: data.startDate ? new Date(data.startDate) : undefined,
         plannedEndDate: data.plannedEndDate ? new Date(data.plannedEndDate) : undefined,
       }
@@ -53,12 +89,20 @@ export class ProjectsService {
   }
 
   static async bulkCreate(tenantId: string, items: any[]) {
-    const data = items.map(item => ({
-      ...item,
-      tenantId,
-      startDate: item.startDate ? new Date(item.startDate) : undefined,
-      plannedEndDate: item.plannedEndDate ? new Date(item.plannedEndDate) : undefined,
-    }));
+    const data = items.map(item => {
+      const approvedBudget = Number(item.approvedBudget || 0);
+      const actualCost = Number(item.actualCost || 0);
+      const availableBudget = Number(item.availableBudget) || Math.max(0, approvedBudget - actualCost);
+      return {
+        ...item,
+        tenantId,
+        approvedBudget,
+        actualCost,
+        availableBudget,
+        startDate: item.startDate ? new Date(item.startDate) : undefined,
+        plannedEndDate: item.plannedEndDate ? new Date(item.plannedEndDate) : undefined,
+      };
+    });
     return prisma.project.createMany({
       data,
       skipDuplicates: true

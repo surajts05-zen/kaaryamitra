@@ -39,7 +39,13 @@ export interface BudgetRequest {
   requestedAmount: number;
   objective?: string;
   businessJustification?: string;
+  expectedOutcomes?: string;
+  risks?: string;
+  dependencies?: string;
   projectId?: string;
+  costCenterId?: string;
+  departmentId?: string;
+  periodId?: string;
   project?: { name: string; code: string };
   costCenter?: { name: string };
   createdAt: string;
@@ -48,6 +54,13 @@ export interface BudgetRequest {
     id: string;
     status: string;
     currentStepIndex: number;
+    actions?: Array<{
+      id: string;
+      action: string;
+      comment?: string;
+      createdAt: string;
+      actorId?: string;
+    }>;
   };
 }
 
@@ -167,6 +180,21 @@ export function useCreateBudgetRequest() {
   });
 }
 
+export function useUpdateBudgetRequest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await apiClient.put(`/budget-requests/${id}`, data);
+      return res.data.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['budget-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['budget-requests', variables.id] });
+    },
+  });
+}
+
 export function useSubmitBudgetRequest() {
   const queryClient = useQueryClient();
 
@@ -182,6 +210,38 @@ export function useSubmitBudgetRequest() {
   });
 }
 
+export function useRecallBudgetRequest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiClient.post(`/budget-requests/${id}/recall`);
+      return res.data.data;
+    },
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['budget-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['budget-requests', id] });
+      queryClient.invalidateQueries({ queryKey: ['workflow', 'pending-approvals'] });
+    },
+  });
+}
+
+export function useReturnBudgetRequest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, comment }: { id: string; comment?: string }) => {
+      const res = await apiClient.post(`/budget-requests/${id}/return`, { comment });
+      return res.data.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['budget-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['budget-requests', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['workflow', 'pending-approvals'] });
+    },
+  });
+}
+
 export function useApproveBudgetRequest() {
   const queryClient = useQueryClient();
 
@@ -193,6 +253,7 @@ export function useApproveBudgetRequest() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['budget-requests'] });
       queryClient.invalidateQueries({ queryKey: ['budget-requests', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['workflow', 'pending-approvals'] });
     },
   });
 }
@@ -208,6 +269,7 @@ export function useRejectBudgetRequest() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['budget-requests'] });
       queryClient.invalidateQueries({ queryKey: ['budget-requests', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['workflow', 'pending-approvals'] });
     },
   });
 }

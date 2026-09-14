@@ -69,6 +69,7 @@ const formSchema = z.object({
     'RESIGNATION_APPROVAL',
     'COMPENSATION_REVISION',
     'PAYROLL_APPROVAL',
+    'BUDGET_REQUEST',
   ]),
   steps: z.array(stepSchema).min(1, 'At least one step is required'),
 });
@@ -91,6 +92,7 @@ const TRIGGER_LABELS: Record<string, string> = {
   RESIGNATION_APPROVAL: 'Resignation Request',
   COMPENSATION_REVISION: 'Compensation Revision',
   PAYROLL_APPROVAL: 'Payroll Approval',
+  BUDGET_REQUEST: 'Budget Request',
 };
 
 const ASSIGNEE_LABELS: Record<string, string> = {
@@ -115,6 +117,7 @@ const TRIGGER_ICONS: Record<string, string> = {
   RESIGNATION_APPROVAL: '🚪',
   COMPENSATION_REVISION: '💰',
   PAYROLL_APPROVAL: '💸',
+  BUDGET_REQUEST: '🏦',
 };
 
 // ─── Workflow Form Dialog ──────────────────────────────────────────────────────

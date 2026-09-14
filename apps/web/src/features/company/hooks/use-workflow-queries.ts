@@ -15,7 +15,7 @@ export type WorkflowTemplate = {
   tenantId: string;
   name: string;
   description?: string;
-  triggerType: 'LEAVE_REQUEST' | 'EXPENSE_REQUEST' | 'OFFBOARDING_REQUEST' | 'DOCUMENT_REQUEST' | 'ATTENDANCE_REGULARIZATION' | 'TIMESHEET_APPROVAL' | 'SHIFT_SWAP_REQUEST' | 'CUSTOM' | 'ONBOARDING_WORKFLOW' | 'ASSET_REQUEST' | 'RESIGNATION_APPROVAL' | 'COMPENSATION_REVISION' | 'PAYROLL_APPROVAL';
+  triggerType: 'LEAVE_REQUEST' | 'EXPENSE_REQUEST' | 'OFFBOARDING_REQUEST' | 'DOCUMENT_REQUEST' | 'ATTENDANCE_REGULARIZATION' | 'TIMESHEET_APPROVAL' | 'SHIFT_SWAP_REQUEST' | 'CUSTOM' | 'ONBOARDING_WORKFLOW' | 'ASSET_REQUEST' | 'RESIGNATION_APPROVAL' | 'COMPENSATION_REVISION' | 'PAYROLL_APPROVAL' | 'BUDGET_REQUEST';
   entityType: string;
   isActive: boolean;
   steps: WorkflowStepDef[];
@@ -99,6 +99,19 @@ export type PendingApproval = {
         designation?: { name: string };
       };
     } | null;
+    budgetRequest: {
+      id: string;
+      requestNumber: string;
+      requestType: string;
+      requestedAmount: number;
+      status: string;
+      priority: string;
+      objective?: string;
+      businessJustification?: string;
+      requesterId: string;
+      project?: { name: string; code: string } | null;
+      costCenter?: { name: string } | null;
+    } | null;
   };
   currentStep: WorkflowStepDef;
 };
@@ -175,7 +188,7 @@ export function useProcessWorkflowAction() {
       comment,
     }: {
       instanceId: string;
-      action: 'APPROVED' | 'REJECTED';
+      action: 'APPROVED' | 'REJECTED' | 'RETURNED';
       comment?: string;
     }) => {
       const res = await apiClient.post(`/workflows/approvals/${instanceId}`, { action, comment });
@@ -184,6 +197,7 @@ export function useProcessWorkflowAction() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workflows', 'approvals'] });
       queryClient.invalidateQueries({ queryKey: ['leave'] });
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
     },
   });
 }

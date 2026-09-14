@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/hooks/use-currency';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 export function BudgetsDashboardPage() {
   const { data: dashboard, isLoading } = useBudgetDashboard();
@@ -21,7 +22,8 @@ export function BudgetsDashboardPage() {
   const recentRequests = dashboard?.recentRequests || [];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-6 w-full space-y-6">
+      <Breadcrumb items={[{ label: 'Budget Overview' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Budgets Overview</h1>

@@ -76,6 +76,36 @@ export async function rejectHandler(req: Request, res: Response) {
   res.status(200).json({ success: true, message: 'Request rejected successfully' });
 }
 
+export async function recallHandler(req: Request, res: Response) {
+  const data = await BudgetRequestsService.recall(req.tenantId!, req.params.id as string);
+  res.status(200).json({ success: true, message: 'Request recalled to draft', data });
+}
+
+export async function returnHandler(req: Request, res: Response) {
+  const { id } = req.params;
+  const { comment } = req.body;
+  
+  const reqInfo = await BudgetRequestsService.getById(req.tenantId!, id as string);
+  if (reqInfo.workflowInstance) {
+    await processWorkflowAction(
+      req.tenantId!,
+      reqInfo.workflowInstance.id,
+      req.auth!.userId,
+      'RETURNED',
+      typeof comment === 'string' ? comment : undefined
+    );
+  } else {
+    await BudgetRequestsService.returnForRevision(
+      req.tenantId!,
+      id as string,
+      req.auth!.userId,
+      typeof comment === 'string' ? comment : undefined
+    );
+  }
+  
+  res.status(200).json({ success: true, message: 'Request sent back for revision successfully' });
+}
+
 export async function archiveHandler(req: Request, res: Response) {
   const data = await BudgetRequestsService.archive(req.tenantId!, req.params.id as string);
   res.status(200).json({ success: true, data });

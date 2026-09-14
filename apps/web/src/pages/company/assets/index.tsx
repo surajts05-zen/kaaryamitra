@@ -1,17 +1,34 @@
 import { useState } from 'react';
-import { useAssets } from '@/features/company/hooks/use-asset-queries';
+import { useAssets, useBulkCreateAssets } from '@/features/company/hooks/use-asset-queries';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Link, useParams } from 'react-router-dom';
-import { Laptop, Search, Plus, Monitor, Smartphone, Key } from 'lucide-react';
+import { Laptop, Search, Plus, Monitor, Smartphone, Key, Upload } from 'lucide-react';
+import { CsvImportModal } from '@/components/ui/csv-import-modal';
+import { toast } from 'sonner';
 
 export default function AssetDirectory() {
   const { slug } = useParams();
   const [search, setSearch] = useState('');
   const { data: assets, isLoading } = useAssets({ search });
+  const bulkCreateMutation = useBulkCreateAssets();
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
+
+  const handleBulkImport = async (rows: Record<string, string>[]) => {
+    const items = rows.map(r => ({
+      name: r.name || r['Asset Name'] || r.assetName || '',
+      category: r.category || r['Category Name'] || r.categoryName || '',
+      serialNumber: r.serialNumber || r['Serial Number'] || r.serialnumber || '',
+      assetTag: r.assetTag || r['Asset Tag'] || r.assettag || '',
+      status: r.status || r['Status'] || 'AVAILABLE',
+    }));
+
+    const res = await bulkCreateMutation.mutateAsync(items);
+    toast.success(`Successfully imported ${res.count} assets`);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -34,18 +51,23 @@ export default function AssetDirectory() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-6 w-full space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Asset Directory</h1>
           <p className="text-muted-foreground mt-1">Manage company assets and track assignments.</p>
         </div>
         <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={() => setIsCsvModalOpen(true)} className="gap-2">
+            <Upload className="h-4 w-4" /> Import CSV
+          </Button>
           <Button variant="outline" asChild>
             <Link to={`/t/${slug}/settings/assets`}>Categories</Link>
           </Button>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Add Asset
+          <Button asChild>
+            <Link to={`/t/${slug}/settings/assets`}>
+              <Plus className="mr-2 h-4 w-4" /> Add Asset
+            </Link>
           </Button>
         </div>
       </div>
@@ -141,6 +163,28 @@ export default function AssetDirectory() {
           </Table>
         </CardContent>
       </Card>
+
+      <CsvImportModal
+        isOpen={isCsvModalOpen}
+        onOpenChange={setIsCsvModalOpen}
+        title="Import Asset Inventory"
+        description="Upload a CSV file containing company physical assets and hardware."
+        sampleFilename="assets_sample"
+        headers={[
+          { key: 'name', label: 'Asset Name', required: true },
+          { key: 'category', label: 'Category Name', required: false },
+          { key: 'serialNumber', label: 'Serial Number', required: false },
+          { key: 'assetTag', label: 'Asset Tag', required: false },
+          { key: 'status', label: 'Status (AVAILABLE|ASSIGNED|MAINTENANCE|RETIRED|LOST)', required: false },
+        ]}
+        sampleRows={[
+          ['MacBook Pro M3', 'Laptops', 'SN-998877', 'TAG-001', 'AVAILABLE'],
+          ['Dell UltraSharp 27"', 'Monitors', 'SN-443322', 'TAG-002', 'AVAILABLE'],
+          ['Logitech MX Master 3S', 'Peripherals', 'SN-112233', 'TAG-003', 'AVAILABLE'],
+        ]}
+        onImport={handleBulkImport}
+        isLoading={bulkCreateMutation.isPending}
+      />
     </div>
   );
 }

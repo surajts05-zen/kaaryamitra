@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   CheckCircle2,
   XCircle,
+  RotateCcw,
   Calendar,
   Clock,
   Inbox,
@@ -38,7 +39,7 @@ function ActionDialog({
   onClose,
 }: {
   approval: PendingApproval | null;
-  action: 'APPROVED' | 'REJECTED' | null;
+  action: 'APPROVED' | 'REJECTED' | 'RETURNED' | null;
   onClose: () => void;
 }) {
   const [comment, setComment] = useState('');
@@ -50,10 +51,11 @@ function ActionDialog({
   const correction = approval.instance.attendanceCorrection;
   const swap = approval.instance.shiftSwapRequest;
   const ts = approval.instance.timesheet;
-  if (!app && !correction && !swap && !ts) return null;
+  const br = approval.instance.budgetRequest;
+  if (!app && !correction && !swap && !ts && !br) return null;
 
   const handleConfirm = () => {
-    const payload: { instanceId: string; action: 'APPROVED' | 'REJECTED'; comment?: string } = {
+    const payload: { instanceId: string; action: 'APPROVED' | 'REJECTED' | 'RETURNED'; comment?: string } = {
       instanceId: approval.instance.id,
       action,
     };
@@ -65,7 +67,13 @@ function ActionDialog({
       payload,
       {
         onSuccess: () => {
-          toast.success(action === 'APPROVED' ? 'Application approved ✅' : 'Application rejected');
+          toast.success(
+            action === 'APPROVED' 
+              ? 'Application approved ✅' 
+              : action === 'RETURNED' 
+              ? 'Returned for revision ⚠️' 
+              : 'Application rejected'
+          );
           onClose();
           setComment('');
         },
@@ -77,22 +85,27 @@ function ActionDialog({
   };
 
   const isApproving = action === 'APPROVED';
+  const isReturning = action === 'RETURNED';
 
   return (
     <Dialog open={!!approval && !!action} onOpenChange={() => onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className={`flex items-center gap-2 ${isApproving ? 'text-emerald-500' : 'text-destructive'}`}>
+          <DialogTitle className={`flex items-center gap-2 ${isApproving ? 'text-emerald-500' : isReturning ? 'text-amber-500' : 'text-destructive'}`}>
             {isApproving ? (
               <CheckCircle2 className="h-5 w-5" />
+            ) : isReturning ? (
+              <RotateCcw className="h-5 w-5" />
             ) : (
               <XCircle className="h-5 w-5" />
             )}
-            {isApproving ? 'Approve Request' : 'Reject Request'}
+            {isApproving ? 'Approve Request' : isReturning ? 'Send Back for Revision' : 'Reject Request'}
           </DialogTitle>
           <DialogDescription>
             {isApproving
               ? 'Approving this request will advance it to the next step (or complete it if this is the last step).'
+              : isReturning
+              ? 'Sending back this request will move it back to Draft status so the applicant can update and resubmit.'
               : 'Rejecting this request will terminate the workflow.'}
           </DialogDescription>
         </DialogHeader>
@@ -166,11 +179,20 @@ function ActionDialog({
               </p>
             </div>
           )}
+          {br && (
+            <div className="rounded-lg border p-3 bg-muted/30 space-y-1 text-sm">
+              <p className="font-medium">{br.requestNumber}</p>
+              <p className="text-muted-foreground font-semibold">Budget Request — {br.requestType.replace(/_/g, ' ')}</p>
+              <p className="text-muted-foreground">Amount: {br.requestedAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}</p>
+              {br.project && <p className="text-muted-foreground">Project: {br.project.name} ({br.project.code})</p>}
+              {br.objective && <p className="text-muted-foreground italic">"{br.objective}"</p>}
+            </div>
+          )}
 
           <div className="space-y-2">
-            <Label>{isApproving ? 'Comment (Optional)' : 'Reason for Rejection'}</Label>
+            <Label>{isApproving ? 'Comment (Optional)' : isReturning ? 'Revision Instructions (Recommended)' : 'Reason for Rejection'}</Label>
             <Textarea
-              placeholder={isApproving ? 'Add a note...' : 'Please provide a reason...'}
+              placeholder={isApproving ? 'Add a note...' : isReturning ? 'Explain what changes are needed...' : 'Please provide a reason...'}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               className="resize-none"
@@ -183,14 +205,22 @@ function ActionDialog({
               Cancel
             </Button>
             <Button
-              className={`flex-1 ${isApproving ? '' : 'bg-destructive hover:bg-destructive/90 text-destructive-foreground'}`}
+              className={`flex-1 ${
+                isApproving 
+                  ? '' 
+                  : isReturning 
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white' 
+                  : 'bg-destructive hover:bg-destructive/90 text-destructive-foreground'
+              }`}
               onClick={handleConfirm}
-              disabled={processMutation.isPending || (!isApproving && !comment)}
+              disabled={processMutation.isPending || (!isApproving && !isReturning && !comment)}
             >
               {processMutation.isPending
                 ? 'Processing...'
                 : isApproving
                   ? 'Confirm Approval'
+                  : isReturning
+                  ? 'Confirm Send Back'
                   : 'Confirm Rejection'}
             </Button>
           </div>
@@ -205,30 +235,34 @@ function ActionDialog({
 function ApprovalCard({
   approval,
   onApprove,
+  onReturn,
   onReject,
 }: {
   approval: PendingApproval;
   onApprove: () => void;
+  onReturn: () => void;
   onReject: () => void;
 }) {
   const app = approval.instance.leaveApplication;
   const correction = approval.instance.attendanceCorrection;
   const swap = approval.instance.shiftSwapRequest;
   const ts = approval.instance.timesheet;
-  if (!app && !correction && !swap && !ts) return null;
+  const br = approval.instance.budgetRequest;
+  if (!app && !correction && !swap && !ts && !br) return null;
 
-  const employee = app ? app.employee : correction ? correction.record.employee : swap ? swap.requestingEmployee : ts!.employee;
-  const initials = `${employee.firstName[0]}${employee.lastName[0]}`.toUpperCase();
+  // Budget requests don't have an employee entity directly — use a placeholder
+  const employee = app ? app.employee : correction ? correction.record.employee : swap ? swap.requestingEmployee : ts ? ts.employee : null;
+  const initials = employee ? `${employee.firstName[0]}${employee.lastName[0]}`.toUpperCase() : 'BR';
   const stepLabel = approval.currentStep.label;
   const stepIndex = approval.instance.currentStepIndex + 1;
-  const badgeColor = app ? (app.leaveType?.color ?? '#4CAF50') : swap ? '#9c27b0' : ts ? '#2196f3' : '#ff9800';
-  const badgeLabel = app ? app.leaveType.name : swap ? 'Shift Swap' : ts ? 'Timesheet' : 'Attendance Regularization';
+  const badgeColor = app ? (app.leaveType?.color ?? '#4CAF50') : swap ? '#9c27b0' : ts ? '#2196f3' : br ? '#f59e0b' : '#ff9800';
+  const badgeLabel = app ? app.leaveType.name : swap ? 'Shift Swap' : ts ? 'Timesheet' : br ? 'Budget Request' : 'Attendance Regularization';
 
   return (
     <Card className="hover:shadow-md transition-all group">
       <CardContent className="p-5">
         <div className="flex items-start gap-4">
-          {/* Employee Avatar */}
+          {/* Avatar */}
           <Avatar className="h-12 w-12 flex-shrink-0">
             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
               {initials}
@@ -239,20 +273,30 @@ function ApprovalCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2 mb-2">
               <div>
-                <p className="font-semibold">
-                  {employee.firstName} {employee.lastName}
-                </p>
+                {employee ? (
+                  <p className="font-semibold">
+                    {employee.firstName} {employee.lastName}
+                  </p>
+                ) : br ? (
+                  <p className="font-semibold">{br.requestNumber}</p>
+                ) : null}
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  {employee.employeeCode && (
+                  {employee?.employeeCode && (
                     <span className="flex items-center gap-1">
                       <User className="h-3 w-3" />
                       {employee.employeeCode}
                     </span>
                   )}
-                  {employee.department && (
+                  {employee?.department && (
                     <span className="flex items-center gap-1">
                       <Building2 className="h-3 w-3" />
                       {employee.department.name}
+                    </span>
+                  )}
+                  {br?.project && (
+                    <span className="flex items-center gap-1">
+                      <Building2 className="h-3 w-3" />
+                      {br.project.name}
                     </span>
                   )}
                 </div>
@@ -342,6 +386,22 @@ function ApprovalCard({
                   </div>
                 </div>
               </>
+            ) : br ? (
+              <>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="flex items-center gap-1.5 text-sm font-medium">
+                    <span>{br.requestType.replace(/_/g, ' ')}</span>
+                  </div>
+                  <div className="text-sm text-right font-semibold">
+                    {br.requestedAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })}
+                  </div>
+                </div>
+                {br.objective && (
+                  <p className="text-sm text-muted-foreground italic mb-3 truncate">
+                    "{br.objective}"
+                  </p>
+                )}
+              </>
             ) : null}
 
             {/* Current Step */}
@@ -355,6 +415,15 @@ function ApprovalCard({
 
               {/* Actions */}
               <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs border-amber-500/50 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20"
+                  onClick={onReturn}
+                >
+                  <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                  Send Back
+                </Button>
                 <Button
                   size="sm"
                   variant="outline"
@@ -386,9 +455,9 @@ function ApprovalCard({
 export function ApprovalsInboxPage() {
   const { data: approvals, isLoading } = useMyPendingApprovals();
   const [selectedApproval, setSelectedApproval] = useState<PendingApproval | null>(null);
-  const [actionType, setActionType] = useState<'APPROVED' | 'REJECTED' | null>(null);
+  const [actionType, setActionType] = useState<'APPROVED' | 'REJECTED' | 'RETURNED' | null>(null);
 
-  const handleAction = (approval: PendingApproval, action: 'APPROVED' | 'REJECTED') => {
+  const handleAction = (approval: PendingApproval, action: 'APPROVED' | 'REJECTED' | 'RETURNED') => {
     setSelectedApproval(approval);
     setActionType(action);
   };
@@ -444,6 +513,7 @@ export function ApprovalsInboxPage() {
               key={approval.instance.id}
               approval={approval}
               onApprove={() => handleAction(approval, 'APPROVED')}
+              onReturn={() => handleAction(approval, 'RETURNED')}
               onReject={() => handleAction(approval, 'REJECTED')}
             />
           ))}

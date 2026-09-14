@@ -57,7 +57,7 @@ export default function AssetDetails() {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="p-6 w-full space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate('../')}>
           <ArrowLeft className="h-4 w-4" />

@@ -30,6 +30,6 @@ export const UpdateWorkflowTemplateSchema = z.object({
 // ─── Workflow Action (Approve / Reject) ────────────────────────────────────────
 
 export const WorkflowActionSchema = z.object({
-  action: z.enum(['APPROVED', 'REJECTED']),
+  action: z.enum(['APPROVED', 'REJECTED', 'RETURNED']),
   comment: z.string().optional(),
 });

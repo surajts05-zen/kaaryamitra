@@ -9,6 +9,8 @@ import {
   submitHandler,
   approveHandler,
   rejectHandler,
+  recallHandler,
+  returnHandler,
   archiveHandler
 } from './budget-requests.controller.js';
 
@@ -20,6 +22,8 @@ budgetRequestsRouter.get('/:id', requirePermission('budget:request'), asyncHandl
 budgetRequestsRouter.put('/:id', requirePermission('budget:request'), asyncHandler(updateHandler));
 
 budgetRequestsRouter.post('/:id/submit', requirePermission('budget:request'), asyncHandler(submitHandler));
+budgetRequestsRouter.post('/:id/recall', requirePermission('budget:request'), asyncHandler(recallHandler));
 budgetRequestsRouter.post('/:id/approve', requirePermission('budget:approve'), asyncHandler(approveHandler));
 budgetRequestsRouter.post('/:id/reject', requirePermission('budget:approve'), asyncHandler(rejectHandler));
+budgetRequestsRouter.post('/:id/return', requirePermission('budget:approve'), asyncHandler(returnHandler));
 budgetRequestsRouter.put('/:id/archive', requirePermission('budget:request'), asyncHandler(archiveHandler));

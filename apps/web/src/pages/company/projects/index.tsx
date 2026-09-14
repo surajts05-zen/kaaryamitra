@@ -11,6 +11,7 @@ import { NewProjectModal } from './components/new-project-modal';
 import { CsvImportButton } from '@/components/ui/csv-import-button';
 
 import { useCurrency } from '@/hooks/use-currency';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 export function ProjectsPage() {
   const { data: projects, isLoading } = useProjects();
@@ -19,7 +20,8 @@ export function ProjectsPage() {
   const { formatCurrency } = useCurrency();
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-6 w-full space-y-6">
+      <Breadcrumb items={[{ label: 'Projects' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -108,7 +110,7 @@ export function ProjectsPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" asChild>
-                      <Link to={`/company/projects/${project.id}`}>View</Link>
+                      <Link to={project.id}>View</Link>
                     </Button>
                   </TableCell>
                 </TableRow>

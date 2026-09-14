@@ -35,6 +35,8 @@ export class BudgetRequestsService {
   static async create(tenantId: string, requesterId: string, data: any) {
     const { lineItems, ...rest } = data;
 
+    const sanitizeFk = (id?: string) => (!id || id === 'NONE' || id.trim() === '' ? null : id);
+
     // Generate request number
     const count = await prisma.budgetRequest.count({ where: { tenantId } });
     const requestNumber = `BR-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
@@ -48,6 +50,10 @@ export class BudgetRequestsService {
       const br = await tx.budgetRequest.create({
         data: {
           ...rest,
+          projectId: sanitizeFk(rest.projectId),
+          costCenterId: sanitizeFk(rest.costCenterId),
+          departmentId: sanitizeFk(rest.departmentId),
+          periodId: sanitizeFk(rest.periodId),
           tenantId,
           requesterId,
           requestNumber,
@@ -56,6 +62,7 @@ export class BudgetRequestsService {
           lineItems: {
             create: lineItems.map((li: any) => ({
               ...li,
+              categoryId: sanitizeFk(li.categoryId),
               requestedAmount: li.quantity * li.unitCost
             }))
           }
@@ -73,13 +80,20 @@ export class BudgetRequestsService {
     }
 
     const { lineItems, ...rest } = data;
+    const sanitizeFk = (id?: string) => (id === undefined ? undefined : (!id || id === 'NONE' || id.trim() === '' ? null : id));
     
     return prisma.$transaction(async (tx) => {
+      if (rest.projectId !== undefined) rest.projectId = sanitizeFk(rest.projectId);
+      if (rest.costCenterId !== undefined) rest.costCenterId = sanitizeFk(rest.costCenterId);
+      if (rest.departmentId !== undefined) rest.departmentId = sanitizeFk(rest.departmentId);
+      if (rest.periodId !== undefined) rest.periodId = sanitizeFk(rest.periodId);
+
       if (lineItems) {
         await tx.budgetRequestLineItem.deleteMany({ where: { budgetRequestId: id } });
         await tx.budgetRequestLineItem.createMany({
           data: lineItems.map((li: any) => ({
             ...li,
+            categoryId: sanitizeFk(li.categoryId),
             budgetRequestId: id,
             requestedAmount: li.quantity * li.unitCost
           }))
@@ -102,25 +116,69 @@ export class BudgetRequestsService {
     const req = await this.getById(tenantId, id);
     if (req.status !== 'DRAFT') throw AppError.badRequest('Can only submit DRAFT requests');
 
-    // Start workflow
-    const template = await prisma.workflowTemplate.findFirst({
-      where: { tenantId, triggerType: 'BUDGET_REQUEST', isActive: true },
-    });
-
-    if (!template) {
-      throw AppError.badRequest('No active workflow template for BUDGET_REQUEST found');
-    }
-
     await prisma.$transaction(async (tx) => {
       await tx.budgetRequest.update({
         where: { id },
         data: { status: 'SUBMITTED' }
       });
       
-      await startWorkflow(tenantId, template.id, 'BudgetRequest', id);
+      // Start workflow — if no BUDGET_REQUEST workflow template is configured this is a no-op
+      await startWorkflow(tenantId, 'BUDGET_REQUEST', 'BudgetRequest', id);
     });
 
     return this.getById(tenantId, id);
+  }
+
+  static async recall(tenantId: string, id: string) {
+    const req = await this.getById(tenantId, id);
+    if (!['SUBMITTED', 'UNDER_REVIEW'].includes(req.status)) {
+      throw AppError.badRequest('Can only recall requests that are pending approval');
+    }
+
+    return prisma.$transaction(async (tx) => {
+      if (req.workflowInstance && req.workflowInstance.status === 'IN_PROGRESS') {
+        await tx.workflowInstance.update({
+          where: { id: req.workflowInstance.id },
+          data: { status: 'CANCELLED', completedAt: new Date() }
+        });
+      }
+
+      return tx.budgetRequest.update({
+        where: { id },
+        data: { status: 'DRAFT' }
+      });
+    });
+  }
+
+  static async returnForRevision(tenantId: string, id: string, actorUserId: string, comment?: string) {
+    const req = await this.getById(tenantId, id);
+    if (!['SUBMITTED', 'UNDER_REVIEW'].includes(req.status)) {
+      throw AppError.badRequest('Can only return requests that are pending approval');
+    }
+
+    return prisma.$transaction(async (tx) => {
+      if (req.workflowInstance && req.workflowInstance.status === 'IN_PROGRESS') {
+        await tx.workflowAction.create({
+          data: {
+            instanceId: req.workflowInstance.id,
+            stepIndex: req.workflowInstance.currentStepIndex,
+            actorId: actorUserId,
+            action: 'returned',
+            comment: comment ?? null
+          }
+        });
+
+        await tx.workflowInstance.update({
+          where: { id: req.workflowInstance.id },
+          data: { status: 'CANCELLED', completedAt: new Date() }
+        });
+      }
+
+      return tx.budgetRequest.update({
+        where: { id },
+        data: { status: 'DRAFT' }
+      });
+    });
   }
 
   static async archive(tenantId: string, id: string) {

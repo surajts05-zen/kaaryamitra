@@ -13,7 +13,7 @@ import { CsvImportModal } from '@/components/ui/csv-import-modal';
 
 export function AssetSettings() {
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6 max-w-5xl">
+    <div className="flex-1 space-y-4 p-8 pt-6 w-full">
       <Breadcrumb
         items={[
           { label: 'Settings', path: 'settings' },

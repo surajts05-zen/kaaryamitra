@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useCreateBudgetRequest, useBudgetCategories, useCostCenters } from '@/features/budgets/budgets.service';
+import { useState, useEffect } from 'react';
+import { useCreateBudgetRequest, useUpdateBudgetRequest, useBudgetCategories, useCostCenters, BudgetRequest } from '@/features/budgets/budgets.service';
 import { useProjects } from '@/features/projects/projects.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -14,9 +14,10 @@ import { useCurrency } from '@/hooks/use-currency';
 interface BudgetRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialData?: BudgetRequest | null;
 }
 
-export function BudgetRequestModal({ isOpen, onClose }: BudgetRequestModalProps) {
+export function BudgetRequestModal({ isOpen, onClose, initialData }: BudgetRequestModalProps) {
   const { currencySymbol } = useCurrency();
   const [requestType, setRequestType] = useState('NEW_PROJECT');
   const [priority, setPriority] = useState('MEDIUM');
@@ -34,6 +35,37 @@ export function BudgetRequestModal({ isOpen, onClose }: BudgetRequestModalProps)
   const { data: costCenters } = useCostCenters();
   
   const createMutation = useCreateBudgetRequest();
+  const updateMutation = useUpdateBudgetRequest();
+
+  useEffect(() => {
+    if (initialData) {
+      setRequestType(initialData.requestType || 'NEW_PROJECT');
+      setPriority(initialData.priority || 'MEDIUM');
+      setProjectId(initialData.projectId || '');
+      setCostCenterId(initialData.costCenterId || '');
+      setObjective(initialData.objective || '');
+      setBusinessJustification(initialData.businessJustification || '');
+      if (initialData.lineItems && initialData.lineItems.length > 0) {
+        setLineItems(initialData.lineItems.map(item => ({
+          description: item.description,
+          quantity: item.quantity,
+          unitCost: Number(item.unitCost),
+          capexOpex: item.capexOpex || 'OPEX',
+          categoryId: item.categoryId || ''
+        })));
+      } else {
+        setLineItems([{ description: '', quantity: 1, unitCost: 0, capexOpex: 'OPEX', categoryId: '' }]);
+      }
+    } else {
+      setRequestType('NEW_PROJECT');
+      setPriority('MEDIUM');
+      setProjectId('');
+      setCostCenterId('');
+      setObjective('');
+      setBusinessJustification('');
+      setLineItems([{ description: '', quantity: 1, unitCost: 0, capexOpex: 'OPEX', categoryId: '' }]);
+    }
+  }, [initialData, isOpen]);
 
   const handleAddLineItem = () => {
     setLineItems([...lineItems, { description: '', quantity: 1, unitCost: 0, capexOpex: 'OPEX', categoryId: '' }]);
@@ -61,20 +93,32 @@ export function BudgetRequestModal({ isOpen, onClose }: BudgetRequestModalProps)
     }
 
     try {
-      await createMutation.mutateAsync({
+      const sanitizedLineItems = lineItems.map(item => ({
+        ...item,
+        categoryId: (!item.categoryId || item.categoryId === 'NONE') ? undefined : item.categoryId
+      }));
+
+      const payload = {
         requestType,
         priority,
-        projectId: projectId || undefined,
-        costCenterId: costCenterId || undefined,
+        projectId: (!projectId || projectId === 'NONE') ? undefined : projectId,
+        costCenterId: (!costCenterId || costCenterId === 'NONE') ? undefined : costCenterId,
         objective,
         businessJustification,
-        lineItems
-      });
+        lineItems: sanitizedLineItems
+      };
+
+      if (initialData?.id) {
+        await updateMutation.mutateAsync({ id: initialData.id, data: payload });
+        toast.success('Budget request updated successfully');
+      } else {
+        await createMutation.mutateAsync(payload);
+        toast.success('Budget request created as draft');
+      }
       
-      toast.success('Budget request submitted successfully');
       onClose();
     } catch (error: any) {
-      toast.error(error?.response?.data?.error?.message || 'Failed to submit budget request');
+      toast.error(error?.response?.data?.error?.message || 'Failed to save budget request');
     }
   };
 
@@ -82,8 +126,10 @@ export function BudgetRequestModal({ isOpen, onClose }: BudgetRequestModalProps)
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>New Budget Request</DialogTitle>
-          <DialogDescription>Submit a new budget request for approval.</DialogDescription>
+          <DialogTitle>{initialData ? 'Edit Budget Request' : 'New Budget Request'}</DialogTitle>
+          <DialogDescription>
+            {initialData ? 'Update draft budget request details before submitting.' : 'Create a new budget request draft.'}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
@@ -191,12 +237,12 @@ export function BudgetRequestModal({ isOpen, onClose }: BudgetRequestModalProps)
 
                 <div className="col-span-4 md:col-span-1 space-y-1">
                   <Label className="text-xs">Qty</Label>
-                  <Input type="number" min={1} required className="h-9" value={item.quantity} onChange={(e) => handleLineItemChange(index, 'quantity', parseInt(e.target.value))} />
+                  <Input type="number" min={1} required className="h-9" value={item.quantity} onChange={(e) => handleLineItemChange(index, 'quantity', parseInt(e.target.value) || 1)} />
                 </div>
                 
                 <div className="col-span-6 md:col-span-2 space-y-1">
                   <Label className="text-xs">Unit Cost ({currencySymbol})</Label>
-                  <Input type="number" min={0} required className="h-9" value={item.unitCost} onChange={(e) => handleLineItemChange(index, 'unitCost', parseFloat(e.target.value))} />
+                  <Input type="number" min={0} required className="h-9" value={item.unitCost} onChange={(e) => handleLineItemChange(index, 'unitCost', parseFloat(e.target.value) || 0)} />
                 </div>
                 
                 <div className="col-span-2 md:col-span-1 flex justify-end mt-6">
@@ -210,8 +256,8 @@ export function BudgetRequestModal({ isOpen, onClose }: BudgetRequestModalProps)
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending ? 'Saving...' : 'Submit Request'}
+            <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+              {createMutation.isPending || updateMutation.isPending ? 'Saving...' : initialData ? 'Save Changes' : 'Save as Draft'}
             </Button>
           </DialogFooter>
         </form>

@@ -217,7 +217,7 @@ export async function processWorkflowAction(
   tenantId: string,
   instanceId: string,
   actorUserId: string,
-  action: 'APPROVED' | 'REJECTED',
+  action: 'APPROVED' | 'REJECTED' | 'RETURNED',
   comment?: string,
 ) {
   const instance = await prisma.workflowInstance.findUnique({
@@ -243,6 +243,23 @@ export async function processWorkflowAction(
       comment: comment ?? null,
     },
   });
+
+  if (action === 'RETURNED') {
+    // Return for revision cancels the active workflow and returns entity to DRAFT
+    const returnedInstance = await prisma.workflowInstance.update({
+      where: { id: instanceId },
+      data: { status: 'CANCELLED', completedAt: new Date() },
+    });
+
+    if (instance.budgetRequestId) {
+      await prisma.budgetRequest.update({
+        where: { id: instance.budgetRequestId },
+        data: { status: 'DRAFT' },
+      });
+    }
+
+    return returnedInstance;
+  }
 
   if (action === 'REJECTED') {
     // Reject terminates the entire workflow
@@ -548,7 +565,12 @@ export async function getPendingActionsForUser(tenantId: string, userId: string)
       assetAssignment: { include: { employee: { include: { user: true, department: true, designation: true } } } },
       compensationHistory: { include: { employee: { include: { user: true, department: true, designation: true } } } },
       payrollRun: true,
-      budgetRequest: true,
+      budgetRequest: {
+        include: {
+          project: { select: { name: true, code: true } },
+          costCenter: { select: { name: true } },
+        }
+      },
     },
   });
 
