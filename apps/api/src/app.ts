@@ -13,6 +13,9 @@ import { adminRouter } from './modules/admin/admin.router.js';
 import { orgRouter } from './modules/org/org.router.js';
 import { employeesRouter } from './modules/employees/employees.router.js';
 import { essRouter } from './modules/ess/ess.router.js';
+import { billingRouter } from './modules/billing/billing.router.js';
+import { adminBillingRouter } from './modules/billing/admin-billing.router.js';
+import { initBillingMeterJob } from './jobs/billing-meter.job.js';
 import { leaveRouter, essLeaveRouter, leaveApprovalsRouter } from './modules/leave/leave.router.js';
 import { workflowRouter } from './modules/workflows/workflow.router.js';
 import { rolesRouter } from './modules/roles/roles.router.js';
@@ -53,6 +56,9 @@ import { requireAuth, requireSuperAdmin, requireApiKey, resolveTenant } from './
 
 export function createApp() {
   const app = express();
+  
+  // Initialize cron jobs
+  initBillingMeterJob();
 
   // ── Security headers ────────────────────────────────────────────────────────
   app.use(
@@ -252,11 +258,10 @@ export function createApp() {
   app.use('/api/v1/notifications', requireAuth, notificationsRouter);
 
   // Tenant-scoped routes — all under /api/v1/t/:slug/
-  // Modules are registered as they are built in each phase:
-  // app.use('/api/v1/t/:slug', requireAuth, resolveTenant, leaveRouter);
-  // ...
-
+  app.use('/api/v1/t/:slug/billing', requireAuth, resolveTenant, billingRouter);
+  
   // Super Admin routes
+  app.use('/api/v1/admin/billing', requireAuth, requireSuperAdmin, adminBillingRouter);
   app.use('/api/v1/admin', requireAuth, requireSuperAdmin, adminRouter);
 
   // 404 handler

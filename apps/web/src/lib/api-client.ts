@@ -9,6 +9,8 @@ export const apiClient = axios.create({
   },
 });
 
+export const api = apiClient;
+
 // ── Request interceptor — attach access token ─────────────────────────────────
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('km_access_token');

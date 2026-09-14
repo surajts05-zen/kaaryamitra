@@ -6,6 +6,7 @@ import { ProtectedRoute, TenantResolver } from '@/components/auth/protected-rout
 import { AdminDashboardPage } from '@/pages/admin/dashboard';
 import { AdminTenantsPage } from '@/pages/admin/tenants';
 import { AdminSettingsPage } from '@/pages/admin/settings';
+import { AdminBillingDashboard } from '@/pages/admin/billing';
 
 import { DashboardPage } from '@/pages/dashboard';
 import { DepartmentsPage } from '@/pages/company/departments';
@@ -104,6 +105,10 @@ import { FinanceSettingsPage } from '@/pages/company/settings/finance';
 // Developer Hub
 import { DeveloperHubPage } from '@/pages/company/settings/developer-hub';
 
+// Phase 24 - SaaS Billing
+import { CompanyBillingPage } from '@/pages/company/settings/billing';
+import { CompanyPlanComparePage } from '@/pages/company/settings/billing/plan-compare';
+
 /**
  * KaaryaMitra App Router
  */
@@ -119,6 +124,7 @@ export function App() {
           <Route index element={<AdminDashboardPage />} />
           <Route path="tenants" element={<AdminTenantsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
+          <Route path="billing" element={<AdminBillingDashboard />} />
         </Route>
 
         {/* Workspace Routes */}
@@ -132,6 +138,8 @@ export function App() {
             <Route path="locations" element={<LocationsPage />} />
             <Route path="designations" element={<DesignationsPage />} />
             <Route path="settings" element={<CompanySettingsPage />} />
+            <Route path="settings/billing" element={<CompanyBillingPage />} />
+            <Route path="settings/billing/compare" element={<CompanyPlanComparePage />} />
             <Route path="settings/leave" element={<LeaveTypesPage />} />
             <Route path="settings/shifts" element={<AdminShiftsPage />} />
             <Route path="settings/workflows" element={<WorkflowsPage />} />

@@ -86,6 +86,7 @@ export const navItems: NavItem[] = [
   { icon: GitBranch, label: 'Workflows',        path: 'settings/workflows', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: FileText,  label: 'Policies & Content', path: 'settings/policies', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: Shield,    label: 'Roles & Permissions', path: 'settings/roles', allowedRoles: ADMIN_ROLES, group: 'Settings' },
+  { icon: CreditCard,label: 'Billing & Plans', path: 'settings/billing', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: Settings,  label: 'Settings',      path: 'settings',          allowedRoles: ADMIN_ROLES, group: 'Settings' },
   
   // Help & Resources
@@ -95,6 +96,7 @@ export const navItems: NavItem[] = [
 export const adminNavItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Platform Dashboard', path: '/admin' },
   { icon: Building2,       label: 'Workspaces',         path: '/admin/tenants', group: 'Platform' },
+  { icon: CreditCard,      label: 'Billing',            path: '/admin/billing', group: 'Platform' },
   { icon: Settings,        label: 'Platform Config',    path: '/admin/settings', group: 'Platform' },
 ];
 

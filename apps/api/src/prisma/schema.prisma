@@ -368,13 +368,8 @@ model Tenant {
   // Domain
   domain String? @unique
 
-  // Billing
-  stripeCustomerId     String?
-  stripeSubscriptionId String?
-  trialEndsAt          DateTime?
-  planExpiresAt        DateTime?
-
   // Feature flags (JSON map: featureName -> boolean)
+  // Rebuilt by BillingService.syncFeatureFlags() after subscription changes
   featureFlags Json @default("{}")
 
   // AI Config
@@ -439,6 +434,11 @@ model Tenant {
   webhookEndpoints   WebhookEndpoint[]
   integrations       TenantIntegration[]
   encryptedSecrets   EncryptedSecret[]
+
+  // Phase 24 — SaaS Billing
+  subscription TenantSubscription?
+  invoices     Invoice[]
+  usageRecords UsageRecord[]
 
   @@map("tenants")
 }
@@ -1597,7 +1597,13 @@ model PlatformSettings {
   smtpPass     String?
   smtpFrom     String?
   geminiApiKey String?
-  updatedAt    DateTime @updatedAt
+
+  // Razorpay (Phase 24)
+  razorpayKeyId         String?
+  razorpayKeySecret     String?
+  razorpayWebhookSecret String?
+
+  updatedAt DateTime @updatedAt
 
   @@map("platform_settings")
 }
@@ -2537,4 +2543,176 @@ model EncryptedSecret {
 
   @@unique([tenantId, key])
   @@map("encrypted_secrets")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SAAS BILLING (Phase 24)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum BillingCycle {
+  MONTHLY
+  ANNUAL
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  PAUSED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  VOID
+  UNCOLLECTIBLE
+}
+
+// Plan definitions — editable by Super Admin
+model PlanDefinition {
+  id                    String     @id @default(cuid())
+  name                  String     @unique // "Free" | "Starter" | "Growth" | "Enterprise"
+  slug                  TenantPlan @unique // maps to TenantPlan enum
+  description           String?
+  monthlyPriceInr       Decimal    @default(0) @db.Decimal(10, 2)
+  monthlyPriceUsd       Decimal    @default(0) @db.Decimal(10, 2)
+  annualDiscountPct     Int        @default(16) // % off annual vs 12x monthly
+  maxEmployees          Int? // null = unlimited
+  maxStorageMb          Int? // null = unlimited
+  maxApiCallsPerMonth   Int? // null = unlimited
+  employeeOverageRateInr Decimal?  @db.Decimal(10, 2)
+  employeeOverageRateUsd Decimal?  @db.Decimal(10, 2)
+  trialDays             Int        @default(14)
+  isPublic              Boolean    @default(true)
+  razorpayMonthlyPlanId String? // Razorpay Plan ID for monthly billing
+  razorpayAnnualPlanId  String? // Razorpay Plan ID for annual billing
+  modules               Json       @default("[]") // string[] of enabled module keys
+  sortOrder             Int        @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscriptions TenantSubscription[]
+
+  @@map("plan_definitions")
+}
+
+// Individual module add-ons — prices editable by Super Admin
+model ModuleAddon {
+  id                    String  @id @default(cuid())
+  key                   String  @unique // "payroll" | "ai" | "projects" | etc.
+  name                  String
+  description           String?
+  monthlyPriceInr       Decimal @db.Decimal(10, 2)
+  monthlyPriceUsd       Decimal @db.Decimal(10, 2)
+  razorpayMonthlyPlanId String?
+  isActive              Boolean @default(true)
+  sortOrder             Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscriptionAddons TenantSubscriptionAddon[]
+
+  @@map("module_addons")
+}
+
+// One subscription per tenant
+model TenantSubscription {
+  id                     String             @id @default(cuid())
+  tenantId               String             @unique
+  planId                 String
+  billingCycle           BillingCycle       @default(MONTHLY)
+  status                 SubscriptionStatus @default(TRIALING)
+  currency               String             @default("INR") // "INR" | "USD"
+  currentPeriodStart     DateTime
+  currentPeriodEnd       DateTime
+  trialStart             DateTime?
+  trialEnd               DateTime?
+  cancelAtPeriodEnd      Boolean            @default(false)
+
+  // Razorpay references
+  razorpaySubscriptionId String?
+  razorpayCustomerId     String?
+  razorpayPlanId         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant       Tenant                    @relation(fields: [tenantId], references: [id])
+  plan         PlanDefinition            @relation(fields: [planId], references: [id])
+  addons       TenantSubscriptionAddon[]
+  invoices     Invoice[]
+  usageRecords UsageRecord[]
+
+  @@map("tenant_subscriptions")
+}
+
+// Junction: which add-ons are active on a subscription
+model TenantSubscriptionAddon {
+  id             String   @id @default(cuid())
+  subscriptionId String
+  addonId        String
+  quantity       Int      @default(1)
+  addedAt        DateTime @default(now())
+
+  subscription TenantSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  addon        ModuleAddon        @relation(fields: [addonId], references: [id])
+
+  @@unique([subscriptionId, addonId])
+  @@map("tenant_subscription_addons")
+}
+
+// Invoices (auto-generated monthly or on one-time add-on purchase)
+model Invoice {
+  id             String        @id @default(cuid())
+  tenantId       String
+  subscriptionId String?
+  invoiceNumber  String        @unique // e.g. "KM-2026-0001"
+  status         InvoiceStatus @default(DRAFT)
+  subtotal       Decimal       @db.Decimal(10, 2)
+  tax            Decimal       @default(0) @db.Decimal(10, 2)
+  total          Decimal       @db.Decimal(10, 2)
+  currency       String        @default("INR")
+  periodStart    DateTime
+  periodEnd      DateTime
+  dueDate        DateTime
+  paidAt         DateTime?
+
+  // Razorpay
+  razorpayOrderId    String?
+  razorpayPaymentId  String?
+  razorpayPaymentUrl String? // short payment link for self-serve
+
+  lineItems Json // [{description: string, quantity: number, unitPrice: number, amount: number}]
+  notes     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant       Tenant              @relation(fields: [tenantId], references: [id])
+  subscription TenantSubscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@index([tenantId, status])
+  @@map("invoices")
+}
+
+// Usage metering records (written by nightly cron job)
+model UsageRecord {
+  id             String   @id @default(cuid())
+  tenantId       String
+  subscriptionId String?
+  metric         String // "employees" | "storage_mb" | "api_calls"
+  value          Int
+  recordedAt     DateTime @default(now())
+  periodStart    DateTime
+  periodEnd      DateTime
+
+  tenant       Tenant              @relation(fields: [tenantId], references: [id])
+  subscription TenantSubscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@index([tenantId, metric, recordedAt])
+  @@map("usage_records")
 }

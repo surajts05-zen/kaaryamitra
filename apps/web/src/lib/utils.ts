@@ -25,3 +25,12 @@ export function getInitials(firstName: string, lastName: string): string {
 export function truncate(text: string, maxLength: number): string {
   return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
 }
+
+/** Format numbers as currency */
+export function formatCurrency(amount: number, currency: string = 'INR'): string {
+  return new Intl.NumberFormat(currency === 'INR' ? 'en-IN' : 'en-US', {
+    style: 'currency',
+    currency: currency,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
