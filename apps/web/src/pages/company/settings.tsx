@@ -311,6 +311,20 @@ export function CompanySettingsPage() {
                 </CardHeader>
               </Card>
             </Link>
+
+            <Link to="developer">
+              <Card className="hover:border-primary/50 hover:shadow-md transition-all cursor-pointer h-full border-border/60">
+                <CardHeader>
+                  <div className="p-2.5 w-fit rounded-lg bg-pink-500/10 text-pink-600 mb-2">
+                    <Sliders className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-lg">Developer Hub</CardTitle>
+                  <CardDescription className="text-xs">
+                    Manage API keys, Webhooks, and Third-Party Integrations.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
           </div>
         </div>
       )}

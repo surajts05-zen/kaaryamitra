@@ -43,7 +43,13 @@ import { milestonesRouter } from './modules/milestones/milestones.router.js';
 import { projectExpensesRouter } from './modules/project-expenses/project-expenses.router.js';
 import { budgetAllocationsRouter } from './modules/budget-allocations/budget-allocations.router.js';
 import { budgetDashboardRouter } from './modules/budget-dashboard/budget-dashboard.router.js';
-import { requireAuth, requireSuperAdmin, resolveTenant } from './middleware/auth.js';
+import { apiKeysRouter } from './modules/api-keys/api-keys.router.js';
+import { webhooksRouter } from './modules/webhooks/webhooks.router.js';
+import { integrationsRouter } from './modules/integrations/integrations.router.js';
+import { openapiRouter } from './modules/openapi/openapi.router.js';
+// Must be imported AFTER openapiRouter (which exports `registry`) so paths register correctly
+import './modules/openapi/openapi.definitions.js';
+import { requireAuth, requireSuperAdmin, requireApiKey, resolveTenant } from './middleware/auth.js';
 
 export function createApp() {
   const app = express();
@@ -61,7 +67,7 @@ export function createApp() {
       origin: env.CORS_ORIGIN.split(',').map((o) => o.trim()),
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
     }),
   );
 
@@ -74,7 +80,7 @@ export function createApp() {
   app.use(
     pinoHttp({
       logger,
-      redact: ['req.headers.authorization', 'req.headers.cookie'],
+      redact: ['req.headers.authorization', 'req.headers.cookie', 'req.headers.x-api-key'],
       customLogLevel: (_req: unknown, res: { statusCode: number }, err?: Error) => {
         if (err || res.statusCode >= 500) return 'error';
         if (res.statusCode >= 400) return 'warn';
@@ -101,6 +107,9 @@ export function createApp() {
 
   // Auth routes
   app.use('/api/v1/auth', authRouter);
+
+  // OpenAPI Docs
+  app.use('/api/v1/docs', openapiRouter);
 
   // Tenant-scoped Org routes
   app.use('/api/v1/org', requireAuth, resolveTenant, orgRouter);
@@ -226,6 +235,18 @@ export function createApp() {
   app.use('/api/v1/t/:slug/budget-requests', requireAuth, resolveTenant, budgetRequestsRouter);
   app.use('/api/v1/t/:slug/project-expenses', requireAuth, resolveTenant, projectExpensesRouter);
   app.use('/api/v1/t/:slug/budget-dashboard', requireAuth, resolveTenant, budgetDashboardRouter);
+
+  // API Keys routes
+  app.use('/api/v1/api-keys', requireAuth, resolveTenant, apiKeysRouter);
+  app.use('/api/v1/t/:slug/api-keys', requireAuth, resolveTenant, apiKeysRouter);
+
+  // Webhooks routes
+  app.use('/api/v1/webhooks', requireAuth, resolveTenant, webhooksRouter);
+  app.use('/api/v1/t/:slug/webhooks', requireAuth, resolveTenant, webhooksRouter);
+
+  // Integrations routes
+  app.use('/api/v1/integrations', requireAuth, resolveTenant, integrationsRouter);
+  app.use('/api/v1/t/:slug/integrations', requireAuth, resolveTenant, integrationsRouter);
 
   // Notifications (user-scoped, no tenant resolution needed — userId from JWT is enough)
   app.use('/api/v1/notifications', requireAuth, notificationsRouter);

@@ -34,6 +34,8 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction): v
   }
 }
 
+import bcrypt from 'bcryptjs';
+
 // ── requireSuperAdmin — only platform super admins ────────────────────────────
 
 export function requireSuperAdmin(req: Request, _res: Response, next: NextFunction): void {
@@ -41,6 +43,77 @@ export function requireSuperAdmin(req: Request, _res: Response, next: NextFuncti
     return next(AppError.forbidden('Super Admin access required'));
   }
   next();
+}
+
+// ── requireApiKey — for external API access ───────────────────────────────────
+
+export async function requireApiKey(req: Request, _res: Response, next: NextFunction): Promise<void> {
+  const authHeader = req.headers['authorization'];
+  const xApiKey = req.headers['x-api-key'];
+  
+  let rawKey: string | undefined;
+  
+  if (authHeader?.startsWith('Bearer km_live_')) {
+    rawKey = authHeader.slice(7);
+  } else if (typeof xApiKey === 'string' && xApiKey.startsWith('km_live_')) {
+    rawKey = xApiKey;
+  }
+  
+  if (!rawKey) {
+    return next(AppError.unauthorized('Invalid or missing API Key'));
+  }
+
+  try {
+    const keyPrefix = rawKey.substring(0, 16); // km_live_ + 8 chars
+    
+    // Find potential keys by prefix first to avoid hashing all keys
+    const potentialKeys = await prisma.apiKey.findMany({
+      where: { 
+        keyPrefix,
+        status: 'ACTIVE',
+        OR: [
+          { expiresAt: null },
+          { expiresAt: { gt: new Date() } }
+        ]
+      }
+    });
+    
+    let matchedKey = null;
+    
+    for (const key of potentialKeys) {
+      const isValid = await bcrypt.compare(rawKey, key.keyHash);
+      if (isValid) {
+        matchedKey = key;
+        break;
+      }
+    }
+    
+    if (!matchedKey) {
+      return next(AppError.unauthorized('Invalid or expired API Key'));
+    }
+    
+    // Update last used asynchronously
+    prisma.apiKey.update({
+      where: { id: matchedKey.id },
+      data: { lastUsedAt: new Date() }
+    }).catch(console.error);
+    
+    prisma.apiKeyAuditLog.create({
+      data: {
+        apiKeyId: matchedKey.id,
+        action: 'USED',
+        ipAddress: req.ip || null,
+        userAgent: req.headers['user-agent'] || null
+      }
+    }).catch(console.error);
+    
+    req.tenantId = matchedKey.tenantId;
+    req.permissions = matchedKey.scopes; // We'll attach scopes to permissions
+    
+    next();
+  } catch (err) {
+    next(err);
+  }
 }
 
 // ── resolveTenant — extracts tenant from /t/:slug/ path ──────────────────────

@@ -434,6 +434,11 @@ model Tenant {
   budgetRequests     BudgetRequest[]
   projectExpenses    ProjectExpense[]
   budgetTransactions BudgetTransaction[]
+  
+  apiKeys            ApiKey[]
+  webhookEndpoints   WebhookEndpoint[]
+  integrations       TenantIntegration[]
+  encryptedSecrets   EncryptedSecret[]
 
   @@map("tenants")
 }
@@ -477,6 +482,7 @@ model User {
   publishedPolicies PolicyVersion[]   @relation("PolicyPublisher")
   LibraryFolder     LibraryFolder[]
   LibraryItem       LibraryItem[]
+  apiKeys           ApiKey[]
 
   @@index([tenantId])
   @@map("users")
@@ -2365,4 +2371,170 @@ model ProjectForecast {
   createdAt DateTime @default(now())
 
   @@map("project_forecasts")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PHASE 22: API & INTEGRATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ApiKeyStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+
+model ApiKey {
+  id          String       @id @default(cuid())
+  tenantId    String
+  name        String                         // "Payroll Integration", etc.
+  keyHash     String       @unique           // bcrypt/SHA-256 hash of actual key
+  keyPrefix   String                         // first 8 chars for display (km_live_xxxx)
+  scopes      String[]                       // ["employees:read","payroll:read"]
+  status      ApiKeyStatus @default(ACTIVE)
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  createdByUserId String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  createdBy   User         @relation(fields: [createdByUserId], references: [id])
+  auditLogs   ApiKeyAuditLog[]
+
+  @@index([tenantId])
+  @@map("api_keys")
+}
+
+model ApiKeyAuditLog {
+  id        String   @id @default(cuid())
+  apiKeyId  String
+  action    String   // "CREATED" | "REVOKED" | "USED"
+  ipAddress String?
+  userAgent String?
+  endpoint  String?
+  createdAt DateTime @default(now())
+
+  apiKey ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+  @@map("api_key_audit_logs")
+}
+
+enum WebhookEventType {
+  EMPLOYEE_CREATED
+  EMPLOYEE_UPDATED
+  EMPLOYEE_OFFBOARDED
+  LEAVE_APPROVED
+  LEAVE_REJECTED
+  PAYROLL_FINALIZED
+  ATTENDANCE_MARKED
+  RESIGNATION_SUBMITTED
+  CUSTOM
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  DELIVERED
+  FAILED
+  RETRYING
+}
+
+model WebhookEndpoint {
+  id        String  @id @default(cuid())
+  tenantId  String
+  name      String
+  url       String
+  secret    String  // HMAC signing secret (stored encrypted)
+  events    WebhookEventType[]
+  isActive  Boolean @default(true)
+  headers   Json    @default("{}")  // custom headers
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant    Tenant             @relation(fields: [tenantId], references: [id])
+  deliveries WebhookDelivery[]
+
+  @@index([tenantId])
+  @@map("webhook_endpoints")
+}
+
+model WebhookDelivery {
+  id              String                @id @default(cuid())
+  endpointId      String
+  event           WebhookEventType
+  payload         Json
+  status          WebhookDeliveryStatus @default(PENDING)
+  responseStatus  Int?
+  responseBody    String?
+  attemptCount    Int                   @default(0)
+  nextRetryAt     DateTime?
+  deliveredAt     DateTime?
+  createdAt       DateTime              @default(now())
+
+  endpoint WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@index([endpointId, status])
+  @@map("webhook_deliveries")
+}
+
+enum IntegrationProvider {
+  GOOGLE_WORKSPACE
+  MICROSOFT_365
+  SLACK
+  TEAMS
+  GREYTHR          // payroll
+  KEKA             // payroll
+  TALLY            // accounting
+  QUICKBOOKS       // accounting
+  ZOHO_BOOKS       // accounting
+  BIOMETRIC_ZKTIME // attendance device
+  GOOGLE_CALENDAR
+  OUTLOOK_CALENDAR
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  DISCONNECTED
+  ERROR
+  PENDING_OAUTH
+}
+
+model TenantIntegration {
+  id           String              @id @default(cuid())
+  tenantId     String
+  provider     IntegrationProvider
+  status       IntegrationStatus   @default(DISCONNECTED)
+  config       Json                @default("{}")  // encrypted at app layer
+  accessToken  String?             // encrypted
+  refreshToken String?             // encrypted
+  tokenExpiry  DateTime?
+  metadata     Json                @default("{}")  // scopes, user info, etc.
+  lastSyncAt   DateTime?
+  errorMessage String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, provider])
+  @@index([tenantId])
+  @@map("tenant_integrations")
+}
+
+model EncryptedSecret {
+  id        String   @id @default(cuid())
+  tenantId  String
+  key       String   // e.g. "google_oauth_token", "webhook_secret_123"
+  value     String   // The AES-256-GCM encrypted value
+  iv        String   // Initialization vector
+  authTag   String   // Authentication tag
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, key])
+  @@map("encrypted_secrets")
 }

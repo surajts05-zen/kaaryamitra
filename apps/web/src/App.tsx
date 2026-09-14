@@ -101,6 +101,9 @@ import { BudgetRequestsPage } from '@/pages/company/budgets/requests';
 // Finance Settings
 import { FinanceSettingsPage } from '@/pages/company/settings/finance';
 
+// Developer Hub
+import { DeveloperHubPage } from '@/pages/company/settings/developer-hub';
+
 /**
  * KaaryaMitra App Router
  */
@@ -143,6 +146,7 @@ export function App() {
             <Route path="settings/salary-structures" element={<SalarySettingsHubPage defaultTab="structures" />} />
             <Route path="settings/statutory" element={<SalarySettingsHubPage defaultTab="statutory" />} />
             <Route path="settings/finance" element={<FinanceSettingsPage />} />
+            <Route path="settings/developer" element={<DeveloperHubPage />} />
             {/* Phase 26 - Policies */}
             <Route path="settings/policies" element={<PoliciesAdminList />} />
             <Route path="settings/policies/:id/edit" element={<PolicyEditor />} />

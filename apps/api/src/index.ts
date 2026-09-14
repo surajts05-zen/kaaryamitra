@@ -2,6 +2,7 @@ import { createApp } from './app.js';
 import { env } from './config/env.js';
 import { logger } from './lib/logger.js';
 import { connectDatabase, disconnectDatabase } from './lib/prisma.js';
+import { startWebhookRetryJob } from './jobs/webhook-retry.job.js';
 
 async function main() {
   logger.info(`🚀 Starting KaaryaMitra API (${env.NODE_ENV})`);
@@ -10,6 +11,9 @@ async function main() {
   await connectDatabase();
 
   const app = createApp();
+
+  // Start background jobs
+  startWebhookRetryJob();
 
   const server = app.listen(env.PORT, () => {
     logger.info(`✅ Server listening on http://localhost:${env.PORT}`);
