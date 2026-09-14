@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useStatutoryRules, useCreateStatutoryRule, useUpdateStatutoryRule } from '@/features/company/hooks/use-payroll-queries';
+import { useStatutoryRules, useCreateStatutoryRule, useUpdateStatutoryRule, useSeedDefaultStatutoryRules } from '@/features/company/hooks/use-payroll-queries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -8,16 +8,26 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Plus, Loader2, Edit2, ShieldAlert } from 'lucide-react';
+import { Plus, Loader2, Edit2, ShieldAlert, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function StatutorySettingsPage() {
   const { data: rules, isLoading } = useStatutoryRules();
   const createMutation = useCreateStatutoryRule();
   const updateMutation = useUpdateStatutoryRule();
+  const seedMutation = useSeedDefaultStatutoryRules();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<any>(null);
+
+  const handleSeedDefaults = async () => {
+    try {
+      const res = await seedMutation.mutateAsync();
+      toast.success(res.message || 'Standard statutory rules added successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to load statutory rules');
+    }
+  };
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -60,17 +70,28 @@ export function StatutorySettingsPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Statutory Compliances</h1>
           <p className="text-muted-foreground mt-1">
             Configure local tax rules, PF, ESI, and other compliance deductions for payroll.
           </p>
         </div>
-        <Button onClick={openCreate} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Add Compliance Rule
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            onClick={handleSeedDefaults} 
+            disabled={seedMutation.isPending}
+            className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
+          >
+            {seedMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-primary" />}
+            Load Standard Compliances
+          </Button>
+          <Button onClick={openCreate} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Add Compliance Rule
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -104,7 +125,12 @@ export function StatutorySettingsPage() {
               ) : rules?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
-                    No statutory rules defined.
+                    <div className="space-y-3">
+                      <p>No statutory rules defined. You can add one manually or load standard compliance templates.</p>
+                      <Button variant="outline" size="sm" onClick={handleSeedDefaults} disabled={seedMutation.isPending} className="gap-2">
+                        <Sparkles className="w-4 h-4 text-primary" /> Load Standard Compliances
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (

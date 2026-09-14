@@ -222,6 +222,92 @@ export class PayrollService {
   // STATUTORY RULES (Phase 31)
   // ---------------------------------------------------------
 
+  static async seedDefaultStatutoryRules(tenantId: string) {
+    const DEFAULT_INDIAN_STATUTORY_RULES = [
+      {
+        countryCode: 'IN',
+        name: 'Employee Provident Fund (PF - Employee)',
+        code: 'PF_EMP',
+        type: 'PERCENTAGE_OF_COMPONENT',
+        baseComponent: 'BASIC',
+        rateOrAmount: 12.00,
+        cappedAt: 15000.00,
+        effectiveFrom: new Date('2024-01-01'),
+        isActive: true,
+      },
+      {
+        countryCode: 'IN',
+        name: 'Employer Provident Fund (PF - Employer)',
+        code: 'PF_EMPR',
+        type: 'PERCENTAGE_OF_COMPONENT',
+        baseComponent: 'BASIC',
+        rateOrAmount: 12.00,
+        cappedAt: 15000.00,
+        effectiveFrom: new Date('2024-01-01'),
+        isActive: true,
+      },
+      {
+        countryCode: 'IN',
+        name: 'Employee State Insurance (ESI - Employee)',
+        code: 'ESI_EMP',
+        type: 'PERCENTAGE_OF_COMPONENT',
+        baseComponent: 'GROSS',
+        rateOrAmount: 0.75,
+        cappedAt: 21000.00,
+        effectiveFrom: new Date('2024-01-01'),
+        isActive: true,
+      },
+      {
+        countryCode: 'IN',
+        name: 'Professional Tax (PT - Standard)',
+        code: 'PT_STANDARD',
+        type: 'FIXED_SLAB',
+        baseComponent: 'GROSS',
+        rateOrAmount: 200.00,
+        cappedAt: null,
+        effectiveFrom: new Date('2024-01-01'),
+        isActive: true,
+      },
+      {
+        countryCode: 'IN',
+        name: 'Tax Deducted at Source (TDS - Income Tax)',
+        code: 'TDS_INCOME_TAX',
+        type: 'CUSTOM_FORMULA',
+        baseComponent: 'ANNUAL_TAXABLE',
+        rateOrAmount: 10.00,
+        cappedAt: null,
+        effectiveFrom: new Date('2024-01-01'),
+        isActive: true,
+      },
+    ];
+
+    const results = [];
+    for (const rule of DEFAULT_INDIAN_STATUTORY_RULES) {
+      const existing = await prisma.statutoryRule.findFirst({
+        where: { tenantId, code: rule.code }
+      });
+
+      if (!existing) {
+        const created = await prisma.statutoryRule.create({
+          data: {
+            tenantId,
+            countryCode: rule.countryCode,
+            name: rule.name,
+            code: rule.code,
+            type: rule.type,
+            baseComponent: rule.baseComponent,
+            rateOrAmount: rule.rateOrAmount,
+            cappedAt: rule.cappedAt,
+            effectiveFrom: rule.effectiveFrom,
+            isActive: rule.isActive
+          }
+        });
+        results.push(created);
+      }
+    }
+    return results;
+  }
+
   static async getStatutoryRules(tenantId: string) {
     return prisma.statutoryRule.findMany({
       where: { tenantId },

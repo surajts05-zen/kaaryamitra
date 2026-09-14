@@ -209,6 +209,91 @@ export class CompensationService {
   // ---------------------------------------------------------
   // SALARY STRUCTURES
   // ---------------------------------------------------------
+  
+  static async seedDefaultStructures(tenantId: string) {
+    // Ensure components exist first
+    await CompensationService.seedDefaultComponents(tenantId);
+
+    const components = await prisma.salaryComponent.findMany({ where: { tenantId } });
+    const compMap = new Map(components.map(c => [c.code, c.id]));
+
+    const DEFAULT_STRUCTURES = [
+      {
+        name: 'Standard Full-Time Employee Structure',
+        description: 'Standard corporate structure with 50% Basic, 40% HRA, Conveyance, Special Allowance, PF & PT deductions.',
+        isActive: true,
+        items: [
+          { code: 'BASIC', calculationType: 'PERCENTAGE', value: 50, percentageBase: 'CTC' },
+          { code: 'HRA', calculationType: 'PERCENTAGE', value: 40, percentageBase: 'BASIC' },
+          { code: 'CONVEYANCE', calculationType: 'FIXED', value: 1600 },
+          { code: 'SPECIAL_ALLOWANCE', calculationType: 'PERCENTAGE', value: 10, percentageBase: 'CTC' },
+          { code: 'PF_EMP', calculationType: 'PERCENTAGE', value: 12, percentageBase: 'BASIC' },
+          { code: 'PT', calculationType: 'FIXED', value: 200 },
+        ]
+      },
+      {
+        name: 'Executive & Leadership Band',
+        description: 'Executive structure including Medical Allowance, LTA, Performance Bonus, PF and Tax deductions.',
+        isActive: true,
+        items: [
+          { code: 'BASIC', calculationType: 'PERCENTAGE', value: 40, percentageBase: 'CTC' },
+          { code: 'HRA', calculationType: 'PERCENTAGE', value: 50, percentageBase: 'BASIC' },
+          { code: 'MEDICAL', calculationType: 'FIXED', value: 1250 },
+          { code: 'LTA', calculationType: 'PERCENTAGE', value: 10, percentageBase: 'BASIC' },
+          { code: 'BONUS', calculationType: 'PERCENTAGE', value: 10, percentageBase: 'CTC' },
+          { code: 'SPECIAL_ALLOWANCE', calculationType: 'PERCENTAGE', value: 15, percentageBase: 'CTC' },
+          { code: 'PF_EMP', calculationType: 'PERCENTAGE', value: 12, percentageBase: 'BASIC' },
+          { code: 'PT', calculationType: 'FIXED', value: 200 },
+        ]
+      },
+      {
+        name: 'Consolidated / Intern Band',
+        description: 'Simplified flat-rate compensation template.',
+        isActive: true,
+        items: [
+          { code: 'BASIC', calculationType: 'PERCENTAGE', value: 100, percentageBase: 'CTC' },
+        ]
+      }
+    ];
+
+    const results = [];
+    for (const structTmpl of DEFAULT_STRUCTURES) {
+      const existing = await prisma.salaryStructure.findFirst({
+        where: { tenantId, name: structTmpl.name }
+      });
+
+      if (!existing) {
+        const validItems = structTmpl.items
+          .filter(i => compMap.has(i.code))
+          .map(i => ({
+            componentId: compMap.get(i.code)!,
+            calculationType: i.calculationType as any,
+            value: i.value,
+            percentageBase: i.percentageBase || null
+          }));
+
+        const created = await prisma.salaryStructure.create({
+          data: {
+            tenantId,
+            name: structTmpl.name,
+            description: structTmpl.description,
+            isActive: structTmpl.isActive,
+            items: {
+              createMany: {
+                data: validItems
+              }
+            }
+          },
+          include: {
+            items: { include: { component: true } }
+          }
+        });
+        results.push(created);
+      }
+    }
+
+    return results;
+  }
 
   static async getStructures(tenantId: string) {
     return prisma.salaryStructure.findMany({

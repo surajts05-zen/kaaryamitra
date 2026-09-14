@@ -22,6 +22,7 @@ router.patch('/components/:id', adminRole, CompensationController.updateComponen
 
 // Structures
 router.get('/structures', adminRole, CompensationController.getStructures);
+router.post('/structures/seed-defaults', adminRole, CompensationController.seedDefaultStructures);
 router.post('/structures', adminRole, CompensationController.createStructure);
 router.patch('/structures/:id', adminRole, CompensationController.updateStructure);
 

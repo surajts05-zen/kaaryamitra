@@ -105,6 +105,17 @@ export function useStatutoryRules() {
   });
 }
 
+export function useSeedDefaultStatutoryRules() {
+  const tenantSlug = useTenantSlug();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.post(`/t/${tenantSlug}/payroll/statutory/seed-defaults`).then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: payrollKeys.statutoryRules(tenantSlug) });
+    },
+  });
+}
+
 export function useCreateStatutoryRule() {
   const tenantSlug = useTenantSlug();
   const queryClient = useQueryClient();

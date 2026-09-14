@@ -38,6 +38,11 @@ export class CompensationController {
     res.json(structures);
   }
 
+  static async seedDefaultStructures(req: Request, res: Response) {
+    const seeded = await CompensationService.seedDefaultStructures(req.tenantId!);
+    res.status(201).json({ message: `Seeded ${seeded.length} standard salary structures`, data: seeded });
+  }
+
   static async createStructure(req: Request, res: Response) {
     const data = createSalaryStructureSchema.parse(req.body);
     const structure = await CompensationService.createStructure(req.tenantId!, data);

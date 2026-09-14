@@ -70,6 +70,18 @@ export function useSalaryStructures() {
   });
 }
 
+export function useSeedDefaultSalaryStructures() {
+  const tenantSlug = useTenantSlug();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.post(`/t/${tenantSlug}/compensation/structures/seed-defaults`).then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: compensationKeys.structures(tenantSlug) });
+      queryClient.invalidateQueries({ queryKey: compensationKeys.components(tenantSlug) });
+    },
+  });
+}
+
 export function useCreateSalaryStructure() {
   const tenantSlug = useTenantSlug();
   const queryClient = useQueryClient();

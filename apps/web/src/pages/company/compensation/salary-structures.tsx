@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSalaryStructures, useCreateSalaryStructure, useUpdateSalaryStructure, useSalaryComponents } from '@/features/company/hooks/use-compensation-queries';
+import { useSalaryStructures, useCreateSalaryStructure, useUpdateSalaryStructure, useSalaryComponents, useSeedDefaultSalaryStructures } from '@/features/company/hooks/use-compensation-queries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Edit2, Loader2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Loader2, Trash2, Sparkles } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 
@@ -22,6 +22,16 @@ export default function SalaryStructuresPage() {
 
   const createMutation = useCreateSalaryStructure();
   const updateMutation = useUpdateSalaryStructure();
+  const seedMutation = useSeedDefaultSalaryStructures();
+
+  const handleSeedDefaults = async () => {
+    try {
+      const res = await seedMutation.mutateAsync();
+      toast.success(res.message || 'Standard salary structures added successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to load standard structures');
+    }
+  };
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -86,17 +96,28 @@ export default function SalaryStructuresPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Salary Structures</h1>
           <p className="text-muted-foreground mt-1">
             Build and manage reusable compensation templates.
           </p>
         </div>
-        <Button onClick={openCreate} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Create Structure
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            onClick={handleSeedDefaults} 
+            disabled={seedMutation.isPending}
+            className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
+          >
+            {seedMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-primary" />}
+            Load Standard Structures
+          </Button>
+          <Button onClick={openCreate} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Create Structure
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -105,8 +126,11 @@ export default function SalaryStructuresPage() {
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : structures?.length === 0 ? (
-          <div className="col-span-full text-center py-10 text-muted-foreground border rounded-lg bg-card">
-            No structures found. Create your first salary structure.
+          <div className="col-span-full text-center py-10 text-muted-foreground border rounded-lg bg-card space-y-3 p-6">
+            <p>No structures found. You can build one manually or load standard structure templates.</p>
+            <Button variant="outline" size="sm" onClick={handleSeedDefaults} disabled={seedMutation.isPending} className="gap-2">
+              <Sparkles className="w-4 h-4 text-primary" /> Load Standard Structures
+            </Button>
           </div>
         ) : (
           structures?.map((struct: any) => (

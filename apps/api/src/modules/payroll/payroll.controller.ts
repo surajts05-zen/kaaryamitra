@@ -55,6 +55,11 @@ export class PayrollController {
     res.json(rules);
   }
 
+  static async seedDefaultStatutoryRules(req: Request, res: Response) {
+    const seeded = await PayrollService.seedDefaultStatutoryRules(req.tenantId!);
+    res.status(201).json({ message: `Seeded ${seeded.length} standard statutory rules`, data: seeded });
+  }
+
   static async createStatutoryRule(req: Request, res: Response) {
     const data = createStatutoryRuleSchema.parse(req.body);
     const rule = await PayrollService.createStatutoryRule(req.tenantId!, data);

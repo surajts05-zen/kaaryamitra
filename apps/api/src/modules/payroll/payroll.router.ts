@@ -23,6 +23,7 @@ router.post('/runs/:id/upload', requireRole(['admin', 'hr', 'hr manager', 'compa
 
 // Statutory Rules
 router.get('/statutory', requireRole(['admin', 'hr', 'hr manager', 'company admin']), PayrollController.getStatutoryRules);
+router.post('/statutory/seed-defaults', requireRole(['admin', 'hr', 'hr manager', 'company admin']), PayrollController.seedDefaultStatutoryRules);
 router.post('/statutory', requireRole(['admin', 'hr', 'hr manager', 'company admin']), PayrollController.createStatutoryRule);
 router.patch('/statutory/:id', requireRole(['admin', 'hr', 'hr manager', 'company admin']), PayrollController.updateStatutoryRule);
 
