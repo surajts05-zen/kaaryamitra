@@ -5,11 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import { useCurrency } from '@/hooks/use-currency';
 
 export function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: project, isLoading: projectLoading } = useProject(id);
   const { data: milestones, isLoading: milestonesLoading } = useMilestones(id!);
+  const { formatCurrency } = useCurrency();
 
   if (projectLoading) return <div className="p-8 text-center">Loading project details...</div>;
   if (!project) return <div className="p-8 text-center">Project not found</div>;
@@ -32,7 +34,7 @@ export function ProjectDetailPage() {
             <CardTitle className="text-sm font-medium text-gray-500">Approved Budget</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{Number(project.approvedBudget || 0).toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatCurrency(project.approvedBudget)}</div>
           </CardContent>
         </Card>
         
@@ -41,7 +43,7 @@ export function ProjectDetailPage() {
             <CardTitle className="text-sm font-medium text-gray-500">Actual Cost</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{Number(project.actualCost || 0).toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatCurrency(project.actualCost)}</div>
           </CardContent>
         </Card>
         
@@ -51,7 +53,7 @@ export function ProjectDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              ₹{Number(project.availableBudget || 0).toLocaleString()}
+              {formatCurrency(project.availableBudget)}
             </div>
           </CardContent>
         </Card>
@@ -98,7 +100,7 @@ export function ProjectDetailPage() {
                     </TableCell>
                     <TableCell>{m.plannedStart ? new Date(m.plannedStart).toLocaleDateString() : '-'}</TableCell>
                     <TableCell>{m.plannedEnd ? new Date(m.plannedEnd).toLocaleDateString() : '-'}</TableCell>
-                    <TableCell className="text-right">₹{Number(m.plannedBudget || 0).toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(m.plannedBudget)}</TableCell>
                   </TableRow>
                 ))
               )}

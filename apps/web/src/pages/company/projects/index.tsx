@@ -10,10 +10,13 @@ import { toast } from 'sonner';
 import { NewProjectModal } from './components/new-project-modal';
 import { CsvImportButton } from '@/components/ui/csv-import-button';
 
+import { useCurrency } from '@/hooks/use-currency';
+
 export function ProjectsPage() {
   const { data: projects, isLoading } = useProjects();
   const bulkCreateMutation = useBulkCreateProject();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { formatCurrency } = useCurrency();
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -101,7 +104,7 @@ export function ProjectsPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    ₹{Number(project.approvedBudget || 0).toLocaleString()}
+                    {formatCurrency(project.approvedBudget)}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" asChild>

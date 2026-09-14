@@ -4,12 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, Save, Palette, Receipt, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Save, Palette, CreditCard, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { useCurrency } from '@/hooks/use-currency';
 
 export default function PayrollSettingsPage() {
   const { data: settings, isLoading } = usePayrollSettings();
   const updateMutation = useUpdatePayrollSettings();
+  const { formatCurrency } = useCurrency();
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -143,7 +145,7 @@ export default function PayrollSettingsPage() {
         <Card className="bg-muted/30 border-dashed">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-muted-foreground text-sm font-medium">
-              <Receipt className="w-4 h-4" /> Live Preview (Approximate)
+              <CreditCard className="w-4 h-4" /> Live Preview (Approximate)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -166,19 +168,19 @@ export default function PayrollSettingsPage() {
               <div className="grid grid-cols-2 gap-4 mt-6 text-sm">
                 <div>
                   <h4 className="font-semibold pb-1 mb-2 border-b">Earnings</h4>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Basic</span><span>₹40,000</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">HRA</span><span>₹20,000</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Basic</span><span>{formatCurrency(40000)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">HRA</span><span>{formatCurrency(20000)}</span></div>
                 </div>
                 <div>
                   <h4 className="font-semibold pb-1 mb-2 border-b">Deductions</h4>
-                  <div className="flex justify-between"><span className="text-muted-foreground">PF</span><span>₹1,800</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Tax</span><span>₹2,500</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">PF</span><span>{formatCurrency(1800)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Tax</span><span>{formatCurrency(2500)}</span></div>
                 </div>
               </div>
 
               <div className="bg-primary/5 p-3 rounded-lg flex justify-between items-center mt-6">
                 <span className="font-bold">Net Payable</span>
-                <span className="font-bold text-lg" style={{ color: themeColor }}>₹55,700</span>
+                <span className="font-bold text-lg" style={{ color: themeColor }}>{formatCurrency(55700)}</span>
               </div>
 
               <div className="mt-12 flex justify-between items-end text-sm">

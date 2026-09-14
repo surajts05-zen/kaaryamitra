@@ -2,17 +2,15 @@ import React from 'react';
 import { useMyCompensation, useMyCompensationHistory } from '@/features/company/hooks/use-compensation-queries';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, History, IndianRupee, ShieldCheck } from 'lucide-react';
+import { Loader2, History, Wallet, ShieldCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { useCurrency } from '@/hooks/use-currency';
 
 export default function MyCompensationPage() {
   const { data: profile, isLoading } = useMyCompensation();
   const { data: history } = useMyCompensationHistory();
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
-  };
+  const { formatCurrency } = useCurrency();
 
   if (isLoading) {
     return (
@@ -23,7 +21,7 @@ export default function MyCompensationPage() {
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="p-6 w-full space-y-6">
       <Breadcrumb items={[{ label: 'My Compensation' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div>
         <h1 className="text-3xl font-bold tracking-tight">My Compensation</h1>
@@ -45,7 +43,7 @@ export default function MyCompensationPage() {
           <Card className="bg-primary/5 border-primary/20">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2">
-                <IndianRupee className="w-5 h-5 text-primary" /> Current Package
+                <Wallet className="w-5 h-5 text-primary" /> Current Package
               </CardTitle>
               <CardDescription>Effective since {format(new Date(profile.effectiveFrom), 'PPP')}</CardDescription>
             </CardHeader>

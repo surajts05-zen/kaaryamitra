@@ -22,12 +22,15 @@ import {
   Sliders,
   Settings as SettingsIcon,
   Sparkles,
-  IndianRupee,
+  Landmark,
+  Wallet,
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CURRENCIES } from '@/lib/currency';
 
 const schema = z.object({
   companyName: z.string().min(1, 'Company name is required'),
+  currency: z.string().optional(),
   workHoursStart: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format (HH:MM)'),
   workHoursEnd: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format (HH:MM)'),
   probationDays: z.number().min(0),
@@ -55,6 +58,7 @@ export function CompanySettingsPage() {
     if (settings) {
       reset({
         companyName: settings.companyName || '',
+        currency: settings.currency || 'USD',
         workHoursStart: settings.workHoursStart,
         workHoursEnd: settings.workHoursEnd,
         probationDays: settings.probationDays,
@@ -256,11 +260,53 @@ export function CompanySettingsPage() {
               <Card className="hover:border-primary/50 hover:shadow-md transition-all cursor-pointer h-full border-border/60">
                 <CardHeader>
                   <div className="p-2.5 w-fit rounded-lg bg-green-500/10 text-green-600 mb-2">
-                    <IndianRupee className="h-6 w-6" />
+                    <Landmark className="h-6 w-6" />
                   </div>
                   <CardTitle className="text-lg">Finance & Budgets</CardTitle>
                   <CardDescription className="text-xs">
                     Define cost centers, budget categories, and financial hierarchies.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+
+            <Link to="policies">
+              <Card className="hover:border-primary/50 hover:shadow-md transition-all cursor-pointer h-full border-border/60">
+                <CardHeader>
+                  <div className="p-2.5 w-fit rounded-lg bg-teal-500/10 text-teal-600 mb-2">
+                    <FileText className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-lg">Policies & Content</CardTitle>
+                  <CardDescription className="text-xs">
+                    Draft, publish, and manage company policies, handbook, and governance documents.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+
+            <Link to="../library">
+              <Card className="hover:border-primary/50 hover:shadow-md transition-all cursor-pointer h-full border-border/60">
+                <CardHeader>
+                  <div className="p-2.5 w-fit rounded-lg bg-sky-500/10 text-sky-600 mb-2">
+                    <FileText className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-lg">Content Library</CardTitle>
+                  <CardDescription className="text-xs">
+                    Explore and manage company knowledge articles, announcements, and guides.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+
+            <Link to="salary">
+              <Card className="hover:border-primary/50 hover:shadow-md transition-all cursor-pointer h-full border-border/60">
+                <CardHeader>
+                  <div className="p-2.5 w-fit rounded-lg bg-emerald-500/10 text-emerald-600 mb-2">
+                    <Wallet className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-lg">Salary &amp; Payroll Settings</CardTitle>
+                  <CardDescription className="text-xs">
+                    Configure salary components, structures, statutory rules, and payslips under one roof.
                   </CardDescription>
                 </CardHeader>
               </Card>
@@ -275,16 +321,38 @@ export function CompanySettingsPage() {
           <Card className="border-border/60">
             <CardHeader>
               <CardTitle>Organization Profile & Work Policies</CardTitle>
-              <CardDescription>Configure company name, default working hours, probation rules, attendance tracking, and AI keys.</CardDescription>
+              <CardDescription>Configure company name, currency, working hours, probation rules, attendance tracking, and AI keys.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label className="font-semibold">Company / Organization Name</Label>
-                <Input placeholder="e.g. KaaryaMitra Inc." {...register('companyName')} />
-                {errors.companyName && <p className="text-xs text-destructive">{errors.companyName.message}</p>}
-                <p className="text-xs text-muted-foreground">
-                  This name will be displayed across the workspace dashboard, header branding, emails, and reports.
-                </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="font-semibold">Company / Organization Name</Label>
+                  <Input placeholder="e.g. KaaryaMitra Inc." {...register('companyName')} />
+                  {errors.companyName && <p className="text-xs text-destructive">{errors.companyName.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="font-semibold">Workspace ISO Currency</Label>
+                  <Controller
+                    control={control}
+                    name="currency"
+                    render={({ field }) => (
+                      <Select value={field.value || 'USD'} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CURRENCIES.map((c) => (
+                            <SelectItem key={c.code} value={c.code}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.currency && <p className="text-xs text-destructive">{errors.currency.message}</p>}
+                </div>
               </div>
 
               <div className="pt-4 border-t space-y-4">

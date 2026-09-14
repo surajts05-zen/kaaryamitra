@@ -15,21 +15,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Loader2, Plus, History, Calculator } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { useCurrency } from '@/hooks/use-currency';
 
 export function EmployeeCompensationTab({ employeeId }: { employeeId: string }) {
   const { data: profile, isLoading } = useEmployeeCompensation(employeeId);
   const { data: history } = useEmployeeCompensationHistory(employeeId);
   const { data: structures } = useSalaryStructures();
+  const { formatCurrency } = useCurrency();
   
   const reviseMutation = useReviseCompensation();
   
   const [isReviseModalOpen, setIsReviseModalOpen] = useState(false);
   const [selectedStructureId, setSelectedStructureId] = useState<string | null>(null);
   const [annualCTC, setAnnualCTC] = useState<number>(0);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
-  };
 
   const handleRevise = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

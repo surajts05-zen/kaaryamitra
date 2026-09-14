@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useCurrency } from '@/hooks/use-currency';
 
 interface BudgetRequestModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface BudgetRequestModalProps {
 }
 
 export function BudgetRequestModal({ isOpen, onClose }: BudgetRequestModalProps) {
+  const { currencySymbol } = useCurrency();
   const [requestType, setRequestType] = useState('NEW_PROJECT');
   const [priority, setPriority] = useState('MEDIUM');
   const [projectId, setProjectId] = useState('');
@@ -193,7 +195,7 @@ export function BudgetRequestModal({ isOpen, onClose }: BudgetRequestModalProps)
                 </div>
                 
                 <div className="col-span-6 md:col-span-2 space-y-1">
-                  <Label className="text-xs">Unit Cost (₹)</Label>
+                  <Label className="text-xs">Unit Cost ({currencySymbol})</Label>
                   <Input type="number" min={0} required className="h-9" value={item.unitCost} onChange={(e) => handleLineItemChange(index, 'unitCost', parseFloat(e.target.value))} />
                 </div>
                 

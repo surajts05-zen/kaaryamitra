@@ -9,20 +9,18 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { useCurrency } from '@/hooks/use-currency';
 
 export default function PayrollRunDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: run, isLoading } = usePayrollRun(id as string);
   const updateStatus = useUpdatePayrollRunStatus();
   const uploadCsv = useUploadPayrollCsv();
+  const { formatCurrency } = useCurrency();
   
   const [isUploadOpen, setIsUploadOpen] = React.useState(false);
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const [uploadResult, setUploadResult] = React.useState<any>(null);
-
-  const formatCurrency = (amount: any) => {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(amount) || 0);
-  };
 
   const handleStatusChange = async (status: string) => {
     try {

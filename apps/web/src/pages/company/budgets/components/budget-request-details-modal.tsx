@@ -7,6 +7,7 @@ import {
 import { useBudgetRequest } from '@/features/budgets/budgets.service';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useCurrency } from '@/hooks/use-currency';
 
 interface BudgetRequestDetailsModalProps {
   id: string | null;
@@ -15,6 +16,7 @@ interface BudgetRequestDetailsModalProps {
 
 export function BudgetRequestDetailsModal({ id, onClose }: BudgetRequestDetailsModalProps) {
   const { data: request, isLoading } = useBudgetRequest(id || undefined);
+  const { formatCurrency } = useCurrency();
 
   if (!id) return null;
 
@@ -46,7 +48,7 @@ export function BudgetRequestDetailsModal({ id, onClose }: BudgetRequestDetailsM
               </div>
               <div>
                 <p className="text-sm text-gray-500">Total Requested</p>
-                <p className="font-medium">₹{Number(request.requestedAmount).toLocaleString()}</p>
+                <p className="font-medium">{formatCurrency(request.requestedAmount)}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Objective</p>
@@ -73,8 +75,8 @@ export function BudgetRequestDetailsModal({ id, onClose }: BudgetRequestDetailsM
                         <TableCell>{item.description}</TableCell>
                         <TableCell>{item.category?.name || '-'}</TableCell>
                         <TableCell className="text-right">{item.quantity}</TableCell>
-                        <TableCell className="text-right">₹{Number(item.unitCost).toLocaleString()}</TableCell>
-                        <TableCell className="text-right font-medium">₹{Number(item.requestedAmount).toLocaleString()}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.unitCost)}</TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(item.requestedAmount)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

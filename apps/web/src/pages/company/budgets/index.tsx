@@ -3,15 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { 
-  IndianRupee, 
+  Landmark, 
   TrendingUp, 
   AlertCircle,
   FileText
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useCurrency } from '@/hooks/use-currency';
 
 export function BudgetsDashboardPage() {
   const { data: dashboard, isLoading } = useBudgetDashboard();
+  const { formatCurrency } = useCurrency();
 
   if (isLoading) return <div className="p-8 text-center">Loading dashboard...</div>;
 
@@ -39,10 +41,10 @@ export function BudgetsDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">Total Approved Budget</CardTitle>
-            <IndianRupee className="h-4 w-4 text-gray-400" />
+            <Landmark className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{kpis?.totalBudget?.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatCurrency(kpis?.totalBudget)}</div>
           </CardContent>
         </Card>
         
@@ -52,7 +54,7 @@ export function BudgetsDashboardPage() {
             <TrendingUp className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{kpis?.actualCost?.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatCurrency(kpis?.actualCost)}</div>
             <p className="text-xs text-gray-500 mt-1">{kpis?.burnRatePct?.toFixed(1)}% burn rate</p>
           </CardContent>
         </Card>
@@ -63,7 +65,7 @@ export function BudgetsDashboardPage() {
             <FileText className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{kpis?.committedCost?.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatCurrency(kpis?.committedCost)}</div>
           </CardContent>
         </Card>
 
@@ -73,7 +75,7 @@ export function BudgetsDashboardPage() {
             <AlertCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">₹{kpis?.availableBudget?.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(kpis?.availableBudget)}</div>
           </CardContent>
         </Card>
       </div>
@@ -92,7 +94,7 @@ export function BudgetsDashboardPage() {
                     <p className="text-xs text-gray-500">{req.project?.name || 'General'}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-sm">₹{req.requestedAmount?.toLocaleString()}</p>
+                    <p className="font-medium text-sm">{formatCurrency(req.requestedAmount)}</p>
                     <Badge variant={req.status === 'APPROVED' ? 'default' : 'outline'}>{req.status}</Badge>
                   </div>
                 </div>

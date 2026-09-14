@@ -66,6 +66,7 @@ import MyAssets from '@/pages/ess/assets';
 // Phase 28 - Compensation
 import SalaryComponentsPage from '@/pages/company/compensation/salary-components';
 import SalaryStructuresPage from '@/pages/company/compensation/salary-structures';
+import { SalarySettingsHubPage } from '@/pages/company/compensation/salary-settings-hub';
 import MyCompensationPage from '@/pages/ess/compensation';
 import MyPayslipsPage from '@/pages/ess/payslips';
 
@@ -87,6 +88,7 @@ import { ESSPolicyViewer } from '@/pages/ess/policies/viewer';
 // Phase 30 - Content Library
 import { LibraryExplorerPage } from '@/pages/company/library';
 import { LibraryEditorPage } from '@/pages/company/library/editor';
+import { LibraryViewerPage } from '@/pages/company/library/viewer';
 import ReportsDashboard from '@/pages/company/reports/index';
 import ReportBuilder from '@/pages/company/reports/builder';
 
@@ -136,9 +138,10 @@ export function App() {
             <Route path="settings/checklists" element={<ChecklistSettings />} />
             <Route path="settings/holidays" element={<HolidaysSettingsPage />} />
             <Route path="settings/helpdesk" element={<HelpdeskSettingsPage />} />
-            <Route path="settings/salary-components" element={<SalaryComponentsPage />} />
-            <Route path="settings/salary-structures" element={<SalaryStructuresPage />} />
-            <Route path="settings/statutory" element={<StatutorySettingsPage />} />
+            <Route path="settings/salary" element={<SalarySettingsHubPage />} />
+            <Route path="settings/salary-components" element={<SalarySettingsHubPage defaultTab="components" />} />
+            <Route path="settings/salary-structures" element={<SalarySettingsHubPage defaultTab="structures" />} />
+            <Route path="settings/statutory" element={<SalarySettingsHubPage defaultTab="statutory" />} />
             <Route path="settings/finance" element={<FinanceSettingsPage />} />
             {/* Phase 26 - Policies */}
             <Route path="settings/policies" element={<PoliciesAdminList />} />
@@ -148,6 +151,7 @@ export function App() {
             <Route path="library" element={<LibraryExplorerPage />} />
             <Route path="library/editor" element={<LibraryEditorPage />} />
             <Route path="library/editor/:id" element={<LibraryEditorPage />} />
+            <Route path="library/viewer/:id" element={<LibraryViewerPage />} />
 
             {/* Reports */}
             <Route path="reports" element={<ReportsDashboard />} />
@@ -164,7 +168,7 @@ export function App() {
 
             {/* Phase 29 - Payroll Admin */}
             <Route path="payroll" element={<PayrollRunsPage />} />
-            <Route path="payroll/settings" element={<PayrollSettingsPage />} />
+            <Route path="payroll/settings" element={<SalarySettingsHubPage defaultTab="payslips" />} />
             <Route path="payroll/:id" element={<PayrollRunDetailPage />} />
 
             {/* Phase 8 - Workflow Engine */}

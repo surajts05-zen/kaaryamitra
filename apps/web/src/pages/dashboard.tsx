@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/store/auth.store';
-import { Building2, Users, MapPin, Briefcase, CalendarDays, Headset, UserMinus, UserPlus, Activity, Bot, Sparkles, FileText, Folder, Megaphone, Laptop, ArrowRight, Clock, CalendarClock, Timer, IndianRupee, Receipt, Target } from 'lucide-react';
+import { Building2, Users, MapPin, Briefcase, CalendarDays, Headset, UserMinus, UserPlus, Activity, Bot, Sparkles, FileText, Folder, Megaphone, Laptop, ArrowRight, Clock, CalendarClock, Timer, Wallet, CreditCard, Target } from 'lucide-react';
 import { useDashboardStats } from '@/features/dashboard/hooks/use-dashboard-queries';
 import { usePinnedAnnouncements } from '@/features/library/hooks/use-library-queries';
 import { useCompanySettings } from '@/features/company/hooks/use-org-queries';
@@ -32,8 +32,8 @@ const QUICK_LINKS = [
   { title: 'My Shifts', icon: CalendarClock, href: '../me/shifts', color: 'bg-indigo-500/10 text-indigo-600' },
   { title: 'My Timesheets', icon: Timer, href: '../me/timesheets', color: 'bg-orange-500/10 text-orange-600' },
   { title: 'My Assets', icon: Laptop, href: '../me/assets', color: 'bg-teal-500/10 text-teal-600' },
-  { title: 'My Compensation', icon: IndianRupee, href: '../me/compensation', color: 'bg-green-500/10 text-green-600' },
-  { title: 'My Payslips', icon: Receipt, href: '../me/payslips', color: 'bg-blue-500/10 text-blue-600' },
+  { title: 'My Compensation', icon: Wallet, href: '../me/compensation', color: 'bg-green-500/10 text-green-600' },
+  { title: 'My Payslips', icon: CreditCard, href: '../me/payslips', color: 'bg-blue-500/10 text-blue-600' },
   { title: 'My Helpdesk', icon: Headset, href: '../me/helpdesk', color: 'bg-yellow-500/10 text-yellow-600' },
   { title: 'My Goals', icon: Target, href: '../me/performance/goals', color: 'bg-cyan-500/10 text-cyan-600' },
   { title: 'My Reviews', icon: Target, href: '../me/performance/reviews', color: 'bg-pink-500/10 text-pink-600' },
@@ -79,56 +79,57 @@ export function DashboardPage() {
           
           {/* ANNOUNCEMENTS FEED */}
           <section>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Megaphone className="h-5 w-5 text-km-forest" /> Company News & Announcements
+                <Megaphone className="h-5 w-5 text-primary" /> Company News &amp; Announcements
               </h3>
               <Link to="../library" className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1">
                 View Library <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
             
-            <div className="space-y-4">
-              {announcementsLoading ? (
-                <div className="space-y-4">
-                  {[1,2].map(i => <Card key={i} className="h-32 animate-pulse bg-muted/50" />)}
-                </div>
-              ) : !announcements || announcements.length === 0 ? (
-                <Card className="p-8 text-center border-dashed bg-muted/30">
-                  <Megaphone className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">No pinned announcements to display.</p>
-                </Card>
-              ) : (
-                announcements.map((item) => (
-                  <Card key={item.id} className="overflow-hidden hover:shadow-md transition-shadow group border-muted/60">
-                    <CardContent className="p-0">
-                      <div className="p-5 flex gap-5">
-                        <div className="bg-primary/10 rounded-lg p-4 flex-shrink-0 self-start hidden sm:block">
-                          <FileText className="h-8 w-8 text-primary" />
+            {announcementsLoading ? (
+              <div className="flex gap-4 overflow-hidden">
+                {[1,2,3].map(i => <div key={i} className="h-32 w-72 flex-shrink-0 animate-pulse rounded-xl bg-muted/50" />)}
+              </div>
+            ) : !announcements || announcements.length === 0 ? (
+              <Card className="p-6 text-center border-dashed bg-muted/30">
+                <Megaphone className="h-7 w-7 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No pinned announcements to display.</p>
+              </Card>
+            ) : (
+              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent snap-x snap-mandatory">
+                {announcements.map((item) => (
+                  <Card
+                    key={item.id}
+                    className="flex-shrink-0 w-72 snap-start overflow-hidden hover:shadow-md transition-shadow group border-muted/60 cursor-pointer"
+                  >
+                    <CardContent className="p-4 flex flex-col h-full">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="bg-primary/10 rounded-md p-1.5 flex-shrink-0">
+                          <FileText className="h-4 w-4 text-primary" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start mb-1">
-                            <h4 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors cursor-pointer">
-                              {item.title}
-                            </h4>
-                            <span className="text-xs text-muted-foreground whitespace-nowrap ml-4">
-                              {format(new Date(item.createdAt), 'MMM d, yyyy')}
-                            </span>
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-3">
-                            Published by {item.createdBy?.firstName} {item.createdBy?.lastName}
-                          </p>
-                          <div 
-                            className="text-sm text-foreground/80 line-clamp-2 prose prose-sm dark:prose-invert"
-                            dangerouslySetInnerHTML={{ __html: item.content || '' }}
-                          />
-                        </div>
+                        <span className="text-[10px] text-muted-foreground">
+                          {format(new Date(item.createdAt), 'MMM d, yyyy')}
+                        </span>
                       </div>
+                      <h4 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors mb-1 line-clamp-2">
+                        {item.title}
+                      </h4>
+                      {item.createdBy && (
+                        <p className="text-[11px] text-muted-foreground mb-2">
+                          {item.createdBy.firstName} {item.createdBy.lastName}
+                        </p>
+                      )}
+                      <div
+                        className="text-xs text-foreground/70 line-clamp-3 prose prose-xs dark:prose-invert flex-1"
+                        dangerouslySetInnerHTML={{ __html: item.content || '' }}
+                      />
                     </CardContent>
                   </Card>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* QUICK LINKS */}
@@ -136,14 +137,14 @@ export function DashboardPage() {
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-km-lime" /> Quick Actions
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-3">
               {QUICK_LINKS.map((link) => (
                 <Link key={link.title} to={link.href} className="group block">
-                  <Card className="h-full border-muted/60 bg-card hover:bg-accent/50 hover:border-km-lime/50 transition-all text-center p-4 shadow-sm group-hover:shadow-md">
-                    <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-transform group-hover:scale-110 ${link.color}`}>
-                      <link.icon className="h-6 w-6" />
+                  <Card className="h-full border-muted/60 bg-card hover:bg-accent/50 hover:border-km-lime/50 transition-all text-center p-3 shadow-sm group-hover:shadow-md flex flex-col items-center justify-center min-h-[100px]">
+                    <div className={`mx-auto w-10 h-10 rounded-full flex items-center justify-center mb-2.5 transition-transform group-hover:scale-110 ${link.color}`}>
+                      <link.icon className="h-5 w-5" />
                     </div>
-                    <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">{link.title}</span>
+                    <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors leading-tight px-1">{link.title}</span>
                   </Card>
                 </Link>
               ))}
@@ -151,12 +152,12 @@ export function DashboardPage() {
           </section>
 
           {/* AI HR SUMMARY */}
-          <Card className="bg-km-forest/5 border-km-forest/20 shadow-sm relative overflow-hidden">
+          <Card className="bg-primary/5 border-primary/20 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-10">
-              <Bot className="h-24 w-24 text-km-forest" />
+              <Bot className="h-24 w-24 text-primary" />
             </div>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2 text-km-forest">
+              <CardTitle className="text-lg flex items-center gap-2 text-primary">
                 <Sparkles className="h-5 w-5 text-km-lime" />
                 Executive HR Summary
               </CardTitle>
@@ -209,7 +210,7 @@ export function DashboardPage() {
           <Card className="border-muted/60 shadow-sm">
             <CardHeader className="pb-3 border-b border-border/50">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Activity className="h-4 w-4 text-km-forest" /> Recent Activity
+                <Activity className="h-4 w-4 text-primary" /> Recent Activity
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">

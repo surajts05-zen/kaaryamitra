@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Folder, File, FileText, Upload, MoreVertical, Trash2, ArrowLeft } from 'lucide-react';
+import { Plus, Folder, File, FileText, Upload, MoreVertical, Trash2, ArrowLeft, Archive } from 'lucide-react';
 import {
   useLibraryFolders,
   useLibraryItems,
@@ -10,6 +10,7 @@ import {
   useDeleteFolder,
   useUploadFile,
   useDeleteItem,
+  useUpdateItem,
   LibraryItemType
 } from '@/features/library/hooks/use-library-queries';
 import {
@@ -41,6 +42,7 @@ export function LibraryExplorerPage() {
   const createFolder = useCreateFolder();
   const deleteFolder = useDeleteFolder();
   const deleteItem = useDeleteItem();
+  const updateItem = useUpdateItem();
   const uploadFile = useUploadFile();
 
   const handleCreateFolder = async () => {
@@ -81,7 +83,10 @@ export function LibraryExplorerPage() {
               <input type="file" className="hidden" onChange={handleFileUpload} />
             </label>
           </Button>
-          <Button onClick={() => navigate(`editor${currentFolder ? `?folderId=${currentFolder.id}` : ''}`)}>
+          <Button onClick={() => {
+            const match = window.location.pathname.match(/^(\/t\/[^/]+)/);
+            navigate(`${match ? match[1] : ''}/library/editor${currentFolder ? `?folderId=${currentFolder.id}` : ''}`);
+          }}>
             <FileText className="h-4 w-4 mr-2" /> Write Article
           </Button>
         </div>
@@ -156,10 +161,21 @@ export function LibraryExplorerPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       {item.type !== LibraryItemType.FILE && (
-                        <DropdownMenuItem onClick={() => navigate(`editor/${item.id}`)}>
+                        <DropdownMenuItem onClick={() => {
+                          const match = window.location.pathname.match(/^(\/t\/[^/]+)/);
+                          navigate(`${match ? match[1] : ''}/library/editor/${item.id}`);
+                        }}>
                           Edit Article
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuItem 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateItem.mutate({ id: item.id, data: { isArchived: !item.isArchived } });
+                        }}
+                      >
+                        <Archive className="h-4 w-4 mr-2" /> {item.isArchived ? 'Unarchive' : 'Archive'}
+                      </DropdownMenuItem>
                       <DropdownMenuItem 
                         className="text-destructive"
                         onClick={() => {
@@ -180,7 +196,8 @@ export function LibraryExplorerPage() {
                     if (item.type === LibraryItemType.FILE && item.fileUrl) {
                       window.open(item.fileUrl, '_blank');
                     } else {
-                      navigate(`viewer/${item.id}`);
+                      const match = window.location.pathname.match(/^(\/t\/[^/]+)/);
+                      navigate(`${match ? match[1] : ''}/library/viewer/${item.id}`);
                     }
                   }}
                 >
@@ -188,7 +205,7 @@ export function LibraryExplorerPage() {
                     {item.type === LibraryItemType.FILE ? (
                       <File className="h-10 w-10 text-muted-foreground" />
                     ) : (
-                      <FileText className="h-10 w-10 text-km-forest" />
+                      <FileText className="h-10 w-10 text-primary" />
                     )}
                   </div>
                   <div>
@@ -197,8 +214,13 @@ export function LibraryExplorerPage() {
                       {format(new Date(item.createdAt), 'MMM d, yyyy')}
                     </p>
                     {item.isPinned && (
-                      <span className="inline-block mt-1 text-[10px] bg-km-lime/20 text-km-forest px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
+                      <span className="inline-block mt-1 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
                         Pinned
+                      </span>
+                    )}
+                    {item.isArchived && (
+                      <span className="inline-block mt-1 ml-2 text-[10px] bg-muted-foreground/20 text-muted-foreground px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
+                        Archived
                       </span>
                     )}
                   </div>

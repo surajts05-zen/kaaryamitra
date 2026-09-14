@@ -26,6 +26,8 @@ export interface LibraryItem {
   sizeBytes?: number;
   tags: string[];
   isPinned: boolean;
+  pinnedUntil?: string | null;
+  isArchived?: boolean;
   createdBy: { id: string; firstName: string; lastName: string };
   createdAt: string;
   updatedAt: string;
@@ -98,7 +100,7 @@ export function useCreateArticle() {
     },
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ['library-items', variables.folderId] });
-      if (variables.isPinned) qc.invalidateQueries({ queryKey: ['library-announcements-pinned'] });
+      qc.invalidateQueries({ queryKey: ['library-announcements-pinned'] });
     },
   });
 }

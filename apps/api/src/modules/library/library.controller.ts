@@ -62,12 +62,18 @@ export class LibraryController {
       folderId: req.body.folderId || null,
       tags: req.body.tags || [],
       isPinned: req.body.isPinned || false,
+      isArchived: req.body.isArchived || false,
+      pinnedUntil: req.body.pinnedUntil ? new Date(req.body.pinnedUntil) : null,
     });
     res.status(201).json({ success: true, data: item });
   }
 
   static async updateItem(req: Request, res: Response) {
-    const item = await LibraryService.updateArticle(req.tenantId!, req.params.id as string, req.body);
+    const updateData = { ...req.body };
+    if (updateData.pinnedUntil !== undefined) {
+      updateData.pinnedUntil = updateData.pinnedUntil ? new Date(updateData.pinnedUntil) : null;
+    }
+    const item = await LibraryService.updateArticle(req.tenantId!, req.params.id as string, updateData);
     res.json({ success: true, data: item });
   }
 

@@ -11,17 +11,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, PlayCircle, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { useCurrency } from '@/hooks/use-currency';
 
 export default function PayrollRunsPage() {
   const { data: runs, isLoading } = usePayrollRuns();
   const createMutation = useCreatePayrollRun();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const { formatCurrency } = useCurrency();
 
   const { slug } = useParams<{ slug: string }>();
-
-  const formatCurrency = (amount: any) => {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(amount) || 0);
-  };
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

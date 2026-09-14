@@ -30,9 +30,11 @@ import {
   ChevronDown,
   ChevronRight,
   BookOpen,
-  IndianRupee,
+  Wallet,
+  Coins,
+  Landmark,
+  CreditCard,
   Banknote,
-  Receipt,
   ShieldAlert,
   User,
 } from 'lucide-react';
@@ -76,7 +78,7 @@ export const navItems: NavItem[] = [
   { icon: Target,        label: 'Goals',         path: 'performance/goals', allowedRoles: HR_ROLES, group: 'Management' },
   { icon: Target,        label: 'Review Cycles', path: 'performance/reviews', allowedRoles: HR_ROLES, group: 'Management' },
   { icon: FolderGit2,    label: 'Projects',      path: 'projects',          allowedRoles: FINANCE_ROLES, group: 'Management' },
-  { icon: IndianRupee,   label: 'Budgets',       path: 'budgets',           allowedRoles: FINANCE_ROLES, group: 'Management' },
+  { icon: Landmark,      label: 'Budgets',       path: 'budgets',           allowedRoles: FINANCE_ROLES, group: 'Management' },
 
   { icon: LayoutDashboard, label: 'Reports', path: 'reports', allowedRoles: HR_ROLES, group: 'Data & Analytics' },
 
@@ -84,10 +86,6 @@ export const navItems: NavItem[] = [
   { icon: GitBranch, label: 'Workflows',        path: 'settings/workflows', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: FileText,  label: 'Policies & Content', path: 'settings/policies', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: Shield,    label: 'Roles & Permissions', path: 'settings/roles', allowedRoles: ADMIN_ROLES, group: 'Settings' },
-  { icon: IndianRupee, label: 'Salary Components', path: 'settings/salary-components', allowedRoles: ADMIN_ROLES, group: 'Settings' },
-  { icon: IndianRupee, label: 'Salary Structures', path: 'settings/salary-structures', allowedRoles: ADMIN_ROLES, group: 'Settings' },
-  { icon: ShieldAlert, label: 'Statutory Compliances', path: 'settings/statutory', allowedRoles: ADMIN_ROLES, group: 'Settings' },
-  { icon: Receipt, label: 'Payslip Settings', path: 'payroll/settings', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: Settings,  label: 'Settings',      path: 'settings',          allowedRoles: ADMIN_ROLES, group: 'Settings' },
   
   // Help & Resources
@@ -107,8 +105,8 @@ export const essNavItems: NavItem[] = [
   { icon: CalendarClock, label: 'My Shifts', path: 'me/shifts' },
   { icon: Timer, label: 'My Timesheets', path: 'me/timesheets' },
   { icon: Laptop, label: 'My Assets', path: 'me/assets' },
-  { icon: IndianRupee, label: 'My Compensation', path: 'me/compensation' },
-  { icon: Receipt, label: 'My Payslips', path: 'me/payslips' },
+  { icon: Wallet, label: 'My Compensation', path: 'me/compensation' },
+  { icon: CreditCard, label: 'My Payslips', path: 'me/payslips' },
   { icon: Headset, label: 'My Helpdesk', path: 'me/helpdesk' },
   { icon: Target, label: 'My Goals', path: 'me/performance/goals' },
   { icon: Target, label: 'My Reviews', path: 'me/performance/reviews' },

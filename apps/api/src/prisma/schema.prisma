@@ -685,6 +685,7 @@ model CompanySettings {
   isGeolocationEnforced Boolean       @default(false)
   isTimesheetEnabled    Boolean       @default(true)
   clearanceMode         ClearanceMode @default(SIMPLE)
+  currency              String        @default("USD")
 
   updatedAt DateTime @updatedAt
 
@@ -1927,8 +1928,10 @@ model LibraryItem {
   mimeType  String?
   sizeBytes Int?
   tags      String[]
-  isPinned  Boolean         @default(false)
-  createdBy String
+  isPinned    Boolean         @default(false)
+  pinnedUntil DateTime?
+  isArchived  Boolean         @default(false)
+  createdBy   String
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 

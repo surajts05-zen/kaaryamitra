@@ -66,10 +66,22 @@ export class LibraryService {
   }
 
   static async getPinnedAnnouncements(tenantId: string) {
+    // Use end of today so "expires on today's date" means it's still visible all day
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
     return prisma.libraryItem.findMany({
-      where: { tenantId, isPinned: true, type: LibraryItemType.ANNOUNCEMENT },
+      where: { 
+        tenantId, 
+        isPinned: true, 
+        isArchived: false,
+        OR: [
+          { pinnedUntil: null },
+          { pinnedUntil: { gte: endOfToday } }
+        ]
+      },
       orderBy: { createdAt: 'desc' },
-      take: 5,
+      take: 10,
       include: {
         creator: { select: { id: true, firstName: true, lastName: true } }
       }
@@ -84,6 +96,8 @@ export class LibraryService {
     folderId: string | null;
     tags?: string[];
     isPinned?: boolean;
+    isArchived?: boolean;
+    pinnedUntil?: Date | null;
     createdBy: string;
   }) {
     return prisma.libraryItem.create({
@@ -95,6 +109,8 @@ export class LibraryService {
         folderId: data.folderId,
         tags: data.tags ?? [],
         isPinned: data.isPinned ?? false,
+        isArchived: data.isArchived ?? false,
+        pinnedUntil: data.pinnedUntil ?? null,
         createdBy: data.createdBy,
       },
     });

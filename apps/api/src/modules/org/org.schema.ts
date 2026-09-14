@@ -58,5 +58,6 @@ export const updateCompanySettingsSchema = z.object({
     isGeolocationEnforced: z.boolean().optional(),
     clearanceMode: z.enum(['SIMPLE', 'CHECKLIST']).nullable().optional(),
     geminiApiKey: z.string().nullable().optional(),
+    currency: z.string().optional(),
   }),
 });

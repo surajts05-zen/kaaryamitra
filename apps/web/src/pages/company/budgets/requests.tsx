@@ -10,11 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BudgetRequestModal } from './components/budget-request-modal';
 import { BudgetRequestDetailsModal } from './components/budget-request-details-modal';
 import { toast } from 'sonner';
+import { useCurrency } from '@/hooks/use-currency';
 
 export function BudgetRequestsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: requests, isLoading } = useBudgetRequests();
   const archiveMutation = useArchiveBudgetRequest();
+  const { formatCurrency } = useCurrency();
   
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [viewingRequestId, setViewingRequestId] = useState<string | null>(null);
@@ -103,7 +105,7 @@ export function BudgetRequestsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        ₹{Number(req.requestedAmount || 0).toLocaleString()}
+                        {formatCurrency(req.requestedAmount)}
                       </TableCell>
                       <TableCell className="text-right space-x-2">
                         {['APPROVED', 'REJECTED', 'CLOSED'].includes(req.status) && (
@@ -168,7 +170,7 @@ export function BudgetRequestsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right font-medium text-gray-500">
-                        ₹{Number(req.requestedAmount || 0).toLocaleString()}
+                        {formatCurrency(req.requestedAmount)}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="sm" onClick={() => setViewingRequestId(req.id)}>

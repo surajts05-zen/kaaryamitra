@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { useCurrency } from '@/hooks/use-currency';
 
 interface NewProjectModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface NewProjectModalProps {
 }
 
 export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
+  const { currencySymbol } = useCurrency();
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [priority, setPriority] = useState('MEDIUM');
@@ -97,7 +99,7 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Approved Budget (₹)</Label>
+            <Label>Approved Budget ({currencySymbol})</Label>
             <Input type="number" min={0} value={approvedBudget} onChange={e => setApprovedBudget(e.target.value ? Number(e.target.value) : '')} placeholder="e.g. 500000" />
           </div>
 

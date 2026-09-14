@@ -35,13 +35,15 @@ export function LibraryEditorPage() {
   const folderId = searchParams.get('folderId') || null;
   const navigate = useNavigate();
 
-  // If we have an ID, we'd normally fetch the item. 
-  // For simplicity here, we'll just use useLibraryItems and find it (though a single query is better).
-  // In a real app, create a useLibraryItem(id) query.
+  // Fetch item for edit mode
+  const { data: items } = useLibraryItems(folderId);
+  const itemToEdit = id ? items?.find((i) => i.id === id) : null;
   
   const [title, setTitle] = useState('');
   const [type, setType] = useState<LibraryItemType>(LibraryItemType.ARTICLE);
   const [isPinned, setIsPinned] = useState(false);
+  const [pinnedUntil, setPinnedUntil] = useState<string>('');
+  const [isArchived, setIsArchived] = useState(false);
   const [content, setContent] = useState('');
 
   const create = useCreateArticle();
@@ -60,6 +62,27 @@ export function LibraryEditorPage() {
     },
   });
 
+  useEffect(() => {
+    if (itemToEdit && editor) {
+      setTitle(itemToEdit.title);
+      setType(itemToEdit.type);
+      setIsPinned(itemToEdit.isPinned);
+      setIsArchived(itemToEdit.isArchived || false);
+      
+      if (itemToEdit.pinnedUntil) {
+        setPinnedUntil(itemToEdit.pinnedUntil.split('T')[0] || '');
+      } else {
+        setPinnedUntil('');
+      }
+
+      setContent(itemToEdit.content || '');
+      // If editor is empty or just initialized, set its content
+      if (editor.isEmpty) {
+        editor.commands.setContent(itemToEdit.content || '');
+      }
+    }
+  }, [itemToEdit, editor]);
+
   const handleSave = async () => {
     if (!title.trim()) {
       toast.error('Title is required');
@@ -67,41 +90,50 @@ export function LibraryEditorPage() {
     }
 
     try {
+      const dataToSave = {
+        title,
+        content,
+        type,
+        isPinned,
+        isArchived,
+        pinnedUntil: pinnedUntil ? pinnedUntil : null,
+      };
+
       if (id) {
         await update.mutateAsync({
           id,
-          data: { title, content, type, isPinned },
+          data: dataToSave,
         });
         toast.success('Article updated successfully');
       } else {
         await create.mutateAsync({
-          title,
-          content,
-          type,
-          isPinned,
+          ...dataToSave,
           folderId,
         });
         toast.success('Article published successfully');
       }
-      navigate('../library'); // Go back to library
+      handleBack();
     } catch (error) {
       toast.error('Failed to save article');
     }
   };
 
+  const handleBack = () => {
+    const match = window.location.pathname.match(/^(\/t\/[^/]+)/);
+    const basePath = match ? match[1] : '';
+    navigate(`${basePath}/library`);
+  };
+
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-20">
-      <div className="flex items-center justify-between">
-        <Breadcrumb
-          items={[
-            { label: 'Content Library', path: '../library' },
-            { label: id ? 'Edit Article' : 'New Article' },
-          ]}
-        />
-        <Button onClick={handleSave} disabled={create.isPending || update.isPending}>
-          <Save className="h-4 w-4 mr-2" />
-          {id ? 'Save Changes' : 'Publish'}
-        </Button>
+    <div className="space-y-6 w-full pb-20">
+      <div className="mb-6 flex items-center justify-between">
+        <Breadcrumb items={[{ label: 'Content Library', path: `${window.location.pathname.match(/^(\/t\/[^/]+)/)?.[1] || ''}/library` }, { label: id ? 'Edit Item' : 'New Item' }]} />
+        <div className="flex gap-2">
+          <Button onClick={handleSave} disabled={create.isPending || update.isPending}>
+            <Save className="h-4 w-4 mr-2" />
+            {id ? 'Save Changes' : 'Publish'}
+          </Button>
+        </div>
       </div>
 
       <div className="bg-card border rounded-lg p-6 space-y-6">
@@ -131,19 +163,44 @@ export function LibraryEditorPage() {
         </div>
 
         {type === LibraryItemType.ANNOUNCEMENT && (
-          <div className="flex items-center justify-between bg-muted/50 p-4 rounded-md border">
-            <div>
-              <p className="font-medium text-sm">Pin to Dashboard</p>
-              <p className="text-xs text-muted-foreground">Pinned announcements appear prominently on the Home Landing Page.</p>
+          <div className="space-y-4 bg-muted/50 p-4 rounded-md border">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-sm">Pin to Dashboard</p>
+                <p className="text-xs text-muted-foreground">Pinned announcements appear prominently on the Home Landing Page.</p>
+              </div>
+              <Switch checked={isPinned} onCheckedChange={setIsPinned} />
             </div>
-            <Switch checked={isPinned} onCheckedChange={setIsPinned} />
+            
+            {isPinned && (
+              <div className="pt-4 border-t flex flex-col gap-2">
+                <Label>Pin Until (Expiration Date)</Label>
+                <Input 
+                  type="date" 
+                  value={pinnedUntil} 
+                  onChange={(e) => setPinnedUntil(e.target.value)} 
+                  className="max-w-[200px]"
+                />
+                <p className="text-xs text-muted-foreground">Leave blank to pin indefinitely.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {id && (
+          <div className="flex items-center justify-between bg-muted/50 p-4 rounded-md border border-destructive/20">
+            <div>
+              <p className="font-medium text-sm text-destructive">Archive Article</p>
+              <p className="text-xs text-muted-foreground">Archived articles are hidden from the dashboard pinned section.</p>
+            </div>
+            <Switch checked={isArchived} onCheckedChange={setIsArchived} />
           </div>
         )}
 
         <div className="border rounded-md overflow-hidden flex flex-col">
           {/* Toolbar */}
           {editor && (
-            <div className="bg-muted p-2 flex flex-wrap gap-1 border-b">
+            <div className="bg-muted p-2 flex flex-wrap items-center gap-1 border-b">
               <Button variant="ghost" size="sm" onClick={() => editor.chain().focus().toggleBold().run()} className={editor.isActive('bold') ? 'bg-muted-foreground/20' : ''}>
                 <Bold className="h-4 w-4" />
               </Button>
@@ -190,7 +247,7 @@ export function LibraryEditorPage() {
           )}
 
           {/* Editor Content */}
-          <div className="p-4 min-h-[400px] prose prose-sm dark:prose-invert max-w-none focus:outline-none">
+          <div className="p-4 min-h-[600px] prose prose-sm dark:prose-invert max-w-none focus:outline-none">
             <EditorContent editor={editor} />
           </div>
         </div>

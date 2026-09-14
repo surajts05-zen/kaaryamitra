@@ -23,7 +23,7 @@ export default function MyAssets() {
   if (isLoading) return <div className="p-8 text-center">Loading your assets...</div>;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="p-6 w-full space-y-6">
       <Breadcrumb items={[{ label: 'My Assets' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div>
         <h1 className="text-3xl font-bold tracking-tight">My Assets</h1>

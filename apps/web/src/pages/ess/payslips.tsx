@@ -4,16 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, Download, Receipt, ArrowRight } from 'lucide-react';
+import { Loader2, Download, CreditCard, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { useCurrency } from '@/hooks/use-currency';
 
 function PayslipPreviewModal({ payslipId, open, onOpenChange }: { payslipId: string | null, open: boolean, onOpenChange: (o: boolean) => void }) {
   const { data: payslip, isLoading } = useMyPayslipDetails(payslipId || '');
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount || 0);
-  };
+  const { formatCurrency } = useCurrency();
 
   if (!open || !payslipId) return null;
 
@@ -132,13 +130,10 @@ function PayslipPreviewModal({ payslipId, open, onOpenChange }: { payslipId: str
 export default function MyPayslipsPage() {
   const { data: payslips, isLoading } = useMyPayslips();
   const [selectedPayslipId, setSelectedPayslipId] = React.useState<string | null>(null);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount || 0);
-  };
+  const { formatCurrency } = useCurrency();
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="p-6 w-full space-y-6">
       <Breadcrumb items={[{ label: 'My Payslips' }]} backPath="dashboard" backLabel="Back to Dashboard" />
       <div>
         <h1 className="text-3xl font-bold tracking-tight">My Payslips</h1>
@@ -150,7 +145,7 @@ export default function MyPayslipsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Receipt className="w-5 h-5 text-primary" /> Payslip History
+            <CreditCard className="w-5 h-5 text-primary" /> Payslip History
           </CardTitle>
           <CardDescription>All your finalized payroll entries</CardDescription>
         </CardHeader>
