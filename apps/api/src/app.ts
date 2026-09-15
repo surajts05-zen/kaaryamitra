@@ -3,7 +3,12 @@ import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { pinoHttp } from 'pino-http';
-import rateLimit from 'express-rate-limit';
+import {
+  globalRateLimiter,
+  authRateLimiter,
+  aiRateLimiter,
+  tenantRateLimiter,
+} from './middleware/rateLimiter.js';
 import { env } from './config/env.js';
 import { logger } from './lib/logger.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -54,17 +59,24 @@ import { openapiRouter } from './modules/openapi/openapi.router.js';
 // Must be imported AFTER openapiRouter (which exports `registry`) so paths register correctly
 import './modules/openapi/openapi.definitions.js';
 import { requireAuth, requireSuperAdmin, requireApiKey, resolveTenant } from './middleware/auth.js';
+import { queueMonitorRouter } from './modules/admin/queue-monitor.router.js';
 
 export function createApp() {
   const app = express();
-  
-  // Initialize cron jobs
+
+  // Initialize BullMQ jobs
   initBillingMeterJob();
+
+  // ── Trust proxy (required for correct IP behind Dokploy/Nginx reverse proxy) ─
+  app.set('trust proxy', 1);
 
   // ── Security headers ────────────────────────────────────────────────────────
   app.use(
     helmet({
+      // Full CSP enabled in production
       contentSecurityPolicy: env.NODE_ENV === 'production',
+      crossOriginEmbedderPolicy: env.NODE_ENV === 'production',
+      hsts: env.NODE_ENV === 'production' ? { maxAge: 31536000, includeSubDomains: true } : false,
     }),
   );
 
@@ -100,24 +112,20 @@ export function createApp() {
     }),
   );
 
-  // ── Global rate limit ─────────────────────────────────────────────────────────
-  app.use(
-    rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      max: 500,
-      standardHeaders: true,
-      legacyHeaders: false,
-      message: { success: false, error: { code: 'RATE_LIMITED', message: 'Too many requests' } },
-    }),
-  );
+  // ── Rate limiting ──────────────────────────────────────────────────────────
+  // Global fallback rate limiter (Redis-backed in production)
+  app.use(globalRateLimiter);
+
+  // Per-tenant rate limit applied after auth resolves tenantId
+  // (mounted on individual route groups below where tenantId is known)
 
   // ── Routes ────────────────────────────────────────────────────────────────────
 
   // Health check (no auth required)
   app.use('/health', healthRouter);
 
-  // Auth routes
-  app.use('/api/v1/auth', authRouter);
+  // Auth routes (strict rate limit: 10 req/15min per IP)
+  app.use('/api/v1/auth', authRateLimiter, authRouter);
 
   // OpenAPI Docs
   app.use('/api/v1/docs', openapiRouter);
@@ -172,9 +180,9 @@ export function createApp() {
   app.use('/api/v1/roles', requireAuth, resolveTenant, rolesRouter);
   app.use('/api/v1/t/:slug/roles', requireAuth, resolveTenant, rolesRouter);
 
-  // Tenant-scoped AI routes
-  app.use('/api/v1/ai', requireAuth, resolveTenant, aiRouter);
-  app.use('/api/v1/t/:slug/ai', requireAuth, resolveTenant, aiRouter);
+  // Tenant-scoped AI routes (strict rate limit: 20 req/min)
+  app.use('/api/v1/ai', requireAuth, resolveTenant, aiRateLimiter, aiRouter);
+  app.use('/api/v1/t/:slug/ai', requireAuth, resolveTenant, aiRateLimiter, aiRouter);
 
   // Tenant-scoped Shifts routes
   app.use('/api/v1/shifts', requireAuth, resolveTenant, shiftsRouter);
@@ -267,6 +275,7 @@ export function createApp() {
   
   // Super Admin routes
   app.use('/api/v1/admin/billing', requireAuth, requireSuperAdmin, adminBillingRouter);
+  app.use('/api/v1/admin/queues', requireAuth, requireSuperAdmin, queueMonitorRouter);
   app.use('/api/v1/admin', requireAuth, requireSuperAdmin, adminRouter);
 
   // 404 handler

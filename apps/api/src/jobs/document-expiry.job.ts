@@ -1,9 +1,20 @@
+/**
+ * Document Expiry Job — migrated from inline cron call to BullMQ repeatable job.
+ *
+ * Runs daily to notify employees of upcoming document expirations
+ * at 30, 7, 1 days and expire documents on the day they expire.
+ */
+
+import { Worker, type Job } from 'bullmq';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { createNotification } from '../modules/notifications/notification.service.js';
+import { getQueue, redisConnection, QUEUE_NAMES, defaultJobOptions } from '../lib/queue.js';
 
-export async function checkDocumentExpiries() {
-  logger.info('Running daily document expiry check...');
+// ─── Job processor ────────────────────────────────────────────────────────────
+
+export async function checkDocumentExpiries(_job?: Job) {
+  logger.info('[DocumentExpiryJob] Running daily document expiry check...');
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -34,7 +45,6 @@ export async function checkDocumentExpiries() {
           ? `Your document "${doc.title}" (${doc.category.name}) has expired today. Please upload a new version.`
           : `Your document "${doc.title}" (${doc.category.name}) is expiring in ${days} day(s).`;
 
-      // Notify the employee
       await createNotification({
         tenantId: doc.tenantId,
         userId: doc.employee.userId,
@@ -43,11 +53,9 @@ export async function checkDocumentExpiries() {
         body,
         link: `/app/me/profile?tab=documents`,
       });
-
-      // We could also notify HR here (find HR role users)
     }
 
-    // Update status to EXPIRED for days === 0
+    // Update status to EXPIRED for docs expiring today
     if (days === 0 && docs.length > 0) {
       await prisma.document.updateMany({
         where: {
@@ -60,5 +68,40 @@ export async function checkDocumentExpiries() {
     }
   }
 
-  logger.info('Finished document expiry check.');
+  logger.info('[DocumentExpiryJob] Finished document expiry check.');
+}
+
+// ─── Register repeatable job + worker ─────────────────────────────────────────
+
+export function initDocumentExpiryJob() {
+  const queue = getQueue(QUEUE_NAMES.DOCUMENT_EXPIRY);
+
+  // Run daily at 7 AM (catches users before working hours)
+  queue
+    .upsertJobScheduler(
+      'document-expiry-daily',
+      { pattern: '0 7 * * *' },
+      {
+        name: 'document-expiry',
+        opts: defaultJobOptions,
+      },
+    )
+    .catch((err) =>
+      logger.error({ err }, '[DocumentExpiryJob] Failed to register repeatable job'),
+    );
+
+  const worker = new Worker(QUEUE_NAMES.DOCUMENT_EXPIRY, checkDocumentExpiries, {
+    connection: redisConnection,
+    concurrency: 1,
+  });
+
+  worker.on('completed', (job) => {
+    logger.info(`[DocumentExpiryJob] Job ${job.id} completed`);
+  });
+
+  worker.on('failed', (job, err) => {
+    logger.error({ err, jobId: job?.id }, '[DocumentExpiryJob] Job failed');
+  });
+
+  logger.info('[DocumentExpiryJob] Registered and worker started');
 }

@@ -173,7 +173,12 @@ export class BillingService {
           if (!customerEmail) {
             // Fallback to Company Admin's email
             const admin = await prisma.user.findFirst({
-              where: { tenantId, roles: { has: 'Company Admin' } },
+              where: {
+                tenantId,
+                userRoles: {
+                  some: { role: { name: 'Company Admin' } },
+                },
+              },
             });
             customerEmail = admin?.email || `${tenant.slug}@kaaryamitra.com`;
           }

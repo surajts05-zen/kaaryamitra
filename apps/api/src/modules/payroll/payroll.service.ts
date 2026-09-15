@@ -84,7 +84,7 @@ export class PayrollService {
           emp.id,
           periodStart,
           periodEnd,
-          data.overrides?.[emp.id]
+          data.overrides?.[emp.id] as { lopDays?: number } | undefined
         );
 
         if (!calc) continue;

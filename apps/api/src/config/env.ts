@@ -41,6 +41,9 @@ const envSchema = z.object({
 
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
+
+  // Performance
+  SLOW_QUERY_THRESHOLD_MS: z.coerce.number().default(500),
 });
 
 const parsed = envSchema.safeParse(process.env);
