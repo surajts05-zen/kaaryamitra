@@ -52,7 +52,7 @@ function makeStore(prefix: string): Store | undefined {
 
 function makeLimiter(prefix: string, opts: Omit<Partial<Options>, 'store'>): ReturnType<typeof rateLimit> {
   const store = makeStore(prefix);
-  const config: Partial<Options> = { ...opts };
+  const config: Partial<Options> = { ...opts, validate: { xForwardedForHeader: false, default: false } };
   if (store) config.store = store;
   return rateLimit(config as Partial<Options>);
 }

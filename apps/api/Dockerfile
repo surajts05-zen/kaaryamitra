@@ -4,7 +4,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy workspace root config
-COPY package.json ./
+COPY package.json package-lock.json ./
 COPY packages/shared-types ./packages/shared-types
 
 # Copy API package
@@ -37,4 +37,4 @@ COPY --from=builder /app/apps/api/src/prisma/schema.prisma ./prisma/schema.prism
 
 EXPOSE 3000
 
-CMD ["node", "dist/index.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]

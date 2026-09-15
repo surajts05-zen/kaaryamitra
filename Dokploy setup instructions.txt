@@ -1,0 +1,21 @@
+1. Set up PostgreSQL on Dokploy
+Go to your Dokploy dashboard.
+Navigate to Databases > PostgreSQL and create a new database.
+Note the internal Connection String provided by Dokploy (it usually looks like postgresql://user:password@postgres-id:5432/dbname).
+2. Set up Redis (Optional but recommended)
+Navigate to Databases > Redis and deploy a Redis instance.
+Note the connection string.
+3. Deploy the API via Dokploy
+Go to Applications and create a new application pointing to this GitHub repository.
+Build Type: Dockerfile
+Build Context: / (Root)
+Dockerfile Path: apps/api/Dockerfile
+Environment Variables: Add DATABASE_URL (from step 1), REDIS_URL (from step 2), and any other required API secrets.
+Deploy. The container will automatically run migrations and start.
+4. Deploy the Web App via Dokploy
+Create another application in Dokploy pointing to the same repository.
+Build Type: Dockerfile
+Build Context: /
+Dockerfile Path: apps/web/Dockerfile
+Environment Variables: Add VITE_API_BASE_URL pointing to the public URL of your deployed API application.
+Deploy.
