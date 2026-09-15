@@ -6,7 +6,7 @@ import { useCommandStore } from '@/store/command.store';
 import { useAuthStore } from '@/store/auth.store';
 import { useEmployees } from '@/features/company/hooks/use-employee-queries';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { navItems, adminNavItems, essNavItems, NavItem } from './app-shell';
+import { navItems, adminNavItems, essNavItems, NavItem, ADMIN_ROLES } from './app-shell';
 
 export function CommandPalette() {
   const navigate = useNavigate();
@@ -37,14 +37,36 @@ export function CommandPalette() {
   const slug = user?.tenantSlug;
 
   const availableNavItems = React.useMemo(() => {
-    if (user?.isSuperAdmin) return adminNavItems;
-    const hasNoRoles = userRoles.length === 0;
+    let baseItems = navItems;
+    if (user?.isSuperAdmin) baseItems = adminNavItems;
+    else {
+      const hasNoRoles = userRoles.length === 0;
+      baseItems = navItems.filter((item) => {
+        if (!item.allowedRoles) return true;
+        if (hasNoRoles) return true;
+        return item.allowedRoles.some((r) => userRoles.includes(r));
+      });
+    }
 
-    return navItems.filter((item) => {
+    // Add hidden search items (settings sub-pages)
+    const hiddenSearchItems: NavItem[] = [
+      { icon: FileText, label: 'Document Settings', path: 'settings/documents', allowedRoles: ADMIN_ROLES },
+      { icon: Settings, label: 'Leave Settings', path: 'settings/leave', allowedRoles: ADMIN_ROLES },
+      { icon: Settings, label: 'Shifts Settings', path: 'settings/shifts', allowedRoles: ADMIN_ROLES },
+      { icon: Settings, label: 'Holiday Calendar', path: 'settings/holidays', allowedRoles: ADMIN_ROLES },
+      { icon: Settings, label: 'Checklist Templates', path: 'settings/checklists', allowedRoles: ADMIN_ROLES },
+      { icon: Settings, label: 'Helpdesk Settings', path: 'settings/helpdesk', allowedRoles: ADMIN_ROLES },
+      { icon: Settings, label: 'Asset Settings', path: 'settings/assets', allowedRoles: ADMIN_ROLES },
+      { icon: Settings, label: 'Salary Settings', path: 'settings/salary', allowedRoles: ADMIN_ROLES },
+      { icon: Settings, label: 'Finance Config', path: 'settings/finance', allowedRoles: ADMIN_ROLES },
+      { icon: Settings, label: 'Developer Hub', path: 'settings/developer', allowedRoles: ADMIN_ROLES },
+    ].filter(item => {
+      if (user?.isSuperAdmin) return false;
       if (!item.allowedRoles) return true;
-      if (hasNoRoles) return true;
-      return item.allowedRoles.some((r) => userRoles.includes(r));
+      return item.allowedRoles.some(r => userRoles.includes(r));
     });
+
+    return [...baseItems, ...hiddenSearchItems];
   }, [user?.isSuperAdmin, userRoles]);
 
   const runCommand = React.useCallback((command: () => void) => {

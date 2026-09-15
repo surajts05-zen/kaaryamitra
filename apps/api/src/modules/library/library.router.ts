@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { LibraryController } from './library.controller.js';
 import multer from 'multer';
-import { requirePermission } from '../../middleware/auth.js';
+import { requireAuth, requirePermission } from '../../middleware/auth.js';
+import { enforceStorageLimit } from '../../middleware/billing.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -21,6 +22,6 @@ router.put('/items/:id', requirePermission('org:manage'), LibraryController.upda
 router.delete('/items/:id', requirePermission('org:manage'), LibraryController.deleteItem);
 
 // FILE UPLOAD
-router.post('/upload', requirePermission('org:manage'), upload.single('file'), LibraryController.uploadFile);
+router.post('/upload', requirePermission('org:manage'), enforceStorageLimit, upload.single('file'), LibraryController.uploadFile);
 
 export const libraryRouter = router;

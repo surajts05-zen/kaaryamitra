@@ -453,6 +453,11 @@ export class BillingService {
       },
     });
 
+    const tenantInfo = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { geminiApiKey: true },
+    });
+
     const flags: Record<string, boolean> = {};
 
     if (!sub) {
@@ -478,6 +483,11 @@ export class BillingService {
       freeModules.forEach((k) => (flags[k] = true));
     }
 
+    // Force enable AI if BYO key is provided
+    if (tenantInfo?.geminiApiKey && tenantInfo.geminiApiKey.length > 0) {
+      flags['ai'] = true;
+    }
+
     await prisma.tenant.update({
       where: { id: tenantId },
       data: { featureFlags: flags },
@@ -493,6 +503,17 @@ export class BillingService {
       throw AppError.forbidden(
         `Employee limit reached (${limit} employees on your current plan). ` +
           `Please upgrade your plan to add more employees.`,
+      );
+    }
+  }
+
+  static async enforceStorageLimit(tenantId: string, fileSizeMb: number = 0) {
+    const usage = await BillingService.getUsageSummary(tenantId);
+    if (usage.storageMb.limit !== null && (usage.storageMb.used + fileSizeMb) >= usage.storageMb.limit) {
+      const { limit } = usage.storageMb;
+      throw AppError.forbidden(
+        `Storage limit reached (${limit} MB on your current plan). ` +
+          `Please upgrade your plan to get more storage space.`,
       );
     }
   }

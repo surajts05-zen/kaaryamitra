@@ -11,8 +11,25 @@ export async function getAiClient(tenantId: string) {
     // fallback gracefully
   }
 
-  // @ts-ignore - geminiApiKey added to schema but client may not be fully regenerated yet
-  const apiKey = tenant?.geminiApiKey || dbSettings?.geminiApiKey || process.env['GEMINI_API_KEY'];
+  // Check if tenant has paid for AI (via plan or addon)
+  const sub = await (prisma as any).tenantSubscription.findUnique({
+    where: { tenantId },
+    include: { plan: true, addons: { include: { addon: true } } }
+  });
+
+  const hasPaidAi = sub && (
+    sub.plan?.modules?.includes('ai') || 
+    sub.addons?.some((a: any) => a.addon.key === 'ai') ||
+    sub.status === 'TRIALING'
+  );
+
+  let apiKey = tenant?.geminiApiKey;
+  
+  // Only fallback to platform keys if they have purchased the AI Add-on (or it's included in their plan)
+  if (!apiKey && hasPaidAi) {
+    apiKey = dbSettings?.geminiApiKey || process.env['GEMINI_API_KEY'];
+  }
+
   if (!apiKey) return null;
   return new GoogleGenAI({ apiKey });
 }

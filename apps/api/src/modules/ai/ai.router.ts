@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { requireAuth } from '../../middleware/auth.js';
 import { aiChatHandler, aiInsightsHandler, aiExtractHandler } from './ai.controller.js';
+import { enforceStorageLimit } from '../../middleware/billing.js';
 
 export const aiRouter = Router();
 
@@ -13,4 +14,4 @@ const upload = multer({
 aiRouter.use(requireAuth);
 aiRouter.post('/chat', aiChatHandler);
 aiRouter.get('/insights', aiInsightsHandler);
-aiRouter.post('/extract', upload.single('file'), aiExtractHandler);
+aiRouter.post('/extract', enforceStorageLimit, upload.single('file'), aiExtractHandler);

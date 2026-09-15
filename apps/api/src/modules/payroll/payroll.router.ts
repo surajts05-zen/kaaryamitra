@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { PayrollController } from './payroll.controller.js';
 import { requireAuth } from '../../middleware/auth.js';
+import { enforceStorageLimit } from '../../middleware/billing.js';
 import { requireRole } from '../../middleware/role.js';
 import multer from 'multer';
 
@@ -19,7 +20,7 @@ router.get('/runs', requireRole(['admin', 'hr', 'hr manager', 'company admin']),
 router.post('/runs', requireRole(['admin', 'hr', 'hr manager', 'company admin']), PayrollController.createRun);
 router.get('/runs/:id', requireRole(['admin', 'hr', 'hr manager', 'company admin']), PayrollController.getRunDetails);
 router.patch('/runs/:id/status', requireRole(['admin', 'hr', 'hr manager', 'company admin']), PayrollController.updateRunStatus);
-router.post('/runs/:id/upload', requireRole(['admin', 'hr', 'hr manager', 'company admin']), upload.single('file'), PayrollController.uploadCsv);
+router.post('/runs/:id/upload', requireRole(['admin', 'hr', 'hr manager', 'company admin']), enforceStorageLimit, upload.single('file'), PayrollController.uploadCsv);
 
 // Statutory Rules
 router.get('/statutory', requireRole(['admin', 'hr', 'hr manager', 'company admin']), PayrollController.getStatutoryRules);

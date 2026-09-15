@@ -3,12 +3,21 @@ import { env } from './config/env.js';
 import { logger } from './lib/logger.js';
 import { connectDatabase, disconnectDatabase } from './lib/prisma.js';
 import { startWebhookRetryJob } from './jobs/webhook-retry.job.js';
+import { loadRazorpaySettings } from './modules/billing/razorpay.service.js';
 
 async function main() {
   logger.info(`🚀 Starting KaaryaMitra API (${env.NODE_ENV})`);
 
   // Connect to database
   await connectDatabase();
+
+  // Load Platform Settings
+  try {
+    await loadRazorpaySettings();
+    logger.info('✅ Razorpay settings loaded');
+  } catch (err) {
+    logger.warn('⚠️ Could not load Razorpay settings on startup', err);
+  }
 
   const app = createApp();
 

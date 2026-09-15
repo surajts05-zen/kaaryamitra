@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AppShell } from '@/components/layout/app-shell';
 import { UiDemoPage } from '@/pages/ui-demo';
 import { LoginPage } from '@/pages/login';
+import { ContactPage } from '@/pages/contact';
 import { ProtectedRoute, TenantResolver } from '@/components/auth/protected-route';
 import { AdminDashboardPage } from '@/pages/admin/dashboard';
 import { AdminTenantsPage } from '@/pages/admin/tenants';
@@ -119,6 +120,7 @@ export function App() {
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/contact" element={<ContactPage />} />
 
       <Route element={<ProtectedRoute />}>
         {/* Super Admin Routes */}

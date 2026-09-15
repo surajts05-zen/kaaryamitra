@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useCompanySettings, useUpdateCompanySettings } from '@/features/company/hooks/use-org-queries';
+import { useSubscription } from '@/features/billing/hooks/use-billing-queries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,7 +49,12 @@ type TabKey = 'modules' | 'general';
 export function CompanySettingsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('modules');
   const { data: settings, isLoading } = useCompanySettings();
+  const { data: subData } = useSubscription();
   const updateMutation = useUpdateCompanySettings();
+
+  const hasPaidAi = subData?.subscription.status === 'TRIALING' || 
+    subData?.subscription.plan.modules.includes('ai') || 
+    subData?.subscription.addons.some((a: any) => a.addon.key === 'ai');
 
   const { register, control, handleSubmit, reset, formState: { errors, isDirty } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -458,10 +464,21 @@ export function CompanySettingsPage() {
                     <Sparkles className="h-5 w-5 text-purple-600" />
                     AI & Integrations (BYOK)
                   </h3>
-                  <div className="space-y-2 max-w-sm">
+                  <div className="space-y-2 max-w-lg">
+                    {hasPaidAi ? (
+                      <div className="p-3 bg-primary/10 text-primary-foreground border border-primary/20 rounded-md text-sm mb-4">
+                        <p className="text-primary font-medium">You have KaaryaMitra AI access.</p>
+                        <p className="text-muted-foreground text-xs mt-1 text-primary/80">The system will use the managed platform AI model by default. You can still provide your own BYO key below to override this and avoid extra usage limits.</p>
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-amber-500/10 text-amber-600 border border-amber-500/20 rounded-md text-sm mb-4">
+                        <p className="font-medium">BYO API Key Required</p>
+                        <p className="text-xs mt-1 opacity-80">You must provide your own BYO Gemini API Key to use AI features on your current plan. Alternatively, you can purchase the AI Add-on from the Billing page to use KaaryaMitra's managed AI.</p>
+                      </div>
+                    )}
                     <Label>Tenant Gemini API Key</Label>
                     <Input type="password" placeholder="AI-..." {...register('geminiApiKey')} />
-                    <p className="text-xs text-muted-foreground">Optional. Overrides the platform-wide AI key for this workspace.</p>
+                    <p className="text-xs text-muted-foreground">Overrides the platform-wide AI key for this workspace.</p>
                     {errors.geminiApiKey && <p className="text-xs text-destructive">{errors.geminiApiKey.message}</p>}
                   </div>
                 </div>

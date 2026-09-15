@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { requireAuth } from '../../middleware/auth.js';
 import { requirePermission as requirePermissions } from '../../middleware/auth.js';
+import { enforceStorageLimit } from '../../middleware/billing.js';
 import { asyncHandler } from '../../middleware/errorHandler.js';
 import {
   createCategoryHandler,
@@ -34,9 +35,11 @@ documentsRouter.delete('/categories/:id', requireAuth, requirePermissions('setti
 // ── Document Details & Actions ────────────────────────────────────────────────
 documentsRouter.get('/:id', requireAuth, asyncHandler(getDocumentHandler));
 documentsRouter.get('/:id/preview', requireAuth, asyncHandler(getDocumentPreviewUrlHandler));
-documentsRouter.post('/:id/versions', requireAuth, upload.single('file'), asyncHandler(uploadNewVersionHandler));
+// Add enforceStorageLimit to upload routes
+documentsRouter.post('/:id/versions', requireAuth, enforceStorageLimit, upload.single('file'), asyncHandler(uploadNewVersionHandler));
 documentsRouter.patch('/:id/verify', requireAuth, requirePermissions('document:manage'), asyncHandler(verifyDocumentHandler));
 
 // ── Employee Documents (Mounted at /employees/:employeeId/documents) ──────────
 employeeDocumentsRouter.get('/', requireAuth, asyncHandler(listEmployeeDocumentsHandler));
-employeeDocumentsRouter.post('/', requireAuth, upload.single('file'), asyncHandler(uploadDocumentHandler));
+// Employee upload routes
+employeeDocumentsRouter.post('/', requireAuth, enforceStorageLimit, upload.single('file'), asyncHandler(uploadDocumentHandler));
