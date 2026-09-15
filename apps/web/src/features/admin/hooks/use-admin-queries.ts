@@ -72,6 +72,10 @@ export type PlatformSettings = {
   smtpPass: string | null;
   smtpFrom: string | null;
   geminiApiKey: string | null;
+  s3Bucket: string | null;
+  s3Region: string | null;
+  s3AccessKey: string | null;
+  s3SecretKey: string | null;
 };
 
 export function usePlatformSettings() {

@@ -1603,6 +1603,12 @@ model PlatformSettings {
   razorpayKeySecret     String?
   razorpayWebhookSecret String?
 
+  // File Storage / S3
+  s3Bucket     String?
+  s3Region     String?
+  s3AccessKey  String?
+  s3SecretKey  String?
+
   updatedAt DateTime @updatedAt
 
   @@map("platform_settings")

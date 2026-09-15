@@ -65,6 +65,27 @@ export function UserGuidePage() {
             <button onClick={() => scrollToSection('payroll')} className="text-left text-sm text-muted-foreground hover:text-primary transition-colors">
               7. Payroll & Compensation
             </button>
+            <button onClick={() => scrollToSection('billing')} className="text-left text-sm text-muted-foreground hover:text-primary transition-colors">
+              8. SaaS Billing & Subscriptions
+            </button>
+            <button onClick={() => scrollToSection('projects')} className="text-left text-sm text-muted-foreground hover:text-primary transition-colors">
+              9. Projects & Budgeting
+            </button>
+            <button onClick={() => scrollToSection('workflows')} className="text-left text-sm text-muted-foreground hover:text-primary transition-colors">
+              10. Workflow Engine & Approvals
+            </button>
+            <button onClick={() => scrollToSection('assets')} className="text-left text-sm text-muted-foreground hover:text-primary transition-colors">
+              11. Asset Management
+            </button>
+            <button onClick={() => scrollToSection('helpdesk')} className="text-left text-sm text-muted-foreground hover:text-primary transition-colors">
+              12. HR Helpdesk
+            </button>
+            <button onClick={() => scrollToSection('library')} className="text-left text-sm text-muted-foreground hover:text-primary transition-colors">
+              13. Content Library & Policies
+            </button>
+            <button onClick={() => scrollToSection('resignations')} className="text-left text-sm text-muted-foreground hover:text-primary transition-colors">
+              14. Resignations & Offboarding
+            </button>
           </nav>
         </div>
 
@@ -82,12 +103,7 @@ export function UserGuidePage() {
               When you log into KaaryaMitra, you are routed to your specific tenant workspace. The application shell is context-aware, meaning the navigation sidebar dynamically adjusts based on your role (e.g., Company Admin, HR Manager, or Employee).
             </p>
             <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
-              <div className="h-64 bg-muted/30 border-b flex items-center justify-center border-dashed">
-                <div className="flex flex-col items-center text-muted-foreground/50">
-                  <ImageIcon className="h-10 w-10 mb-2" />
-                  <span>Insert Dashboard Screenshot Here</span>
-                </div>
-              </div>
+              
               <CardContent className="p-6 bg-card">
                 <h4 className="font-semibold flex items-center gap-2 text-lg">
                   <LayoutDashboard className="h-5 w-5 text-primary" />
@@ -102,6 +118,9 @@ export function UserGuidePage() {
                   </li>
                   <li className="pl-2">
                     <strong className="text-foreground">Global Search:</strong> Press <kbd className="font-mono text-xs bg-muted px-1 mx-1 rounded border">Cmd/Ctrl + K</kbd> to open the command palette and instantly search for employees, departments, or settings.
+                  </li>
+                  <li className="pl-2">
+                    <strong className="text-foreground">AI Assistant:</strong> Look for the chat widget in the bottom right corner (if enabled by your plan) to ask natural language HR questions.
                   </li>
                   <li className="pl-2">
                     <strong className="text-foreground">Theme Toggle:</strong> Click the Sun/Moon icon in the top right header to switch between Light and Dark mode depending on your preference.
@@ -121,12 +140,7 @@ export function UserGuidePage() {
               For Company Admins, the initial setup involves modeling the organizational structure. The "Organization" and "Settings" navigation groups provide the tools to build your company hierarchy.
             </p>
             <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
-              <div className="h-64 bg-muted/30 border-b flex items-center justify-center border-dashed">
-                <div className="flex flex-col items-center text-muted-foreground/50">
-                  <ImageIcon className="h-10 w-10 mb-2" />
-                  <span>Insert Admin Settings Screenshot Here</span>
-                </div>
-              </div>
+              
               <CardContent className="p-6 bg-card">
                 <h4 className="font-semibold flex items-center gap-2 text-lg mb-4">
                   <Settings className="h-5 w-5 text-primary" />
@@ -178,12 +192,7 @@ export function UserGuidePage() {
               HR Managers can access the Employee Directory to oversee the entire workforce, manage reporting lines, and update comprehensive employee profiles.
             </p>
             <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
-              <div className="h-64 bg-muted/30 border-b flex items-center justify-center border-dashed">
-                <div className="flex flex-col items-center text-muted-foreground/50">
-                  <ImageIcon className="h-10 w-10 mb-2" />
-                  <span>Insert Employee Directory Screenshot Here</span>
-                </div>
-              </div>
+              
               <CardContent className="p-6 bg-card">
                 <h4 className="font-semibold flex items-center gap-2 text-lg mb-4">
                   <Users className="h-5 w-5 text-primary" />
@@ -233,12 +242,7 @@ export function UserGuidePage() {
               The "My Workspace" section empowers employees to handle day-to-day HR tasks independently without needing to contact HR.
             </p>
             <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
-              <div className="h-64 bg-muted/30 border-b flex items-center justify-center border-dashed">
-                <div className="flex flex-col items-center text-muted-foreground/50">
-                  <ImageIcon className="h-10 w-10 mb-2" />
-                  <span>Insert ESS Dashboard Screenshot Here</span>
-                </div>
-              </div>
+              
               <CardContent className="p-6 bg-card">
                 <h4 className="font-semibold flex items-center gap-2 text-lg mb-4">
                   <CalendarDays className="h-5 w-5 text-primary" />
@@ -292,12 +296,7 @@ export function UserGuidePage() {
               The Performance management module enables goal-setting and structured feedback across the organization.
             </p>
             <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
-              <div className="h-64 bg-muted/30 border-b flex items-center justify-center border-dashed">
-                <div className="flex flex-col items-center text-muted-foreground/50">
-                  <ImageIcon className="h-10 w-10 mb-2" />
-                  <span>Insert Performance Module Screenshot Here</span>
-                </div>
-              </div>
+              
               <CardContent className="p-6 bg-card">
                 <h4 className="font-semibold flex items-center gap-2 text-lg mb-4">
                   <Target className="h-5 w-5 text-primary" />
@@ -323,7 +322,9 @@ export function UserGuidePage() {
                       <li className="pl-2">Navigate to <strong>My Workspace {'>'} My Reviews</strong>.</li>
                       <li className="pl-2">Click on the active review cycle to open your appraisal form.</li>
                       <li className="pl-2">Complete the self-evaluation questions, rating your performance and providing comments.</li>
-                      <li className="pl-2">Click <strong>Submit to Manager</strong>. Your manager will then review your submission and add their feedback to complete the cycle.</li>
+                      <li className="pl-2">Click <strong>Submit to Manager</strong>.</li>
+                      <li className="pl-2">If you are a manager, navigate to <strong>My Team {'>'} Team Reviews</strong> to see pending appraisals from your direct reports. Fill out your evaluation and click <strong>Complete Review</strong>.</li>
+                      <li className="pl-2">Once finalized, both you and HR can view the historical ratings in your Employee Profile.</li>
                     </ol>
                   </div>
                 </div>
@@ -341,12 +342,7 @@ export function UserGuidePage() {
               KaaryaMitra uses a fine-grained Role-Based Access Control (RBAC) model to ensure security, privacy, and appropriate access across multi-tenant workspaces.
             </p>
             <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
-              <div className="h-64 bg-muted/30 border-b flex items-center justify-center border-dashed">
-                <div className="flex flex-col items-center text-muted-foreground/50">
-                  <ImageIcon className="h-10 w-10 mb-2" />
-                  <span>Insert Roles & Permissions Matrix Screenshot Here</span>
-                </div>
-              </div>
+              
               <CardContent className="p-6 bg-card">
                 <h4 className="font-semibold flex items-center gap-2 text-lg mb-4">
                   <ShieldCheck className="h-5 w-5 text-primary" />
@@ -453,12 +449,7 @@ export function UserGuidePage() {
               The Payroll module automates payslip generation, statutory compliance, and payroll lifecycle management.
             </p>
             <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
-              <div className="h-64 bg-muted/30 border-b flex items-center justify-center border-dashed">
-                <div className="flex flex-col items-center text-muted-foreground/50">
-                  <ImageIcon className="h-10 w-10 mb-2" />
-                  <span>Insert Payroll Module Screenshot Here</span>
-                </div>
-              </div>
+              
               <CardContent className="p-6 bg-card">
                 <h4 className="font-semibold flex items-center gap-2 text-lg mb-4">
                   <Target className="h-5 w-5 text-primary" />
@@ -491,7 +482,67 @@ export function UserGuidePage() {
                       <li className="pl-2">Once accurate, change the DRAFT status to <strong>REVIEW</strong>.</li>
                       <li className="pl-2">After finance review, update to <strong>APPROVED</strong>.</li>
                       <li className="pl-2">Click <strong>Finalize (Lock)</strong> to freeze the records permanently. No further edits can be made.</li>
-                      <li className="pl-2">Finally, mark it as <strong>PAID</strong> once salaries are disbursed.</li>
+                      <li className="pl-2">Finally, mark it as <strong>PAID</strong> once salaries are disbursed. This action will automatically release the Payslips to all employees.</li>
+                    </ol>
+                  </div>
+
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">How Employees Access Payslips</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Employees can navigate to <strong>My Workspace {'>'} Payslips</strong>.</li>
+                      <li className="pl-2">Here, they can view their comprehensive salary history and click the <strong>Download PDF</strong> button for any finalized month to get a branded, professional payslip.</li>
+                    </ol>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Section 8: SaaS Billing & Subscriptions */}
+          <section id="billing" className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">8</div>
+              <h3 className="text-2xl font-semibold tracking-tight">SaaS Billing & Subscriptions (Razorpay Integration)</h3>
+            </div>
+            <p className="text-muted-foreground ml-11">
+              KaaryaMitra includes a full-fledged billing module. Super Admins configure global subscription plans and payment gateways, while Company Admins can self-serve their subscription upgrades.
+            </p>
+            <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
+              
+              <CardContent className="p-6 bg-card">
+                <h4 className="font-semibold flex items-center gap-2 text-lg mb-4">
+                  <Target className="h-5 w-5 text-primary" />
+                  Step-by-Step: Managing Billing
+                </h4>
+                
+                <div className="space-y-6">
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">For Super Admins: Configuring Razorpay & Plans</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Navigate to <strong>Platform Billing {'>'} Razorpay Settings</strong>.</li>
+                      <li className="pl-2">Enter your Razorpay Key ID and Key Secret to enable payment processing globally.</li>
+                      <li className="pl-2">Navigate to <strong>Platform Billing {'>'} Plans & Add-ons</strong>.</li>
+                      <li className="pl-2">Edit the prices for the STARTER, GROWTH, and ENTERPRISE plans and insert the corresponding Razorpay Plan IDs.</li>
+                    </ol>
+                  </div>
+
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">For Company Admins: Upgrading Your Plan</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Navigate to <strong>Settings {'>'} Billing & Plans</strong> in your Workspace.</li>
+                      <li className="pl-2">Click <strong>Upgrade Plan</strong> to open the Plan Comparison page.</li>
+                      <li className="pl-2">Select a plan (e.g., STARTER) and choose any optional Add-ons (like Payroll).</li>
+                      <li className="pl-2">Click <strong>Proceed to Payment</strong>. You will be redirected to the secure Razorpay checkout.</li>
+                      <li className="pl-2">Once the payment is successful, your tenant's feature flags are automatically unlocked!</li>
+                    </ol>
+                  </div>
+
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">For Company Admins: Downloading Invoices</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Navigate to <strong>Settings {'>'} Billing & Plans</strong>.</li>
+                      <li className="pl-2">Scroll down to the <strong>Billing History</strong> table.</li>
+                      <li className="pl-2">Click the download icon next to any PAID invoice to save a PDF copy for your accounting records.</li>
                     </ol>
                   </div>
                 </div>
@@ -499,6 +550,218 @@ export function UserGuidePage() {
             </Card>
           </section>
           
+          {/* Section 9: Projects & Budgeting */}
+          <section id="projects" className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">9</div>
+              <h3 className="text-2xl font-semibold tracking-tight">Projects & Budgeting</h3>
+            </div>
+            <p className="text-muted-foreground ml-11">
+              Track project progress, allocate budgets, and manage clients and vendors directly within KaaryaMitra to ensure accurate cost tracking and resource management.
+            </p>
+            <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
+              <CardContent className="p-6 bg-card">
+                <h4 className="font-semibold flex items-center gap-2 text-lg mb-4">
+                  <Target className="h-5 w-5 text-primary" />
+                  Step-by-Step: Managing Projects & Budgets
+                </h4>
+                
+                <div className="space-y-6">
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">How to Create and Configure a Project</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Navigate to <strong>Projects</strong> via the main sidebar.</li>
+                      <li className="pl-2">Click <strong>New Project</strong> and enter the project Name, assigned Client, Start/End Dates, and the overall allocated Budget.</li>
+                      <li className="pl-2">Assign internal team members or external vendors to the project. Once assigned, employees can seamlessly log timesheets against this specific project in their ESS portal.</li>
+                      <li className="pl-2">Define project milestones and link them to budget release phases if applicable.</li>
+                    </ol>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">How to Track Budgets and Expenses</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Navigate to the <strong>Budgets Dashboard</strong> to see a macro view of all project finances.</li>
+                      <li className="pl-2">View real-time <strong>burn rates</strong> and profitability analytics, which are automatically calculated based on approved expenses, vendor invoices, and employee timesheets.</li>
+                      <li className="pl-2">Managers can submit <strong>Purchase Orders</strong> or <strong>Expense Requests</strong> directly against specific project budgets.</li>
+                      <li className="pl-2">Set up automated alerts when a project's budget crosses 80% or 90% utilization.</li>
+                    </ol>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Section 10: Workflow Engine & Approvals */}
+          <section id="workflows" className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">10</div>
+              <h3 className="text-2xl font-semibold tracking-tight">Workflow Engine & Approvals</h3>
+            </div>
+            <p className="text-muted-foreground ml-11">
+              A highly configurable routing engine that centralizes approvals for all company-wide requests—eliminating email chains and ensuring compliance.
+            </p>
+            <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
+              <CardContent className="p-6 bg-card">
+                <div className="space-y-6">
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">Configuring Workflows (For Admins)</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Navigate to <strong>Settings {'>'} Workflows</strong>.</li>
+                      <li className="pl-2">Create a new workflow by defining a <strong>Trigger</strong> (e.g., Expense Request &gt; $500).</li>
+                      <li className="pl-2">Set up multi-level approval chains (e.g., Line Manager -&gt; Department Head -&gt; Finance). You can use parallel or sequential routing.</li>
+                      <li className="pl-2">Configure <strong>Escalation Rules</strong> (e.g., auto-escalate to the next approver if no action is taken within 48 hours).</li>
+                    </ol>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">Using the Unified Approvals Inbox</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Navigate to <strong>Approvals</strong> in the sidebar. This inbox aggregates pending requests across Leave, Budgets, Policies, and more.</li>
+                      <li className="pl-2">Review the request details and audit trail. Add optional comments for context.</li>
+                      <li className="pl-2">Click <strong>Approve</strong>, <strong>Reject</strong>, or <strong>Request Clarification</strong>.</li>
+                      <li className="pl-2">If you are going on leave, use the <strong>Delegation</strong> feature to temporarily route your approvals to a trusted colleague.</li>
+                    </ol>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Section 11: Asset Management */}
+          <section id="assets" className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">11</div>
+              <h3 className="text-2xl font-semibold tracking-tight">Asset Management</h3>
+            </div>
+            <p className="text-muted-foreground ml-11">
+              Keep a rigorous inventory of company hardware, software licenses, and access cards assigned to employees throughout their lifecycle.
+            </p>
+            <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
+              <CardContent className="p-6 bg-card">
+                <div className="space-y-6">
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">How to Inventory and Assign an Asset</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Navigate to <strong>Assets {'>'} Asset Catalog</strong>.</li>
+                      <li className="pl-2">Click <strong>Add Asset</strong> (e.g., MacBook Pro, Adobe Creative Cloud License) and record its serial number, purchase date, warranty expiry, and current condition.</li>
+                      <li className="pl-2">Click <strong>Assign</strong> and select an employee. The employee will receive an ESS notification requiring them to digitally acknowledge receipt of the asset.</li>
+                    </ol>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">Asset Maintenance and Offboarding</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Use the <strong>Maintenance</strong> tab to log repair history and associated costs for physical assets.</li>
+                      <li className="pl-2">When an employee resigns, any assets assigned to them are <strong>automatically flagged</strong> in the IT Clearance Checklist, ensuring no equipment is lost during offboarding.</li>
+                    </ol>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Section 12: HR Helpdesk */}
+          <section id="helpdesk" className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">12</div>
+              <h3 className="text-2xl font-semibold tracking-tight">HR Helpdesk</h3>
+            </div>
+            <p className="text-muted-foreground ml-11">
+              A built-in ticketing system designed to streamline employee queries, resolve grievances, and manage IT support without external tools.
+            </p>
+            <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
+              <CardContent className="p-6 bg-card">
+                <div className="space-y-6">
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">How Employees Raise Tickets</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Employees navigate to <strong>My Workspace {'>'} My Helpdesk</strong>.</li>
+                      <li className="pl-2">Click <strong>New Ticket</strong> and select a category (e.g., Payroll Issue, Hardware Repair, Policy Query). Categories dictate the target SLA.</li>
+                      <li className="pl-2">Provide a description and attach relevant screenshots, then submit.</li>
+                    </ol>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">How HR/Admins Resolve Tickets</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Navigate to <strong>Company Helpdesk</strong> (visible to Admins and HR only).</li>
+                      <li className="pl-2">View the centralized queue. Tickets are automatically sorted by Priority and SLA breach proximity.</li>
+                      <li className="pl-2">Click a ticket to view the conversation thread. Use the rich text editor to reply to the employee.</li>
+                      <li className="pl-2">Once the issue is fixed, update the ticket status to <strong>Resolved</strong>. Helpdesk analytics will track average resolution times.</li>
+                    </ol>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Section 13: Content Library, Policies & Announcements */}
+          <section id="library" className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">13</div>
+              <h3 className="text-2xl font-semibold tracking-tight">Content Library, Policies & Announcements</h3>
+            </div>
+            <p className="text-muted-foreground ml-11">
+              A powerful CMS for drafting organizational policies, compiling employee handbooks, and broadcasting company-wide announcements.
+            </p>
+            <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
+              <CardContent className="p-6 bg-card">
+                <div className="space-y-6">
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">How to Publish Company-Wide Announcements</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Navigate to <strong>Library {'>'} Announcements</strong>.</li>
+                      <li className="pl-2">Click <strong>New Announcement</strong> and use the rich-text block editor to craft your message (e.g., Townhall updates, holiday greetings, system downtime notices). You can embed images and tables.</li>
+                      <li className="pl-2">Select the target audience (Entire Company, Specific Departments, or Specific Locations).</li>
+                      <li className="pl-2">Click <strong>Publish Now</strong> or <strong>Schedule for Later</strong>. Once published, the announcement will prominently display on the targeted employees' ESS Dashboard.</li>
+                    </ol>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">How to Draft and Enforce Policies</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Navigate to <strong>Library {'>'} Editor</strong>. Choose to start from scratch or use one of the 25+ standard HR templates (e.g., Remote Work Policy, Code of Conduct).</li>
+                      <li className="pl-2">Use the drag-and-drop editor to organize headings, FAQs, and callouts.</li>
+                      <li className="pl-2">Click <strong>Submit for Approval</strong>. The policy is routed through the Workflow Engine to the required executives.</li>
+                      <li className="pl-2">Once approved, the policy becomes <strong>Published</strong> with a specific effective date. Historical versions are automatically preserved for auditing.</li>
+                      <li className="pl-2"><strong>Employee Acknowledgement:</strong> You can enforce digital signatures. Employees will be prompted to read and acknowledge the new policy, and the system will send automated overdue reminders to non-compliant staff.</li>
+                    </ol>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Section 14: Resignations & Offboarding */}
+          <section id="resignations" className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">14</div>
+              <h3 className="text-2xl font-semibold tracking-tight">Resignations & Offboarding</h3>
+            </div>
+            <p className="text-muted-foreground ml-11">
+              Securely manage the employee exit lifecycle, ensuring a smooth transition from resignation submission to final settlement and account deactivation.
+            </p>
+            <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
+              <CardContent className="p-6 bg-card">
+                <div className="space-y-6">
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">Initiating the Exit Process</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Employees submit a formal resignation request via <strong>My Workspace {'>'} Resign</strong>, specifying their reason and requested last working day.</li>
+                      <li className="pl-2">The Reporting Manager receives an immediate notification. They must review the request, negotiate or confirm the Last Working Day (based on the company notice period policy), and approve it.</li>
+                      <li className="pl-2">Once manager-approved, HR is notified to take over the offboarding pipeline.</li>
+                    </ol>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">Clearance Checklists & Final Settlement</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">HR navigates to <strong>Resignations</strong> to monitor the employee's notice period countdown.</li>
+                      <li className="pl-2">The system automatically triggers the <strong>Clearance Checklist</strong>, alerting IT to collect assets, Finance to clear dues, and Admin to revoke access cards.</li>
+                      <li className="pl-2">HR schedules and logs notes from the Exit Interview.</li>
+                      <li className="pl-2">On the last working day, HR finalizes the <strong>Full and Final (F&F) Settlement</strong>, which integrates with the Payroll Engine to disburse remaining leave encashments and deduct outstanding loans.</li>
+                      <li className="pl-2">The employee's KaaryaMitra account is automatically deactivated upon completion of the F&F workflow.</li>
+                    </ol>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
           </div>
         </div>
       </div>

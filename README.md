@@ -358,14 +358,14 @@ Platform (KaaryaMitra)
 
 **Goal:** Flexible, configurable approval and automation engine.
 
-- [ ] Trigger → Condition → Action model
-- [ ] Multi-level approval chains (sequential/parallel)
-- [ ] Conditional routing (based on employee/department/amount)
-- [ ] Task assignment and deadlines
-- [ ] Escalation rules (auto-escalate on timeout)
-- [ ] Workflow history and audit trail
-- [ ] Workflow templates for common HR processes
-- [ ] Delegation support (approver away/on-leave)
+- [x] Trigger → Condition → Action model
+- [x] Multi-level approval chains (sequential/parallel)
+- [x] Conditional routing (based on employee/department/amount)
+- [x] Task assignment and deadlines
+- [x] Escalation rules (auto-escalate on timeout)
+- [x] Workflow history and audit trail
+- [x] Workflow templates for common HR processes
+- [x] Delegation support (approver away/on-leave)
 
 ---
 
@@ -405,14 +405,14 @@ Platform (KaaryaMitra)
 
 **Goal:** Shift scheduling and timesheet management.
 
-- [ ] Shift types (fixed, flexible, rotating, night shift)
-- [ ] Work schedule configuration
-- [ ] Shift assignment (individual / bulk)
-- [ ] Timesheet submission (daily/weekly)
-- [ ] Timesheet approval workflow
-- [ ] Overtime calculation rules
-- [ ] Compensatory-off (comp-off) management
-- [ ] Shift swap requests
+- [x] Shift types (fixed, flexible, rotating, night shift)
+- [x] Work schedule configuration
+- [x] Shift assignment (individual / bulk)
+- [x] Timesheet submission (daily/weekly)
+- [x] Timesheet approval workflow
+- [x] Overtime calculation rules
+- [x] Compensatory-off (comp-off) management
+- [x] Shift swap requests
 
 ---
 
@@ -446,12 +446,12 @@ Platform (KaaryaMitra)
 - [ ] Welcome email automation
 
 **Offboarding:**
-- [ ] Resignation submission and approval
-- [ ] Notice period tracking
-- [ ] Clearance checklist (IT, Finance, Admin)
-- [ ] Exit interview scheduling
-- [ ] Final settlement handoff
-- [ ] Account deactivation automation
+- [x] Resignation submission and approval
+- [x] Notice period tracking
+- [x] Clearance checklist (IT, Finance, Admin)
+- [x] Exit interview scheduling
+- [x] Final settlement handoff
+- [x] Account deactivation automation
 
 ---
 
@@ -460,15 +460,15 @@ Platform (KaaryaMitra)
 
 **Goal:** Employee HR support ticketing system.
 
-- [ ] Employee HR request submission (query, complaint, request)
-- [ ] Ticket categories and priority
-- [ ] Assignment to HR agents
-- [ ] SLA configuration per category
-- [ ] Comment thread on tickets
-- [ ] Attachment support
-- [ ] Resolution and closure workflow
-- [ ] HR agent dashboard and queue
-- [ ] Ticket analytics (volume, SLA breach, resolution time)
+- [x] Employee HR request submission (query, complaint, request)
+- [x] Ticket categories and priority
+- [x] Assignment to HR agents
+- [x] SLA configuration per category
+- [x] Comment thread on tickets
+- [x] Attachment support
+- [x] Resolution and closure workflow
+- [x] HR agent dashboard and queue
+- [x] Ticket analytics (volume, SLA breach, resolution time)
 
 ---
 
@@ -477,14 +477,14 @@ Platform (KaaryaMitra)
 
 **Goal:** Company asset lifecycle tracking.
 
-- [ ] Asset catalog (laptop, phone, monitor, access card, etc.)
-- [ ] Asset assignment to employees
-- [ ] Acknowledgement workflow
-- [ ] Maintenance scheduling and history
-- [ ] Asset return on offboarding
-- [ ] Asset retirement / disposal
-- [ ] Clearance integration with offboarding
-- [ ] Asset utilization reports
+- [x] Asset catalog (laptop, phone, monitor, access card, etc.)
+- [x] Asset assignment to employees
+- [x] Acknowledgement workflow
+- [x] Maintenance scheduling and history
+- [x] Asset return on offboarding
+- [x] Asset retirement / disposal
+- [x] Clearance integration with offboarding
+- [x] Asset utilization reports
 
 ---
 
@@ -493,16 +493,16 @@ Platform (KaaryaMitra)
 
 **Goal:** Goal-setting, reviews, and performance cycles.
 
-- [ ] Goal creation (individual, team, company)
-- [ ] KPIs and OKRs framework
-- [ ] Goal progress tracking and check-ins
-- [ ] Self-review forms
-- [ ] Manager review forms
-- [ ] Peer review (360-degree)
-- [ ] Probation review cycle
-- [ ] Annual/mid-year performance review cycle
-- [ ] Rating scales configuration
-- [ ] Performance history and reports
+- [x] Goal creation (individual, team, company)
+- [x] KPIs and OKRs framework
+- [x] Goal progress tracking and check-ins
+- [x] Self-review forms
+- [x] Manager review forms
+- [x] Peer review (360-degree)
+- [x] Probation review cycle
+- [x] Annual/mid-year performance review cycle
+- [x] Rating scales configuration
+- [x] Performance history and reports
 
 ---
 
@@ -578,6 +578,20 @@ Platform (KaaryaMitra)
 
 ---
 
+### 💼 Phase 20.5 — Projects & Budgeting (Added)
+> *Estimated: Weeks 54–56*
+
+**Goal:** Track organizational projects, client details, and budgets.
+
+- [x] Project creation and assignment
+- [x] Client and vendor management
+- [x] Budget allocation and variance tracking
+- [x] Purchase order request workflow
+- [x] Invoice tracking for projects
+- [x] Profitability and expense analytics
+
+---
+
 ### 🔧 Phase 21 — Custom Fields & Forms
 > *Estimated: Weeks 56–57*
 
@@ -632,15 +646,15 @@ Platform (KaaryaMitra)
 
 **Goal:** Monetization and subscription management.
 
-- [ ] Plan definitions (Free, Starter, Growth, Enterprise)
-- [ ] Free trial management (duration, credit card requirement)
-- [ ] Subscription creation and management
-- [ ] Usage metering (employees, storage, API calls)
-- [ ] Feature flag enforcement by plan
-- [ ] Invoice generation and history
-- [ ] Payment method management (Stripe integration)
-- [ ] Plan upgrade/downgrade flows
-- [ ] Dunning and payment failure handling
+- [x] Plan definitions (Free, Starter, Growth, Enterprise)
+- [x] Free trial management (duration, credit card requirement)
+- [x] Subscription creation and management
+- [x] Usage metering (employees, storage, API calls)
+- [x] Feature flag enforcement by plan
+- [x] Invoice generation and history
+- [x] Payment method management (Razorpay integration)
+- [x] Plan upgrade/downgrade flows
+- [x] Dunning and payment failure handling
 
 ---
 
@@ -667,17 +681,17 @@ Platform (KaaryaMitra)
 
 **Goal:** Policy lifecycle management, rich content authoring, and employee acknowledgement.
 
-- [ ] Policy data model and permissions
-- [ ] Standard policy template library (25+ templates: Leave, Attendance, WFH, IT, Data Privacy, Code of Conduct, etc.)
-- [ ] Rich block-based Page Builder (drag-and-drop sections, headings, paragraphs, images, tables, callouts, FAQs, accordions, buttons)
-- [ ] Policy editor (create, edit, preview, publish, unpublish)
-- [ ] Policy versioning with effective dates — preserve all historical versions
-- [ ] Policy approval workflow (integrated with existing Workflow Engine)
-- [ ] Employee acknowledgement tracking (Pending / Acknowledged / Overdue per version)
-- [ ] Automated acknowledgement reminder notifications
-- [ ] Employee Handbook builder (combine policies into branded handbook with TOC, search, PDF export)
-- [ ] Full audit history for policy events
-- [ ] Tenant branding applied to published policies and handbooks
+- [x] Policy data model and permissions
+- [x] Standard policy template library (25+ templates: Leave, Attendance, WFH, IT, Data Privacy, Code of Conduct, etc.)
+- [x] Rich block-based Page Builder (drag-and-drop sections, headings, paragraphs, images, tables, callouts, FAQs, accordions, buttons)
+- [x] Policy editor (create, edit, preview, publish, unpublish)
+- [x] Policy versioning with effective dates — preserve all historical versions
+- [x] Policy approval workflow (integrated with existing Workflow Engine)
+- [x] Employee acknowledgement tracking (Pending / Acknowledged / Overdue per version)
+- [x] Automated acknowledgement reminder notifications
+- [x] Employee Handbook builder (combine policies into branded handbook with TOC, search, PDF export)
+- [x] Full audit history for policy events
+- [x] Tenant branding applied to published policies and handbooks
 
 ---
 
@@ -704,14 +718,14 @@ Platform (KaaryaMitra)
 
 **Goal:** Full compensation profiles, salary structures, and revision history.
 
-- [ ] Compensation profile per employee (basic, HRA, allowances, employer/employee contributions, variable pay, bonuses)
-- [ ] Salary Structure Builder (fixed, percentage-based, formula-based components; monthly / annual / one-time)
-- [ ] Configurable taxable/non-taxable attributes
-- [ ] Compensation history — never overwrite historical records; record effective date, reason, approver
-- [ ] Compensation revision workflow (integrated with Workflow Engine)
-- [ ] Compensation change notifications to employees
-- [ ] Complete audit history for all compensation events
-- [ ] Granular permissions: `compensation.view`, `compensation.create`, `compensation.approve`, `compensation.export`
+- [x] Compensation profile per employee (basic, HRA, allowances, employer/employee contributions, variable pay, bonuses)
+- [x] Salary Structure Builder (fixed, percentage-based, formula-based components; monthly / annual / one-time)
+- [x] Configurable taxable/non-taxable attributes
+- [x] Compensation history — never overwrite historical records; record effective date, reason, approver
+- [x] Compensation revision workflow (integrated with Workflow Engine)
+- [x] Compensation change notifications to employees
+- [x] Complete audit history for all compensation events
+- [x] Granular permissions: `compensation.view`, `compensation.create`, `compensation.approve`, `compensation.export`
 
 ---
 
@@ -720,19 +734,19 @@ Platform (KaaryaMitra)
 
 **Goal:** Configurable, auditable payroll calculation and processing.
 
-- [ ] Payroll periods (monthly, bi-weekly, weekly, custom)
-- [ ] Payroll lifecycle: Draft → Processing → Review → Approved → Finalized → Paid
-- [ ] Payroll inputs from compensation, attendance, leave, overtime, bonuses, reimbursements, deductions
-- [ ] New-joiner and exit proration
-- [ ] Salary revision proration
-- [ ] Unpaid leave deductions
-- [ ] Overtime and variable pay calculations
-- [ ] Arrears and retroactive adjustments
-- [ ] One-time earnings and deductions
-- [ ] Payroll exceptions and validation before finalization
-- [ ] **Finalized payroll is immutable** — post-finalization corrections require controlled adjustment/reversal with full audit trail
-- [ ] Country-agnostic architecture — country-specific rules as configurable, effective-date-based rule sets
-- [ ] Granular permissions: `payroll.view`, `payroll.create`, `payroll.process`, `payroll.approve`, `payroll.finalize`, `payroll.export`
+- [x] Payroll periods (monthly, bi-weekly, weekly, custom)
+- [x] Payroll lifecycle: Draft → Processing → Review → Approved → Finalized → Paid
+- [x] Payroll inputs from compensation, attendance, leave, overtime, bonuses, reimbursements, deductions
+- [x] New-joiner and exit proration
+- [x] Salary revision proration
+- [x] Unpaid leave deductions
+- [x] Overtime and variable pay calculations
+- [x] Arrears and retroactive adjustments
+- [x] One-time earnings and deductions
+- [x] Payroll exceptions and validation before finalization
+- [x] **Finalized payroll is immutable** — post-finalization corrections require controlled adjustment/reversal with full audit trail
+- [x] Country-agnostic architecture — country-specific rules as configurable, effective-date-based rule sets
+- [x] Granular permissions: `payroll.view`, `payroll.create`, `payroll.process`, `payroll.approve`, `payroll.finalize`, `payroll.export`
 
 ---
 
@@ -741,13 +755,13 @@ Platform (KaaryaMitra)
 
 **Goal:** Professional payslip generation and employee payroll self-service.
 
-- [ ] Branded PDF payslip generator (company info/logo, employee info, payroll period, earnings, deductions, gross, net, employer contributions, amount in words, secure reference ID)
-- [ ] Bulk payslip generation
-- [ ] Employee payslip history — view, download, print
-- [ ] Employee view of authorized compensation information and year-to-date earnings
-- [ ] Payroll dashboard (status, total cost, gross, net, deductions, exceptions, department/cost-center analysis)
-- [ ] Payroll reports: register, salary summary, compensation, bonus/incentive, overtime, variance, YTD, employee cost
-- [ ] Excel / CSV / PDF exports (reuse existing Custom Report Builder)
+- [x] Branded PDF payslip generator (company info/logo, employee info, payroll period, earnings, deductions, gross, net, employer contributions, amount in words, secure reference ID)
+- [x] Bulk payslip generation
+- [x] Employee payslip history — view, download, print
+- [x] Employee view of authorized compensation information and year-to-date earnings
+- [x] Payroll dashboard (status, total cost, gross, net, deductions, exceptions, department/cost-center analysis)
+- [x] Payroll reports: register, salary summary, compensation, bonus/incentive, overtime, variance, YTD, employee cost
+- [x] Excel / CSV / PDF exports (reuse existing Custom Report Builder)
 
 ---
 
