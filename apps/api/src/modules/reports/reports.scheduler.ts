@@ -4,14 +4,7 @@ import { ReportsService } from './reports.service.js';
 
 const prisma = new PrismaClient();
 
-// Configure Nodemailer for Gmail
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER || 'mock@gmail.com',
-    pass: process.env.GMAIL_PASS || 'mock_pass'
-  }
-});
+// Nodemailer is configured dynamically inside the job
 
 export class ReportsScheduler {
   static async processScheduledReports() {
@@ -33,9 +26,29 @@ export class ReportsScheduler {
         // Convert data to CSV string for attachment
         const csv = this.convertToCSV(data);
         
+        // Fetch PlatformSettings for SMTP
+        const platformSettings = await (prisma as any).platformSettings.findUnique({
+          where: { id: 'global' },
+        });
+
+        if (!platformSettings?.smtpHost || !platformSettings?.smtpUser || !platformSettings?.smtpPass) {
+          console.log(`[STUB] Scheduled report ${report.name} queued for ${report.emails} (No SMTP settings)`);
+          continue;
+        }
+
+        const transporter = nodemailer.createTransport({
+          host: platformSettings.smtpHost,
+          port: platformSettings.smtpPort || 587,
+          secure: platformSettings.smtpPort === 465,
+          auth: {
+            user: platformSettings.smtpUser,
+            pass: platformSettings.smtpPass,
+          },
+        });
+
         // Send email
         await transporter.sendMail({
-          from: process.env.GMAIL_USER || 'reports@kaaryamitra.com',
+          from: platformSettings.smtpFrom || '"KaaryaMitra" <noreply@kaaryamitra.com>',
           to: report.emails,
           subject: `Scheduled Report: ${report.name}`,
           text: `Please find attached your scheduled report: ${report.name}.`,

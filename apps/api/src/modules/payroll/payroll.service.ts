@@ -83,7 +83,8 @@ export class PayrollService {
           tenantId,
           emp.id,
           periodStart,
-          periodEnd
+          periodEnd,
+          data.overrides?.[emp.id]
         );
 
         if (!calc) continue;

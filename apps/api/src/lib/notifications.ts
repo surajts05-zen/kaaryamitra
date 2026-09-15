@@ -1,6 +1,7 @@
 import type { NotificationType, NotificationChannel } from '@kaaryamitra/shared-types';
 import { prisma } from './prisma.js';
 import { logger } from './logger.js';
+import nodemailer from 'nodemailer';
 
 export interface CreateNotificationOptions {
   tenantId: string;
@@ -94,9 +95,80 @@ export class NotificationService {
     body: string;
     link?: string;
   }): Promise<void> {
-    // TODO Phase 9: Implement Nodemailer/Resend email sending
-    // const user = await prisma.user.findUnique({ where: { id: options.userId } });
-    // await mailer.send({ to: user.email, subject: options.title, html: renderTemplate(...) });
-    logger.debug({ userId: options.userId }, '[STUB] Email notification queued');
+    try {
+      const user = await prisma.user.findUnique({ where: { id: options.userId } });
+      if (!user || !user.email) return;
+
+      const platformSettings = await (prisma as any).platformSettings.findUnique({
+        where: { id: 'global' },
+      });
+
+      if (!platformSettings?.smtpHost || !platformSettings?.smtpUser || !platformSettings?.smtpPass) {
+        logger.debug({ userId: options.userId }, '[STUB] Email notification queued (No SMTP settings found)');
+        return;
+      }
+
+      const transporter = nodemailer.createTransport({
+        host: platformSettings.smtpHost,
+        port: platformSettings.smtpPort || 587,
+        secure: platformSettings.smtpPort === 465,
+        auth: {
+          user: platformSettings.smtpUser,
+          pass: platformSettings.smtpPass,
+        },
+      });
+
+      const htmlContent = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2>${options.title}</h2>
+          <p>${options.body}</p>
+          ${options.link ? `<p><a href="${options.link}" style="display: inline-block; padding: 10px 20px; background-color: #000; color: #fff; text-decoration: none; border-radius: 5px;">View Details</a></p>` : ''}
+        </div>
+      `;
+
+      await transporter.sendMail({
+        from: platformSettings.smtpFrom || '"KaaryaMitra" <noreply@kaaryamitra.com>',
+        to: user.email,
+        subject: options.title,
+        html: htmlContent,
+      });
+
+      logger.debug({ userId: options.userId }, 'Email notification sent successfully');
+    } catch (err) {
+      logger.error({ err, userId: options.userId }, 'Failed to send email notification');
+    }
+  }
+
+  static async sendSystemEmail(to: string, subject: string, html: string): Promise<void> {
+    try {
+      const platformSettings = await (prisma as any).platformSettings.findUnique({
+        where: { id: 'global' },
+      });
+
+      if (!platformSettings?.smtpHost || !platformSettings?.smtpUser || !platformSettings?.smtpPass) {
+        logger.debug({ to }, '[STUB] System email queued (No SMTP settings found)');
+        return;
+      }
+
+      const transporter = nodemailer.createTransport({
+        host: platformSettings.smtpHost,
+        port: platformSettings.smtpPort || 587,
+        secure: platformSettings.smtpPort === 465,
+        auth: {
+          user: platformSettings.smtpUser,
+          pass: platformSettings.smtpPass,
+        },
+      });
+
+      await transporter.sendMail({
+        from: platformSettings.smtpFrom || '"KaaryaMitra" <noreply@kaaryamitra.com>',
+        to,
+        subject,
+        html,
+      });
+      logger.debug({ to }, 'System email sent successfully');
+    } catch (err) {
+      logger.error({ err, to }, 'Failed to send system email');
+    }
   }
 }

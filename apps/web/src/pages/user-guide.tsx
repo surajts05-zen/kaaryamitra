@@ -461,8 +461,9 @@ export function UserGuidePage() {
                     <h5 className="font-medium text-foreground text-sm mb-2">How to Run Payroll</h5>
                     <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
                       <li className="pl-2">Navigate to <strong>Payroll {'>'} Payroll Runs</strong>.</li>
-                      <li className="pl-2">Click <strong>Run Payroll</strong> and provide details such as Name, Period, and Payment Date.</li>
-                      <li className="pl-2">The system will process eligible employees, calculate their prorated working days, apply statutory rules, and generate DRAFT payslips.</li>
+                      <li className="pl-2">Click <strong>Run Payroll</strong> and provide details such as Name, Period, and Payment Date. You can also provide manual overrides for <strong>Loss of Pay (LOP)</strong> days if needed.</li>
+                      <li className="pl-2">The system will automatically query the Leave module for any <strong>Unpaid Leaves</strong> overlapping with the payroll period. If no manual override is provided, these Unpaid Leaves will be automatically deducted.</li>
+                      <li className="pl-2">The system then calculates prorated working days, applies statutory rules, and generates DRAFT payslips.</li>
                     </ol>
                   </div>
 

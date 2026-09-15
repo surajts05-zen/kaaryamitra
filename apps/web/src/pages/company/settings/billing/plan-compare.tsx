@@ -13,13 +13,14 @@ import { toast } from 'sonner';
 
 export function CompanyPlanComparePage() {
   const navigate = useNavigate();
-  const { tenant } = useAuth();
+  const { user, tenant } = useAuth();
   const { data: plansData, isLoading: loadingPlans } = usePlans();
   const { data: subData, isLoading: loadingSub } = useSubscription();
   const createMutation = useCreateSubscription();
 
   const [isAnnual, setIsAnnual] = useState(false);
   const [selectedAddons, setSelectedAddons] = useState<Set<string>>(new Set());
+  const [billingEmail, setBillingEmail] = useState(user?.email || '');
   
   // Track selected plan instead of instantly checking out
   const [selectedPlanSlug, setSelectedPlanSlug] = useState<string | null>(null);
@@ -92,6 +93,7 @@ export function CompanyPlanComparePage() {
         billingCycle: isAnnual ? 'ANNUAL' : 'MONTHLY',
         currency: 'INR',
         addonKeys: Array.from(selectedAddons),
+        customerEmail: billingEmail,
       },
       {
         onSuccess: (data) => {
@@ -325,6 +327,20 @@ export function CompanyPlanComparePage() {
                     Plus applicable taxes
                   </p>
                 )}
+              </div>
+              
+              <div className="pt-2">
+                <Label htmlFor="billingEmail" className="text-xs">Billing Email (Invoices will be sent here)</Label>
+                <div className="mt-1">
+                  <input 
+                    id="billingEmail"
+                    type="email"
+                    value={billingEmail}
+                    onChange={(e) => setBillingEmail(e.target.value)}
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="admin@company.com"
+                  />
+                </div>
               </div>
             </CardContent>
             

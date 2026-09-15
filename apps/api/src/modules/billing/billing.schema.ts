@@ -44,6 +44,7 @@ export const createSubscriptionSchema = z.object({
   billingCycle: z.enum(['MONTHLY', 'ANNUAL']).default('MONTHLY'),
   currency: z.enum(['INR', 'USD']).default('INR'),
   addonKeys: z.array(z.string()).default([]),
+  customerEmail: z.string().email().optional(),
 });
 
 export type CreateSubscriptionInput = z.infer<typeof createSubscriptionSchema>;

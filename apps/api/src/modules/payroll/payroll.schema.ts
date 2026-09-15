@@ -6,6 +6,7 @@ export const createPayrollRunSchema = z.object({
   periodEnd: z.string().datetime(),
   frequency: z.enum(['MONTHLY', 'BI_WEEKLY', 'WEEKLY']),
   paymentDate: z.string().datetime(),
+  overrides: z.record(z.object({ lopDays: z.number().optional() })).optional(),
 });
 
 export const updatePayrollRunStatusSchema = z.object({

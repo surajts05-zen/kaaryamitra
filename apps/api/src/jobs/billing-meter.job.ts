@@ -33,6 +33,7 @@ export function initBillingMeterJob() {
         include: {
           tenant: true,
           plan: true,
+          addons: { include: { addon: true } },
         },
       });
 
@@ -128,14 +129,26 @@ export function initBillingMeterJob() {
           // If no Razorpay sub exists (manual invoicing or free plan), we handle it here:
           if (!sub.razorpaySubscriptionId && sub.plan.slug !== 'FREE') {
             // Generate manual invoice
-            const addonTotal = 0; // In a real scenario, calculate current addons
-            const basePrice = sub.currency === 'USD' ? Number(sub.plan.monthlyPriceUsd) : Number(sub.plan.monthlyPriceInr);
+            let addonTotal = 0;
+            const addonNames = sub.addons.map((a: any) => {
+              const price = sub.currency === 'USD' ? Number(a.addon.monthlyPriceUsd) : Number(a.addon.monthlyPriceInr);
+              addonTotal += price;
+              return a.addon.name;
+            });
+
+            let basePrice = sub.currency === 'USD' ? Number(sub.plan.monthlyPriceUsd) : Number(sub.plan.monthlyPriceInr);
+            if (sub.billingCycle === 'ANNUAL') {
+              const discount = sub.plan.annualDiscountPct ?? 16;
+              basePrice = basePrice * 12 * (1 - discount / 100);
+              addonTotal = addonTotal * 12;
+            }
+
             const total = basePrice + addonTotal;
 
             if (total > 0) {
               await BillingService.generateInvoice(tenantId, sub.currentPeriodEnd, new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000), {
                 planName: sub.plan.name,
-                addonNames: [], // TODO: fetch addons
+                addonNames,
                 total,
                 currency: sub.currency,
               });

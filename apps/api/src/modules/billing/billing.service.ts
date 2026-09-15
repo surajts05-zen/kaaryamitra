@@ -169,10 +169,19 @@ export class BillingService {
 
       if (razorpayPlanId) {
         try {
+          let customerEmail = input.customerEmail;
+          if (!customerEmail) {
+            // Fallback to Company Admin's email
+            const admin = await prisma.user.findFirst({
+              where: { tenantId, roles: { has: 'Company Admin' } },
+            });
+            customerEmail = admin?.email || `${tenant.slug}@kaaryamitra.com`;
+          }
+
           const result = await createRazorpaySubscription({
             planId: razorpayPlanId,
             totalCount: input.billingCycle === 'ANNUAL' ? 1 : 120, // 10 years
-            customerEmail: tenant.slug + '@kaaryamitra.com', // TODO: get actual admin email
+            customerEmail,
             notes: { tenantId, planSlug: input.planSlug },
           });
           razorpaySubscriptionId = result.subscriptionId;

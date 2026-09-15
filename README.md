@@ -974,8 +974,9 @@ KaaryaMitra's Payroll Engine allows you to automate payslip generation and manag
 
 **How to Run Payroll:**
 1. Navigate to the **Payroll Processing** module in the Company Admin Dashboard.
-2. Click **Run Payroll** and enter the details for the new run (e.g., Run Name, Period Start/End, Payment Date, Frequency).
-3. The system will automatically fetch eligible employees, calculate their prorated working days, and apply their compensation profile components (Basic, HRA, Statutory Rules) to generate **DRAFT** payslips.
+2. Click **Run Payroll** and enter the details for the new run (e.g., Run Name, Period Start/End, Payment Date, Frequency). You can optionally provide manual **Loss of Pay (LOP)** overrides for specific employees.
+3. The system will automatically query the Leave module to find any **Unpaid Leaves** overlapping with the payroll period. If no manual override is provided, the system will deduct these unpaid days automatically.
+4. The system will then fetch eligible employees, calculate their prorated working days, and apply their compensation profile components (Basic, HRA, Statutory Rules) to generate **DRAFT** payslips.
 
 **How to Update / Override Payroll (CSV Upload):**
 If you need to bulk update earnings/deductions or provide custom figures for a DRAFT run:

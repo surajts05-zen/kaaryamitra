@@ -6,7 +6,8 @@ export class PayrollEngine {
     tenantId: string, 
     employeeId: string, 
     periodStart: Date, 
-    periodEnd: Date
+    periodEnd: Date,
+    overrides?: { lopDays?: number }
   ) {
     // 1. Get Employee Compensation Profile
     const profile = await prisma.compensationProfile.findUnique({
@@ -21,11 +22,33 @@ export class PayrollEngine {
     if (!profile) return null;
     if (profile.tenantId !== tenantId) return null;
 
-    // TODO: Factor in LOP (Loss of Pay) from Attendance/Leave modules
-    // For MVP Phase 29, we assume full attendance
     const daysInPeriod = Math.round((periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    const lopDays = 0;
-    const workingDays = daysInPeriod - lopDays;
+    let lopDays = overrides?.lopDays;
+
+    if (typeof lopDays !== 'number') {
+      const unpaidLeaves = await prisma.leaveApplication.findMany({
+        where: {
+          tenantId,
+          employeeId,
+          status: 'APPROVED',
+          leaveType: { isPaid: false },
+          startDate: { lte: periodEnd },
+          endDate: { gte: periodStart }
+        }
+      });
+      
+      let calcLop = 0;
+      for (const leave of unpaidLeaves) {
+        const start = leave.startDate > periodStart ? leave.startDate : periodStart;
+        const end = leave.endDate < periodEnd ? leave.endDate : periodEnd;
+        if (start <= end) {
+          calcLop += Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        }
+      }
+      lopDays = calcLop;
+    }
+
+    const workingDays = Math.max(0, daysInPeriod - lopDays);
     const prorationFactor = workingDays / (daysInPeriod || 30);
 
     const lineItems: any[] = [];

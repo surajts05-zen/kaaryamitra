@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { EmployeesService } from './employees.service.js';
 import { createEmployeeSchema, updateEmployeeSchema } from './employees.schema.js';
+import { NotificationService } from '../../lib/notifications.js';
 
 export async function listEmployeesHandler(req: Request, res: Response) {
   const data = await EmployeesService.listEmployees(req.tenantId!);
@@ -55,9 +56,22 @@ export async function resetPasswordHandler(req: Request, res: Response) {
 
   const targetEmail = sendToAlternate && (employee as any).personalEmail ? (employee as any).personalEmail : employee.workEmail;
 
-  // Mock sending email
-  console.log(`[Email Service Mock] Password reset link sent to: ${targetEmail}`);
-  console.log(`[Email Service Mock] Reset Token: ${resetToken}`);
+  const appUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+  const resetLink = `${appUrl}/reset-password?token=${resetToken}`;
+
+  await NotificationService.sendSystemEmail(
+    targetEmail,
+    'Password Reset Request - KaaryaMitra',
+    `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2>Password Reset</h2>
+        <p>You requested to reset your password. Click the link below to set a new one:</p>
+        <p><a href="${resetLink}" style="display: inline-block; padding: 10px 20px; background-color: #000; color: #fff; text-decoration: none; border-radius: 5px;">Reset Password</a></p>
+        <p>If you didn't request this, you can safely ignore this email.</p>
+        <p>This link expires in 24 hours.</p>
+      </div>
+    `
+  );
 
   res.status(200).json({ 
     success: true, 
