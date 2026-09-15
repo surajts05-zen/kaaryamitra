@@ -15,6 +15,7 @@ import { employeesRouter } from './modules/employees/employees.router.js';
 import { essRouter } from './modules/ess/ess.router.js';
 import { billingRouter } from './modules/billing/billing.router.js';
 import { adminBillingRouter } from './modules/billing/admin-billing.router.js';
+import { razorpayWebhookRouter } from './modules/billing/razorpay-webhook.router.js';
 import { initBillingMeterJob } from './jobs/billing-meter.job.js';
 import { leaveRouter, essLeaveRouter, leaveApprovalsRouter } from './modules/leave/leave.router.js';
 import { workflowRouter } from './modules/workflows/workflow.router.js';
@@ -78,6 +79,10 @@ export function createApp() {
   );
 
   // ── Body parsers ─────────────────────────────────────────────────────────────
+  
+  // Razorpay webhooks require raw body for signature verification, must be mounted before json()
+  app.use('/api/v1/webhooks/razorpay', razorpayWebhookRouter);
+
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser(env.COOKIE_SECRET));

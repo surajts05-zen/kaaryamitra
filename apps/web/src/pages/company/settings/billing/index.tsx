@@ -42,6 +42,7 @@ export function CompanyBillingPage() {
   const isTrial = sub.status === 'TRIALING';
   const isPastDue = sub.status === 'PAST_DUE';
   const isCancelled = sub.status === 'CANCELLED';
+  const isPendingPayment = sub.status === 'PENDING_PAYMENT';
 
   const handleCancel = () => {
     cancelMutation.mutate(true, {
@@ -78,6 +79,16 @@ export function CompanyBillingPage() {
         </Alert>
       )}
 
+      {isPendingPayment && (
+        <Alert className="bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Payment Pending</AlertTitle>
+          <AlertDescription>
+            Your subscription has been updated but we are waiting for payment confirmation. Please complete the payment to activate your premium features.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Current Plan Overview */}
         <Card className="lg:col-span-2">
@@ -89,8 +100,8 @@ export function CompanyBillingPage() {
                   You are currently on the <strong className="text-foreground">{sub.plan.name}</strong> plan.
                 </CardDescription>
               </div>
-              <Badge variant={isTrial ? 'secondary' : isCancelled ? 'destructive' : 'default'} className="uppercase">
-                {sub.status}
+              <Badge variant={isTrial ? 'secondary' : isCancelled ? 'destructive' : isPendingPayment ? 'outline' : 'default'} className={`uppercase ${isPendingPayment ? 'border-amber-500 text-amber-600 dark:text-amber-400' : ''}`}>
+                {sub.status.replace('_', ' ')}
               </Badge>
             </div>
           </CardHeader>

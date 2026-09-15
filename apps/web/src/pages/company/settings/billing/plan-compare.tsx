@@ -9,6 +9,7 @@ import { formatCurrency } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/features/auth/hooks/use-auth';
+import { toast } from 'sonner';
 
 export function CompanyPlanComparePage() {
   const navigate = useNavigate();
@@ -58,7 +59,12 @@ export function CompanyPlanComparePage() {
           if (data.razorpayPaymentUrl) {
             window.location.href = data.razorpayPaymentUrl; // Redirect to Razorpay checkout
           } else {
-            navigate(`/t/${tenant?.slug}/settings/billing`);
+            if (planSlug !== 'FREE') {
+              toast.error('Payment gateway is not configured. Please contact support.');
+            } else {
+              toast.success('Subscription updated successfully');
+              navigate(`/t/${tenant?.slug}/settings/billing`);
+            }
           }
         },
       }

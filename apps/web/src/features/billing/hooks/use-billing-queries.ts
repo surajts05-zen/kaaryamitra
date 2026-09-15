@@ -45,7 +45,7 @@ export interface TenantSubscription {
   tenantId: string;
   planId: string;
   billingCycle: 'MONTHLY' | 'ANNUAL';
-  status: 'TRIALING' | 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'PAUSED';
+  status: 'TRIALING' | 'PENDING_PAYMENT' | 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'PAUSED';
   currency: 'INR' | 'USD';
   currentPeriodStart: string;
   currentPeriodEnd: string;
@@ -179,6 +179,62 @@ export function useUpdateRazorpaySettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BILLING_QUERY_KEYS.adminRazorpay });
+    },
+  });
+}
+
+export function useAdminPlans() {
+  return useQuery({
+    queryKey: BILLING_QUERY_KEYS.plans,
+    queryFn: async () => {
+      const res = await api.get('/admin/billing/plans');
+      return res.data.data as Plan[];
+    },
+  });
+}
+
+export function useUpdateAdminPlan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Plan> }) => {
+      const res = await api.patch(`/admin/billing/plans/${id}`, data);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: BILLING_QUERY_KEYS.plans });
+    },
+  });
+}
+
+export function useAdminAddons() {
+  return useQuery({
+    queryKey: BILLING_QUERY_KEYS.addons,
+    queryFn: async () => {
+      const res = await api.get('/admin/billing/addons');
+      return res.data.data as Addon[];
+    },
+  });
+}
+
+export function useUpdateAdminAddon() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Addon> }) => {
+      const res = await api.patch(`/admin/billing/addons/${id}`, data);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: BILLING_QUERY_KEYS.addons });
+    },
+  });
+}
+
+export function useAdminRazorpaySettings() {
+  return useQuery({
+    queryKey: BILLING_QUERY_KEYS.adminRazorpay,
+    queryFn: async () => {
+      const res = await api.get('/admin/billing/settings/razorpay');
+      return res.data.data;
     },
   });
 }

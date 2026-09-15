@@ -96,7 +96,9 @@ export const navItems: NavItem[] = [
 export const adminNavItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Platform Dashboard', path: '/admin' },
   { icon: Building2,       label: 'Workspaces',         path: '/admin/tenants', group: 'Platform' },
-  { icon: CreditCard,      label: 'Billing',            path: '/admin/billing', group: 'Platform' },
+  { icon: CreditCard,      label: 'Billing Overview',   path: '/admin/billing', group: 'Platform Billing' },
+  { icon: FileText,        label: 'Plans & Add-ons',    path: '/admin/billing/plans', group: 'Platform Billing' },
+  { icon: Wallet,          label: 'Razorpay Settings',  path: '/admin/billing/settings', group: 'Platform Billing' },
   { icon: Settings,        label: 'Platform Config',    path: '/admin/settings', group: 'Platform' },
 ];
 

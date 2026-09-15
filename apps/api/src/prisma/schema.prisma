@@ -2556,6 +2556,7 @@ enum BillingCycle {
 
 enum SubscriptionStatus {
   TRIALING
+  PENDING_PAYMENT
   ACTIVE
   PAST_DUE
   CANCELLED

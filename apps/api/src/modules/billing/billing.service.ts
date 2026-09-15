@@ -210,7 +210,7 @@ export class BillingService {
           planId: plan.id,
           billingCycle: input.billingCycle,
           currency: input.currency,
-          status: total === 0 ? 'ACTIVE' : 'TRIALING',
+          status: total === 0 ? 'ACTIVE' : 'PENDING_PAYMENT',
           currentPeriodStart: now,
           currentPeriodEnd: periodEnd,
           razorpaySubscriptionId,
@@ -227,7 +227,7 @@ export class BillingService {
           planId: plan.id,
           billingCycle: input.billingCycle,
           currency: input.currency,
-          status: total === 0 ? 'ACTIVE' : 'TRIALING',
+          status: total === 0 ? 'ACTIVE' : 'PENDING_PAYMENT',
           currentPeriodStart: now,
           currentPeriodEnd: periodEnd,
           razorpaySubscriptionId,
@@ -280,6 +280,9 @@ export class BillingService {
     if (!addon) throw AppError.notFound('Add-on');
 
     if (input.enabled) {
+      if (Number(addon.monthlyPriceInr) > 0 || Number(addon.monthlyPriceUsd) > 0) {
+        throw AppError.badRequest('Paid add-ons must be purchased by modifying your subscription plan on the billing page.');
+      }
       // Add addon
       const exists = sub.addons.find((a: any) => a.addonId === addon.id);
       if (!exists) {
@@ -466,7 +469,7 @@ export class BillingService {
         if (ALL_MODULE_KEYS.includes(k as ModuleKey)) flags[k] = true;
       });
     } else {
-      // PAST_DUE / CANCELLED / PAUSED — downgrade to free plan modules only
+      // PAST_DUE / CANCELLED / PAUSED / PENDING_PAYMENT — downgrade to free plan modules only
       ALL_MODULE_KEYS.forEach((k) => (flags[k] = false));
       const freePlan = await (prisma as any).planDefinition.findUnique({
         where: { slug: 'FREE' },
@@ -591,7 +594,7 @@ export class BillingService {
         const tenantSub = await (prisma as any).tenantSubscription.findFirst({
           where: { razorpaySubscriptionId: sub.id },
         });
-        if (tenantSub) {
+        if (tenantSub && (tenantSub.status === 'TRIALING' || tenantSub.status === 'PENDING_PAYMENT')) {
           await (prisma as any).tenantSubscription.update({
             where: { id: tenantSub.id },
             data: { status: 'ACTIVE' },

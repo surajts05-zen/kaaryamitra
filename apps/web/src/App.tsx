@@ -7,6 +7,8 @@ import { AdminDashboardPage } from '@/pages/admin/dashboard';
 import { AdminTenantsPage } from '@/pages/admin/tenants';
 import { AdminSettingsPage } from '@/pages/admin/settings';
 import { AdminBillingDashboard } from '@/pages/admin/billing';
+import { AdminBillingPlans } from '@/pages/admin/billing/plans';
+import { AdminBillingSettings } from '@/pages/admin/billing/settings';
 
 import { DashboardPage } from '@/pages/dashboard';
 import { DepartmentsPage } from '@/pages/company/departments';
@@ -124,7 +126,11 @@ export function App() {
           <Route index element={<AdminDashboardPage />} />
           <Route path="tenants" element={<AdminTenantsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
-          <Route path="billing" element={<AdminBillingDashboard />} />
+          <Route path="billing">
+            <Route index element={<AdminBillingDashboard />} />
+            <Route path="plans" element={<AdminBillingPlans />} />
+            <Route path="settings" element={<AdminBillingSettings />} />
+          </Route>
         </Route>
 
         {/* Workspace Routes */}
