@@ -23,7 +23,7 @@ COPY apps/api ./apps/api
 RUN cd apps/api && npx prisma generate
 
 # Build TypeScript
-RUN cd apps/api && npm run build
+RUN cd apps/api && npm run build && mkdir -p node_modules
 
 # ── Production stage ──────────────────────────────────────────────────────────
 FROM node:22-alpine AS runner
@@ -41,6 +41,7 @@ COPY --from=builder /app/node_modules ./node_modules
 
 # Copy API artifacts retaining workspace structure
 COPY --from=builder /app/apps/api/package.json ./apps/api/
+COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/src/prisma ./apps/api/src/prisma
 
