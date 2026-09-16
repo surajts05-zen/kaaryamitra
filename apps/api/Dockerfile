@@ -48,4 +48,4 @@ COPY --from=builder /app/apps/api/src/prisma ./apps/api/src/prisma
 # We don't strictly need to expose port for Dokploy Traefik, but it's good documentation
 EXPOSE 3000
 
-CMD ["sh", "-c", "cd apps/api && npx prisma db push --accept-data-loss && node dist/index.js"]
+CMD ["sh", "-c", "cd apps/api && npx prisma db push --accept-data-loss && npx prisma db seed && node dist/index.js"]
