@@ -44,10 +44,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER:-kaaryamitra}:${POSTGRES_PASSWORD:-km_secret_change_me}@postgres:5432/${POSTGRES_DB:-kaaryamitra_db}
-      REDIS_URL: redis://redis:6379
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-kaaryamitra}:${POSTGRES_PASSWORD:-km_secret_change_me}@postgres:5432/${POSTGRES_DB:-kaaryamitra_db}}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
     # ports:
     #   - '3000:3000'
 
