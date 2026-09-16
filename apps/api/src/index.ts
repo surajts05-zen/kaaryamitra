@@ -28,9 +28,9 @@ async function main() {
   startWebhookRetryJob();
   initDocumentExpiryJob();
 
-  const server = app.listen(env.PORT, () => {
-    logger.info(`✅ Server listening on http://localhost:${env.PORT}`);
-    logger.info(`📋 Health: http://localhost:${env.PORT}/health`);
+  const server = app.listen(env.PORT, '0.0.0.0', () => {
+    logger.info(`✅ Server listening on http://0.0.0.0:${env.PORT}`);
+    logger.info(`📋 Health: http://0.0.0.0:${env.PORT}/health`);
   });
 
   // ── Graceful shutdown ──────────────────────────────────────────────────────
