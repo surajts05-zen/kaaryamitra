@@ -75,3 +75,82 @@ export async function getMeHandler(req: Request, res: Response) {
   const user = await AuthService.getMe(req.auth!.userId);
   res.json({ success: true, data: user });
 }
+
+import { OAuth2Client } from 'google-auth-library';
+
+export async function googleOAuthRedirect(req: Request, res: Response) {
+  const oAuth2Client = new OAuth2Client(
+    process.env['GOOGLE_CLIENT_ID'],
+    process.env['GOOGLE_CLIENT_SECRET'],
+    process.env['GOOGLE_CALLBACK_URL']
+  );
+  
+  const authorizeUrl = oAuth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'],
+    prompt: 'consent'
+  });
+  
+  res.redirect(authorizeUrl);
+}
+
+export async function googleOAuthCallback(req: Request, res: Response) {
+  const code = req.query['code'] as string;
+  if (!code) {
+    res.redirect(`${process.env['FRONTEND_URL'] || 'http://localhost:5173'}/login?error=Google_OAuth_Failed`);
+    return;
+  }
+
+  try {
+    const oAuth2Client = new OAuth2Client(
+      process.env['GOOGLE_CLIENT_ID'],
+      process.env['GOOGLE_CLIENT_SECRET'],
+      process.env['GOOGLE_CALLBACK_URL']
+    );
+
+    const { tokens } = await oAuth2Client.getToken(code);
+    oAuth2Client.setCredentials(tokens);
+
+    const { data } = await oAuth2Client.request<any>({
+      url: 'https://www.googleapis.com/oauth2/v2/userinfo'
+    });
+
+    const email = data.email;
+    const firstName = data.given_name || 'User';
+    const lastName = data.family_name || '';
+
+    const ipAddress = req.ip;
+    const userAgent = req.headers['user-agent'];
+    const meta: { ipAddress?: string; userAgent?: string } = {};
+    if (ipAddress !== undefined) meta.ipAddress = ipAddress;
+    if (userAgent !== undefined) meta.userAgent = userAgent;
+
+    const result = await AuthService.googleLoginOrRegister(email, firstName, lastName, meta);
+    
+    // Set refresh token in cookie
+    res.cookie('km_refresh', result.refreshToken, REFRESH_COOKIE_OPTIONS);
+
+    const frontendUrl = process.env['FRONTEND_URL'] || 'http://localhost:5173';
+    
+    res.redirect(`${frontendUrl}/login?accessToken=${result.accessToken}&requiresSetup=${result.requiresSetup}&tenantSlug=${result.user.tenantSlug || ''}`);
+  } catch (error) {
+    console.error('Google OAuth Error:', error);
+    res.redirect(`${process.env['FRONTEND_URL'] || 'http://localhost:5173'}/login?error=Google_OAuth_Failed`);
+  }
+}
+
+export async function completeSetupHandler(req: Request, res: Response) {
+  const { companyName } = req.body;
+  if (!companyName || typeof companyName !== 'string') {
+    res.status(400).json({ success: false, error: { message: 'Company name is required' } });
+    return;
+  }
+
+  const tenant = await AuthService.completeSetup(req.auth!.userId, companyName);
+  
+  res.json({
+    success: true,
+    data: { tenantSlug: tenant.slug },
+    message: 'Setup completed successfully'
+  });
+}

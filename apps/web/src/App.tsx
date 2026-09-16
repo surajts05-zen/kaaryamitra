@@ -112,14 +112,24 @@ import { DeveloperHubPage } from '@/pages/company/settings/developer-hub';
 import { CompanyBillingPage } from '@/pages/company/settings/billing';
 import { CompanyPlanComparePage } from '@/pages/company/settings/billing/plan-compare';
 
+import { LandingPage } from '@/pages/landing';
+import { RegisterPage } from '@/pages/register';
+import { PrivacyPage } from '@/pages/privacy';
+import { TermsPage } from '@/pages/terms';
+import { CompleteSetupPage } from '@/pages/complete-setup';
+
 /**
  * KaaryaMitra App Router
  */
 export function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/complete-setup" element={<CompleteSetupPage />} />
       <Route path="/contact" element={<ContactPage />} />
 
       <Route element={<ProtectedRoute />}>

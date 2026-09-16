@@ -10,6 +10,7 @@ export const registerSchema = z.object({
       .regex(/[0-9]/, 'Password must contain a number'),
     firstName: z.string().min(1, 'First name required').max(64),
     lastName: z.string().min(1, 'Last name required').max(64),
+    companyName: z.string().min(2, 'Company name is required').max(100),
   }),
 });
 

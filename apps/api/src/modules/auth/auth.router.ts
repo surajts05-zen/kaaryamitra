@@ -6,6 +6,9 @@ import {
   refreshHandler,
   logoutHandler,
   getMeHandler,
+  googleOAuthRedirect,
+  googleOAuthCallback,
+  completeSetupHandler
 } from './auth.controller.js';
 import { requireAuth } from '../../middleware/auth.js';
 
@@ -20,6 +23,9 @@ authRouter.post('/logout', requireAuth, asyncHandler(logoutHandler));
 // Current user
 authRouter.get('/me', requireAuth, asyncHandler(getMeHandler));
 
-// Google OAuth (implemented in Phase 2)
-// authRouter.get('/google', googleOAuthRedirect);
-// authRouter.get('/google/callback', asyncHandler(googleOAuthCallback));
+// Setup
+authRouter.post('/complete-setup', requireAuth, asyncHandler(completeSetupHandler));
+
+// Google OAuth
+authRouter.get('/google', googleOAuthRedirect);
+authRouter.get('/google/callback', asyncHandler(googleOAuthCallback));

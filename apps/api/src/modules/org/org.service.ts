@@ -103,6 +103,8 @@ export class OrgService {
   // ── Company Settings & Holidays ────────────────────────────────────────────
 
   static async getCompanySettings(tenantId: string) {
+    if (!tenantId) throw AppError.forbidden('Company settings are only available within a tenant context');
+
     let settings = await prisma.companySettings.findUnique({ where: { tenantId } });
     if (!settings) {
       settings = await prisma.companySettings.create({
@@ -114,6 +116,7 @@ export class OrgService {
   }
 
   static async updateCompanySettings(tenantId: string, data: z.infer<typeof updateCompanySettingsSchema>['body']) {
+    if (!tenantId) throw AppError.forbidden('Company settings are only available within a tenant context');
     const { companyName, geminiApiKey, ...settingsData } = data;
     const updateData: any = { ...settingsData };
     

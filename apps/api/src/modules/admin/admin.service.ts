@@ -35,6 +35,98 @@ export class AdminService {
     };
   }
 
+  static async createTenantWithDefaults(tx: any, name: string, slug: string, plan: any) {
+    return tx.tenant.create({
+      data: {
+        name,
+        slug,
+        plan,
+        status: 'ACTIVE',
+        documentCategories: {
+          create: [
+            { name: 'Id Proof', description: 'Government issued ID card', isRequired: true },
+            { name: 'Address Proof', description: 'Utility bill, passport, or rent agreement', isRequired: true },
+            { name: 'Nationality proof / passport', description: 'Passport or Citizenship document', isRequired: false }
+          ]
+        },
+        helpdeskCategories: {
+          create: [
+            { name: 'IT Support', description: 'Hardware, software, and network issues' },
+            { name: 'HR Inquiry', description: 'Payroll, benefits, and policies' },
+            { name: 'Facilities', description: 'Office maintenance and supplies' }
+          ]
+        },
+        checklistTemplates: {
+          create: [
+            {
+              name: 'Standard Onboarding',
+              type: 'ONBOARDING',
+              description: 'Default onboarding checklist for new hires',
+              tasks: {
+                create: [
+                  { title: 'Setup Workstation & Hardware', assigneeRole: 'IT', description: 'Provide laptop and required accessories' },
+                  { title: 'Create Email & Software Accounts', assigneeRole: 'IT', description: 'Create work accounts' },
+                  { title: 'Collect Legal Documents', assigneeRole: 'HR', description: 'Collect signed documents and ID' },
+                  { title: 'Welcome Orientation', assigneeRole: 'MANAGER', description: 'Introduce to the team' }
+                ]
+              }
+            },
+            {
+              name: 'Standard Offboarding',
+              type: 'OFFBOARDING',
+              description: 'Default offboarding checklist',
+              tasks: {
+                create: [
+                  { title: 'Revoke System Access', assigneeRole: 'IT', description: 'Disable email and software access' },
+                  { title: 'Return of Assets', assigneeRole: 'IT', description: 'Ensure all assigned laptops, hardware, and access cards are returned' },
+                  { title: 'Conduct Exit Interview', assigneeRole: 'HR', description: 'Gather feedback before departure' },
+                  { title: 'Process Final Settlement', assigneeRole: 'HR', description: 'Clear dues and process F&F' }
+                ]
+              }
+            }
+          ]
+        },
+        roles: {
+          create: SYSTEM_ROLES.map((r: any) => ({
+            name: r.name,
+            description: r.description,
+            isSystem: r.isSystem,
+          }))
+        },
+        costCenters: {
+          create: [
+            { name: 'Engineering & Technology', code: 'ENG-01', isActive: true },
+            { name: 'Sales & Marketing', code: 'SLS-01', isActive: true },
+            { name: 'Human Resources', code: 'HR-01', isActive: true },
+            { name: 'Operations & Admin', code: 'OPS-01', isActive: true }
+          ]
+        },
+        budgetCategories: {
+          create: [
+            { name: 'Software Subscriptions', code: 'SW-OPEX', capexOpex: 'OPEX', isActive: true },
+            { name: 'Hardware & Equipment', code: 'HW-CAPEX', capexOpex: 'CAPEX', isActive: true },
+            { name: 'Travel & Events', code: 'TRV-OPEX', capexOpex: 'OPEX', isActive: true },
+            { name: 'Consulting & Services', code: 'CNS-OPEX', capexOpex: 'OPEX', isActive: true }
+          ]
+        },
+        projects: {
+          create: [
+            { 
+              name: 'Internal Operations FY26', 
+              code: 'INT-FY26', 
+              description: 'Default bucket for internal operational expenses',
+              status: 'ACTIVE',
+              priority: 'MEDIUM',
+              approvedBudget: 1000000,
+              currentBudget: 1000000
+            }
+          ]
+        }
+      },
+      include: { roles: true }
+    });
+  }
+
   static async createTenant(input: CreateTenantInput) {
     // Check slug uniqueness
     const existing = await prisma.tenant.findUnique({ where: { slug: input.slug } });
@@ -45,95 +137,7 @@ export class AdminService {
     // Wrap in transaction to ensure tenant and initial admin user are created together
     const { tenant, adminUser, generatedUsers } = await prisma.$transaction(async (tx) => {
       // 1. Create Tenant and default roles
-      const tenant = await tx.tenant.create({
-        data: {
-          name: input.name,
-          slug: input.slug,
-          plan: input.plan,
-          status: 'ACTIVE',
-          documentCategories: {
-            create: [
-              { name: 'Id Proof', description: 'Government issued ID card', isRequired: true },
-              { name: 'Address Proof', description: 'Utility bill, passport, or rent agreement', isRequired: true },
-              { name: 'Nationality proof / passport', description: 'Passport or Citizenship document', isRequired: false }
-            ]
-          },
-          helpdeskCategories: {
-            create: [
-              { name: 'IT Support', description: 'Hardware, software, and network issues' },
-              { name: 'HR Inquiry', description: 'Payroll, benefits, and policies' },
-              { name: 'Facilities', description: 'Office maintenance and supplies' }
-            ]
-          },
-          checklistTemplates: {
-            create: [
-              {
-                name: 'Standard Onboarding',
-                type: 'ONBOARDING',
-                description: 'Default onboarding checklist for new hires',
-                tasks: {
-                  create: [
-                    { title: 'Setup Workstation & Hardware', assigneeRole: 'IT', description: 'Provide laptop and required accessories' },
-                    { title: 'Create Email & Software Accounts', assigneeRole: 'IT', description: 'Create work accounts' },
-                    { title: 'Collect Legal Documents', assigneeRole: 'HR', description: 'Collect signed documents and ID' },
-                    { title: 'Welcome Orientation', assigneeRole: 'MANAGER', description: 'Introduce to the team' }
-                  ]
-                }
-              },
-              {
-                name: 'Standard Offboarding',
-                type: 'OFFBOARDING',
-                description: 'Default offboarding checklist',
-                tasks: {
-                  create: [
-                    { title: 'Revoke System Access', assigneeRole: 'IT', description: 'Disable email and software access' },
-                    { title: 'Return of Assets', assigneeRole: 'IT', description: 'Ensure all assigned laptops, hardware, and access cards are returned' },
-                    { title: 'Conduct Exit Interview', assigneeRole: 'HR', description: 'Gather feedback before departure' },
-                    { title: 'Process Final Settlement', assigneeRole: 'HR', description: 'Clear dues and process F&F' }
-                  ]
-                }
-              }
-            ]
-          },
-          roles: {
-            create: SYSTEM_ROLES.map(r => ({
-              name: r.name,
-              description: r.description,
-              isSystem: r.isSystem,
-            }))
-          },
-          costCenters: {
-            create: [
-              { name: 'Engineering & Technology', code: 'ENG-01', isActive: true },
-              { name: 'Sales & Marketing', code: 'SLS-01', isActive: true },
-              { name: 'Human Resources', code: 'HR-01', isActive: true },
-              { name: 'Operations & Admin', code: 'OPS-01', isActive: true }
-            ]
-          },
-          budgetCategories: {
-            create: [
-              { name: 'Software Subscriptions', code: 'SW-OPEX', capexOpex: 'OPEX', isActive: true },
-              { name: 'Hardware & Equipment', code: 'HW-CAPEX', capexOpex: 'CAPEX', isActive: true },
-              { name: 'Travel & Events', code: 'TRV-OPEX', capexOpex: 'OPEX', isActive: true },
-              { name: 'Consulting & Services', code: 'CNS-OPEX', capexOpex: 'OPEX', isActive: true }
-            ]
-          },
-          projects: {
-            create: [
-              { 
-                name: 'Internal Operations FY26', 
-                code: 'INT-FY26', 
-                description: 'Default bucket for internal operational expenses',
-                status: 'ACTIVE',
-                priority: 'MEDIUM',
-                approvedBudget: 1000000,
-                currentBudget: 1000000
-              }
-            ]
-          }
-        },
-        include: { roles: true }
-      });
+      const tenant = await AdminService.createTenantWithDefaults(tx, input.name, input.slug, input.plan);
 
       // 2. Generate random password for the new tenant admin
       const adminPassword = crypto.randomBytes(8).toString('hex');

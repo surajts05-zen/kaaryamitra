@@ -11,6 +11,8 @@ import { AppError } from '../../lib/errors.js';
 import type { RegisterInput, LoginInput } from './auth.schema.js';
 import crypto from 'node:crypto';
 
+import { AdminService } from '../admin/admin.service.js';
+
 export class AuthService {
   // ── Register ────────────────────────────────────────────────────────────────
 
@@ -20,15 +22,38 @@ export class AuthService {
 
     const passwordHash = await hashPassword(input.password);
 
-    const user = await prisma.user.create({
-      data: {
-        email: input.email,
-        firstName: input.firstName,
-        lastName: input.lastName,
-        passwordHash,
-        authProvider: 'LOCAL',
-        status: 'ACTIVE',
-      },
+    // Generate slug from company name
+    const baseSlug = input.companyName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    let slug = baseSlug;
+    let counter = 1;
+    while (await prisma.tenant.findUnique({ where: { slug } })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
+    const { user, tenant } = await prisma.$transaction(async (tx) => {
+      const tenant = await AdminService.createTenantWithDefaults(tx, input.companyName, slug, 'FREE');
+
+      const user = await tx.user.create({
+        data: {
+          tenantId: tenant.id,
+          email: input.email,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          passwordHash,
+          authProvider: 'LOCAL',
+          status: 'ACTIVE',
+        },
+      });
+
+      const companyAdminRole = tenant.roles.find((r: any) => r.name === 'Company Admin');
+      if (companyAdminRole) {
+        await tx.userRole.create({
+          data: { userId: user.id, roleId: companyAdminRole.id },
+        });
+      }
+
+      return { user, tenant };
     });
 
     const sessionId = generateSessionId();
@@ -117,6 +142,91 @@ export class AuthService {
       .catch(() => {
         // Silently ignore if session not found
       });
+  }
+
+  // ── Google SSO ─────────────────────────────────────────────────────────────
+
+  static async googleLoginOrRegister(
+    email: string,
+    firstName: string,
+    lastName: string,
+    meta?: { ipAddress?: string; userAgent?: string }
+  ) {
+    const normalizedEmail = email.toLowerCase().trim();
+    let user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      include: {
+        tenant: { select: { slug: true } },
+        userRoles: { include: { role: true } },
+      },
+    });
+
+    if (user) {
+      if (user.status === 'INACTIVE') throw AppError.forbidden('Account is deactivated');
+      
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
+      });
+    } else {
+      // User doesn't exist, create an orphan user for "Complete Setup" flow
+      user = await prisma.user.create({
+        data: {
+          email: normalizedEmail,
+          firstName,
+          lastName,
+          authProvider: 'GOOGLE',
+          status: 'ACTIVE',
+        },
+        include: {
+          tenant: { select: { slug: true } },
+          userRoles: { include: { role: true } },
+        },
+      });
+    }
+
+    const sessionId = generateSessionId();
+    const { accessToken, refreshToken } = await AuthService.createSession(
+      user.id,
+      sessionId,
+      meta,
+    );
+
+    return { user: AuthService.sanitizeUser(user), accessToken, refreshToken, requiresSetup: !user.tenantId && !user.isSuperAdmin };
+  }
+
+  static async completeSetup(userId: string, companyName: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw AppError.notFound('User not found');
+    if (user.tenantId) throw AppError.badRequest('Setup already completed');
+
+    const baseSlug = companyName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    let slug = baseSlug;
+    let counter = 1;
+    while (await prisma.tenant.findUnique({ where: { slug } })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
+    const tenant = await prisma.$transaction(async (tx) => {
+      const newTenant = await AdminService.createTenantWithDefaults(tx, companyName, slug, 'FREE');
+      
+      await tx.user.update({
+        where: { id: user.id },
+        data: { tenantId: newTenant.id },
+      });
+
+      const companyAdminRole = newTenant.roles.find((r: any) => r.name === 'Company Admin');
+      if (companyAdminRole) {
+        await tx.userRole.create({
+          data: { userId: user.id, roleId: companyAdminRole.id },
+        });
+      }
+
+      return newTenant;
+    });
+
+    return tenant;
   }
 
   // ── Get Me ──────────────────────────────────────────────────────────────────
