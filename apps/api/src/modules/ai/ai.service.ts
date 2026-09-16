@@ -27,7 +27,7 @@ export async function getAiClient(tenantId: string) {
   
   // Only fallback to platform keys if they have purchased the AI Add-on (or it's included in their plan)
   if (!apiKey && hasPaidAi) {
-    apiKey = dbSettings?.geminiApiKey || process.env['GEMINI_API_KEY'];
+    apiKey = process.env['GEMINI_API_KEY'];
   }
 
   if (!apiKey) return null;

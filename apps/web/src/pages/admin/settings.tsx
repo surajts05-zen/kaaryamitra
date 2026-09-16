@@ -22,11 +22,6 @@ const settingsSchema = z.object({
   smtpUser: z.string().optional().or(z.literal('')),
   smtpPass: z.string().optional().or(z.literal('')),
   smtpFrom: z.string().optional().or(z.literal('')),
-  geminiApiKey: z.string().optional().or(z.literal('')),
-  s3Bucket: z.string().optional().or(z.literal('')),
-  s3Region: z.string().optional().or(z.literal('')),
-  s3AccessKey: z.string().optional().or(z.literal('')),
-  s3SecretKey: z.string().optional().or(z.literal('')),
 });
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -53,11 +48,6 @@ export function AdminSettingsPage() {
         smtpUser: settings.smtpUser || '',
         smtpPass: settings.smtpPass || '',
         smtpFrom: settings.smtpFrom || '',
-        geminiApiKey: settings.geminiApiKey || '',
-        s3Bucket: settings.s3Bucket || '',
-        s3Region: settings.s3Region || '',
-        s3AccessKey: settings.s3AccessKey || '',
-        s3SecretKey: settings.s3SecretKey || '',
       });
     }
   }, [settings, reset]);
@@ -172,98 +162,7 @@ export function AdminSettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Global AI Integration Settings */}
-        <Card className="border-border/60">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400">
-                <Sparkles className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle>Global AI Configuration (Gemini API)</CardTitle>
-                <CardDescription>
-                  Set the platform default Gemini API key for Karya Mitra Assistant and smart HR features.
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
 
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="geminiApiKey">Platform Gemini API Key</Label>
-              <Input
-                id="geminiApiKey"
-                type="password"
-                placeholder="AIzaSy..."
-                {...register('geminiApiKey')}
-              />
-              <p className="text-xs text-muted-foreground">
-                Tenants can override this key in their workspace settings. If unconfigured by a tenant, the system falls back to this global key.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Global S3 Storage Settings */}
-        <Card className="border-border/60">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                <Server className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle>File Storage (S3) Configuration</CardTitle>
-                <CardDescription>
-                  Configure AWS S3 or compatible object storage credentials to store platform documents and assets.
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="s3Bucket">Bucket Name</Label>
-                <Input
-                  id="s3Bucket"
-                  placeholder="e.g. kaaryamitra-assets"
-                  {...register('s3Bucket')}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="s3Region">Region</Label>
-                <Input
-                  id="s3Region"
-                  placeholder="e.g. ap-south-1"
-                  {...register('s3Region')}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="s3AccessKey">Access Key ID</Label>
-                <Input
-                  id="s3AccessKey"
-                  type="password"
-                  placeholder="••••••••••••"
-                  {...register('s3AccessKey')}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="s3SecretKey">Secret Access Key</Label>
-                <Input
-                  id="s3SecretKey"
-                  type="password"
-                  placeholder="••••••••••••"
-                  {...register('s3SecretKey')}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         <div className="flex justify-end gap-3">
           <Button

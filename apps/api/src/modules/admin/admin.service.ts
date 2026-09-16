@@ -321,11 +321,6 @@ export class AdminService {
       smtpUser: null,
       smtpPass: null,
       smtpFrom: null,
-      geminiApiKey: null,
-      s3Bucket: null,
-      s3Region: null,
-      s3AccessKey: null,
-      s3SecretKey: null,
     };
   }
 

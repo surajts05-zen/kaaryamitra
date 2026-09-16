@@ -29,11 +29,6 @@ export const updatePlatformSettingsSchema = z.object({
     smtpUser: z.string().optional().nullable(),
     smtpPass: z.string().optional().nullable(),
     smtpFrom: z.string().optional().nullable(),
-    geminiApiKey: z.string().optional().nullable(),
-    s3Bucket: z.string().optional().nullable(),
-    s3Region: z.string().optional().nullable(),
-    s3AccessKey: z.string().optional().nullable(),
-    s3SecretKey: z.string().optional().nullable(),
   }),
 });
 
