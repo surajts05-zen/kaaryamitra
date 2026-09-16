@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,7 +21,35 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const login = useAuthStore((state) => state.login);
+  const refreshUser = useAuthStore((state) => state.refreshUser);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const accessToken = searchParams.get('accessToken');
+    const requiresSetup = searchParams.get('requiresSetup') === 'true';
+    const error = searchParams.get('error');
+
+    if (error) {
+      toast.error('Google authentication failed');
+    } else if (accessToken) {
+      localStorage.setItem('km_access_token', accessToken);
+      refreshUser().then(() => {
+        if (requiresSetup) {
+          navigate('/complete-setup');
+        } else {
+          const user = useAuthStore.getState().user;
+          if (user?.isSuperAdmin) {
+            navigate('/admin');
+          } else if (user?.tenantSlug) {
+            navigate(`/t/${user.tenantSlug}/dashboard`);
+          } else {
+            navigate('/');
+          }
+        }
+      });
+    }
+  }, [searchParams, navigate, refreshUser]);
 
   const {
     register,
