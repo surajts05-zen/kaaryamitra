@@ -9,6 +9,7 @@ export const BILLING_QUERY_KEYS = {
   adminSubscriptions: ['admin', 'billing', 'subscriptions'],
   adminStats: ['admin', 'billing', 'stats'],
   adminRazorpay: ['admin', 'billing', 'razorpay'],
+  addons: ['admin', 'billing', 'addons'],
 };
 
 // ── Types (mirrored from backend) ───────────────────────────────────────────
@@ -99,6 +100,7 @@ export function useCreateSubscription() {
       billingCycle: 'MONTHLY' | 'ANNUAL';
       currency: 'INR' | 'USD';
       addonKeys: string[];
+      customerEmail?: string;
     }) => {
       if (!tenant) throw new Error('No tenant context');
       const res = await api.post(`/t/${tenant.slug}/billing/subscription`, input);
@@ -173,7 +175,7 @@ export function useAdminSubscriptions(params: { page: number; limit: number; sta
 export function useUpdateRazorpaySettings() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { razorpayKeyId: string; razorpayKeySecret: string; razorpayWebhookSecret?: string }) => {
+    mutationFn: async (input: { razorpayKeyId: string; razorpayKeySecret: string; razorpayWebhookSecret?: string | undefined }) => {
       const res = await api.post('/admin/billing/settings/razorpay', input);
       return res.data.data;
     },
@@ -188,7 +190,7 @@ export function useAdminPlans() {
     queryKey: BILLING_QUERY_KEYS.plans,
     queryFn: async () => {
       const res = await api.get('/admin/billing/plans');
-      return res.data.data as Plan[];
+      return res.data.data as PlanDefinition[];
     },
   });
 }
@@ -196,7 +198,7 @@ export function useAdminPlans() {
 export function useUpdateAdminPlan() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<Plan> }) => {
+    mutationFn: async ({ id, data }: { id: string; data: Partial<PlanDefinition> }) => {
       const res = await api.patch(`/admin/billing/plans/${id}`, data);
       return res.data.data;
     },
@@ -211,7 +213,7 @@ export function useAdminAddons() {
     queryKey: BILLING_QUERY_KEYS.addons,
     queryFn: async () => {
       const res = await api.get('/admin/billing/addons');
-      return res.data.data as Addon[];
+      return res.data.data as ModuleAddon[];
     },
   });
 }
@@ -219,7 +221,7 @@ export function useAdminAddons() {
 export function useUpdateAdminAddon() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<Addon> }) => {
+    mutationFn: async ({ id, data }: { id: string; data: Partial<ModuleAddon> }) => {
       const res = await api.patch(`/admin/billing/addons/${id}`, data);
       return res.data.data;
     },
