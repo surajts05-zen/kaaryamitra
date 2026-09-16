@@ -159,7 +159,7 @@ export class AdminService {
       });
 
       // Assign Company Admin role to the Tenant Admin
-      const companyAdminRole = tenant.roles.find(r => r.name === 'Company Admin');
+      const companyAdminRole = tenant.roles.find((r: any) => r.name === 'Company Admin');
       if (companyAdminRole) {
         await tx.userRole.create({
           data: { userId: adminUser.id, roleId: companyAdminRole.id },
@@ -169,7 +169,7 @@ export class AdminService {
       // 4. Generate Example Users for the other roles
       const generatedUsers: { email: string; password: string; role: string }[] = [];
       
-      const rolesToSeed = tenant.roles.filter(r => r.name !== 'Company Admin');
+      const rolesToSeed = tenant.roles.filter((r: any) => r.name !== 'Company Admin');
       for (const role of rolesToSeed) {
         const rawPassword = crypto.randomBytes(8).toString('hex');
         const passwordHash = await hashPassword(rawPassword);
