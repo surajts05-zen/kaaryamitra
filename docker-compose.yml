@@ -50,6 +50,9 @@ services:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-kaaryamitra}:${POSTGRES_PASSWORD:-km_secret_change_me}@postgres:5432/${POSTGRES_DB:-kaaryamitra_db}}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+    networks:
+      - default
+      - dokploy-network
     # ports:
     #   - '3000:3000'
 
@@ -65,7 +68,15 @@ services:
     #   - '80:80'
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000}
+    networks:
+      - default
+      - dokploy-network
 
 volumes:
   postgres_data:
   redis_data:
+
+networks:
+  default:
+  dokploy-network:
+    external: true
