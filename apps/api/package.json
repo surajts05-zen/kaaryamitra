@@ -9,7 +9,7 @@
     "start": "node dist/index.js",
     "db:migrate": "prisma migrate dev",
     "db:migrate:prod": "prisma migrate deploy",
-    "db:seed": "tsx src/prisma/seed.ts",
+    "db:seed": "tsx src/prisma/seed.ts && tsx src/modules/billing/billing-seed.ts",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
     "test": "vitest run",
