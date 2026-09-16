@@ -13,11 +13,12 @@ export function errorHandler(
 ): void {
   // Zod validation errors
   if (err instanceof ZodError) {
+    const issues = err.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ');
     const response: ApiErrorResponse = {
       success: false,
       error: {
         code: 'VALIDATION_ERROR',
-        message: 'Validation failed',
+        message: `Validation failed: ${issues}`,
         details: err.flatten().fieldErrors,
       },
     };
