@@ -9,8 +9,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-kaaryamitra}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-km_secret_change_me}
       POSTGRES_DB: ${POSTGRES_DB:-kaaryamitra_db}
-    ports:
-      - '5432:5432'
+    # ports:
+    #   - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -23,8 +23,8 @@ services:
     image: redis:7-alpine
     container_name: km_redis
     restart: unless-stopped
-    ports:
-      - '6379:6379'
+    # ports:
+    #   - '6379:6379'
     volumes:
       - redis_data:/data
     healthcheck:
@@ -48,8 +48,8 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-kaaryamitra}:${POSTGRES_PASSWORD:-km_secret_change_me}@postgres:5432/${POSTGRES_DB:-kaaryamitra_db}
       REDIS_URL: redis://redis:6379
-    ports:
-      - '3000:3000'
+    # ports:
+    #   - '3000:3000'
 
   web:
     build:
@@ -59,8 +59,8 @@ services:
     restart: unless-stopped
     depends_on:
       - api
-    ports:
-      - '80:80'
+    # ports:
+    #   - '80:80'
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000}
 
