@@ -52,3 +52,6 @@ Thumbs.db
 
 # Testing
 .vitest/
+
+# Auto-updated patterns
+.env*
