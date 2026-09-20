@@ -25,7 +25,7 @@ export async function bulkCreateHandler(req: Request, res: Response) {
 
 export async function updateHandler(req: Request, res: Response) {
   const body = updateProjectSchema.parse(req.body);
-  const data = await ProjectsService.update(req.tenantId!, req.params.id as string, body);
+  const data = await ProjectsService.update(req.tenantId!, req.params.id as string, req.auth!.userId, body);
   res.status(200).json({ success: true, data });
 }
 

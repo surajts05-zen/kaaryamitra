@@ -96,6 +96,10 @@ import { LibraryViewerPage } from '@/pages/company/library/viewer';
 import ReportsDashboard from '@/pages/company/reports/index';
 import ReportBuilder from '@/pages/company/reports/builder';
 
+// Meetings & Calendar
+import { MeetingsDashboardPage } from '@/pages/company/meetings';
+import { MeetingWorkspacePage } from '@/pages/company/meetings/workspace';
+
 // Projects & Budgets
 import { ProjectsPage } from '@/pages/company/projects';
 import { ProjectDetailPage } from '@/pages/company/projects/detail';
@@ -182,6 +186,12 @@ export function App() {
             <Route path="library/editor" element={<LibraryEditorPage />} />
             <Route path="library/editor/:id" element={<LibraryEditorPage />} />
             <Route path="library/viewer/:id" element={<LibraryViewerPage />} />
+
+            {/* Meetings & Calendar */}
+            <Route path="meetings">
+              <Route index element={<MeetingsDashboardPage />} />
+              <Route path="workspace/:id" element={<MeetingWorkspacePage />} />
+            </Route>
 
             {/* Reports */}
             <Route path="reports" element={<ReportsDashboard />} />

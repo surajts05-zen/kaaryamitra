@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useCreateProject } from '@/features/projects/projects.service';
+import { useEmployees } from '@/features/company/hooks/use-employee-queries';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCurrency } from '@/hooks/use-currency';
 
@@ -20,8 +22,18 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
   const [priority, setPriority] = useState('MEDIUM');
   const [status, setStatus] = useState('DRAFT');
   const [approvedBudget, setApprovedBudget] = useState<number | ''>('');
+  const [members, setMembers] = useState<{employeeId: string, role: string, accessLevel: string}[]>([]);
   
   const createMutation = useCreateProject();
+  const { data: employees } = useEmployees();
+
+  const handleAddMember = () => setMembers([...members, { employeeId: '', role: 'Member', accessLevel: 'READ_ONLY' }]);
+  const handleRemoveMember = (index: number) => setMembers(members.filter((_, i) => i !== index));
+  const handleMemberChange = (index: number, field: string, value: string) => {
+    const newMembers = [...members];
+    newMembers[index] = { ...newMembers[index], [field]: value } as any;
+    setMembers(newMembers);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +49,7 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
         priority,
         status,
         approvedBudget: Number(approvedBudget) || 0,
+        members: members.filter(m => m.employeeId !== '') as { employeeId: string; role: string; accessLevel: string }[]
       });
       toast.success('Project created successfully');
       onClose();
@@ -46,6 +59,7 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
       setPriority('MEDIUM');
       setStatus('DRAFT');
       setApprovedBudget('');
+      setMembers([]);
     } catch (error: any) {
       toast.error(error?.response?.data?.error?.message || 'Failed to create project');
     }
@@ -101,6 +115,53 @@ export function NewProjectModal({ isOpen, onClose }: NewProjectModalProps) {
           <div className="space-y-2">
             <Label>Approved Budget ({currencySymbol})</Label>
             <Input type="number" min={0} value={approvedBudget} onChange={e => setApprovedBudget(e.target.value ? Number(e.target.value) : '')} placeholder="e.g. 500000" />
+          </div>
+
+          <div className="space-y-4 pt-2">
+            <div className="flex justify-between items-center border-b pb-2">
+              <h3 className="text-sm font-semibold">Project Members</h3>
+              <Button type="button" variant="outline" size="sm" onClick={handleAddMember}>
+                <Plus className="h-4 w-4 mr-2" /> Add Member
+              </Button>
+            </div>
+            
+            {members.map((member, index) => (
+              <div key={index} className="grid grid-cols-12 gap-3 items-start bg-muted/50 p-3 rounded-md border">
+                <div className="col-span-12 md:col-span-4 space-y-1">
+                  <Label className="text-xs">Employee</Label>
+                  <Select value={member.employeeId} onValueChange={(val) => handleMemberChange(index, 'employeeId', val)}>
+                    <SelectTrigger className="h-9"><SelectValue placeholder="Select..." /></SelectTrigger>
+                    <SelectContent>
+                      {employees?.map((emp: any) => (
+                        <SelectItem key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="col-span-6 md:col-span-4 space-y-1">
+                  <Label className="text-xs">Role</Label>
+                  <Input className="h-9" value={member.role} onChange={(e) => handleMemberChange(index, 'role', e.target.value)} />
+                </div>
+                
+                <div className="col-span-4 md:col-span-3 space-y-1">
+                  <Label className="text-xs">Access Level</Label>
+                  <Select value={member.accessLevel} onValueChange={(val) => handleMemberChange(index, 'accessLevel', val)}>
+                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="READ_ONLY">Read Only</SelectItem>
+                      <SelectItem value="READ_WRITE">Read/Write</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="col-span-2 md:col-span-1 flex justify-end mt-6">
+                  <Button type="button" variant="ghost" size="icon" className="text-red-500 h-9 w-9" onClick={() => handleRemoveMember(index)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
 
           <DialogFooter className="mt-6">

@@ -19,6 +19,7 @@ export interface ProjectMilestone {
   projectId: string;
   name: string;
   description?: string;
+  ownerId?: string;
   status: string;
   completionPct: number;
   plannedStart?: string;

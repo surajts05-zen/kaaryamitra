@@ -19,7 +19,8 @@ const envSchema = z.object({
 
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
-  GOOGLE_CALLBACK_URL: z.string().url().optional(),
+  GOOGLE_CALLBACK_URL: z.string().url().optional(),         // SSO login callback
+  GOOGLE_CALENDAR_CALLBACK_URL: z.string().url().optional(), // Calendar sync callback
 
   S3_ENDPOINT: z.string().optional(),
   S3_REGION: z.string().default('ap-south-1'),
@@ -40,6 +41,7 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().optional(),
 
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  FRONTEND_URL: z.string().default('http://localhost:5173'),
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
 
   // Performance

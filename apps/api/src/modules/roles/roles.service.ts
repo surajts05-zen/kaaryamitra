@@ -56,10 +56,18 @@ export async function seedSystemRoles(tenantId: string) {
       'attendance:manage',
       'report:read',
       'document:read',
+      'meeting:read',
+      'meeting:create',
+      'meeting:update',
+      'meeting:cancel',
+      'calendar.sync',
     ]
       .map((action) => permMap.get(action))
       .filter(Boolean) as string[],
-    Employee: ['leave:apply', 'leave:read', 'attendance:checkin', 'attendance:read', 'document:read', 'document:upload']
+    Employee: [
+      'leave:apply', 'leave:read', 'attendance:checkin', 'attendance:read', 'document:read', 'document:upload',
+      'meeting:read', 'meeting:create', 'meeting:update', 'meeting:cancel', 'calendar.sync'
+    ]
       .map((action) => permMap.get(action))
       .filter(Boolean) as string[],
     'Project Manager': [

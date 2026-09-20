@@ -250,6 +250,38 @@ export class AuthService {
     return AuthService.sanitizeUser(user);
   }
 
+  // ── Presence & Pinned Colleagues ────────────────────────────────────────────
+
+  static async updatePresence(userId: string, presenceStatus: any) {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { presenceStatus },
+      include: { tenant: { select: { slug: true } }, userRoles: { include: { role: true } } },
+    });
+    return AuthService.sanitizeUser(user);
+  }
+
+  static async updatePinnedColleagues(userId: string, pinnedEmployeeIds: string[]) {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { pinnedEmployeeIds },
+      include: { tenant: { select: { slug: true } }, userRoles: { include: { role: true } } },
+    });
+    return AuthService.sanitizeUser(user);
+  }
+
+  static async getBulkPresence(userIds: string[]) {
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, presenceStatus: true },
+    });
+    const result: Record<string, string> = {};
+    for (const u of users) {
+      if (u.presenceStatus) result[u.id] = u.presenceStatus;
+    }
+    return result;
+  }
+
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
   private static async createSession(
@@ -297,6 +329,8 @@ export class AuthService {
       tenantId: user.tenantId,
       tenantSlug: user.tenant?.slug ?? null,
       roles,
+      presenceStatus: user.presenceStatus,
+      pinnedEmployeeIds: user.pinnedEmployeeIds,
     };
   }
 }

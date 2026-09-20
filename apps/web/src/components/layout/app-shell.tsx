@@ -78,6 +78,7 @@ export const navItems: NavItem[] = [
   { icon: Target,        label: 'Goals',         path: 'performance/goals', allowedRoles: HR_ROLES, group: 'Management' },
   { icon: Target,        label: 'Review Cycles', path: 'performance/reviews', allowedRoles: HR_ROLES, group: 'Management' },
   { icon: FolderGit2,    label: 'Projects',      path: 'projects',          allowedRoles: FINANCE_ROLES, group: 'Management' },
+  { icon: CalendarDays,  label: 'Meetings',      path: 'meetings',          group: 'Management' },
   { icon: Landmark,      label: 'Budgets',       path: 'budgets',           allowedRoles: FINANCE_ROLES, group: 'Management' },
 
   { icon: LayoutDashboard, label: 'Reports', path: 'reports', allowedRoles: HR_ROLES, group: 'Data & Analytics' },

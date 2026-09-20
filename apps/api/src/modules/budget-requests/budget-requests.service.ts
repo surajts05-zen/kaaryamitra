@@ -33,7 +33,7 @@ export class BudgetRequestsService {
   }
 
   static async create(tenantId: string, requesterId: string, data: any) {
-    const { lineItems, ...rest } = data;
+    const { lineItems, members, ...rest } = data;
 
     const sanitizeFk = (id?: string) => (!id || id === 'NONE' || id.trim() === '' ? null : id);
 
@@ -65,21 +65,37 @@ export class BudgetRequestsService {
               categoryId: sanitizeFk(li.categoryId),
               requestedAmount: li.quantity * li.unitCost
             }))
-          }
+          },
+          members: members ? {
+            create: members.map((m: any) => ({
+              employeeId: m.employeeId,
+              accessLevel: m.accessLevel || 'READ_ONLY'
+            }))
+          } : undefined
         },
-        include: { lineItems: true }
+        include: { lineItems: true, members: true }
       });
       return br;
     });
   }
 
-  static async update(tenantId: string, id: string, data: any) {
+  static async update(tenantId: string, id: string, userId: string, data: any) {
     const existing = await this.getById(tenantId, id);
     if (existing.status !== 'DRAFT') {
       throw AppError.badRequest('Can only edit draft budget requests');
     }
 
-    const { lineItems, ...rest } = data;
+    const employee = await prisma.employee.findUnique({ where: { userId } });
+    if (employee) {
+      const member = await prisma.budgetRequestMember.findFirst({
+        where: { budgetRequestId: id, employeeId: employee.id }
+      });
+      if (member && member.accessLevel === 'READ_ONLY') {
+        throw AppError.forbidden('You only have read-only access to this budget request');
+      }
+    }
+
+    const { lineItems, members, ...rest } = data;
     const sanitizeFk = (id?: string) => (id === undefined ? undefined : (!id || id === 'NONE' || id.trim() === '' ? null : id));
     
     return prisma.$transaction(async (tx) => {
@@ -104,10 +120,23 @@ export class BudgetRequestsService {
         }, 0);
       }
 
+      if (members) {
+        await tx.budgetRequestMember.deleteMany({ where: { budgetRequestId: id } });
+        if (members.length > 0) {
+          await tx.budgetRequestMember.createMany({
+            data: members.map((m: any) => ({
+              budgetRequestId: id,
+              employeeId: m.employeeId,
+              accessLevel: m.accessLevel || 'READ_ONLY'
+            }))
+          });
+        }
+      }
+
       return tx.budgetRequest.update({
         where: { id },
         data: rest,
-        include: { lineItems: true }
+        include: { lineItems: true, members: true }
       });
     });
   }

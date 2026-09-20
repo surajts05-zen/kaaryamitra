@@ -6,6 +6,9 @@ import {
   refreshHandler,
   logoutHandler,
   getMeHandler,
+  updatePresenceHandler,
+  updatePinnedColleaguesHandler,
+  getBulkPresenceHandler,
   googleOAuthRedirect,
   googleOAuthCallback,
   completeSetupHandler
@@ -22,6 +25,9 @@ authRouter.post('/logout', requireAuth, asyncHandler(logoutHandler));
 
 // Current user
 authRouter.get('/me', requireAuth, asyncHandler(getMeHandler));
+authRouter.put('/me/presence', requireAuth, asyncHandler(updatePresenceHandler));
+authRouter.put('/me/pinned-colleagues', requireAuth, asyncHandler(updatePinnedColleaguesHandler));
+authRouter.post('/presence/bulk', requireAuth, asyncHandler(getBulkPresenceHandler));
 
 // Setup
 authRouter.post('/complete-setup', requireAuth, asyncHandler(completeSetupHandler));

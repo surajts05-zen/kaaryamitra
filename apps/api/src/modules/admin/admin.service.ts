@@ -86,6 +86,14 @@ export class AdminService {
             }
           ]
         },
+        meetingTypes: {
+          create: [
+            { name: '1-on-1', color: '#3b82f6', description: 'One-on-one sync' },
+            { name: 'Team Sync', color: '#10b981', description: 'Weekly team sync' },
+            { name: 'Interview', color: '#8b5cf6', description: 'Candidate interview' },
+            { name: 'All Hands', color: '#f59e0b', description: 'Company all-hands' }
+          ]
+        },
         roles: {
           create: SYSTEM_ROLES.map((r: any) => ({
             name: r.name,

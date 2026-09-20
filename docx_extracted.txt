@@ -1,0 +1,826 @@
+Claude Implementation Prompt
+Meetings & Calendar Manager for Multi-Tenant HRMS
+Paste the prompt below into Claude Code/Coding Agent after giving it access to the existing HRMS repository. Claude should inspect and reuse the existing architecture rather than rebuilding the HRMS.
+You are a senior SaaS architect and full-stack engineer working on an existing modern multi-tenant HRMS/HRM application.
+
+Your task is to design and implement a first-class Meetings & Calendar Manager that integrates deeply with the existing HRMS.
+
+IMPORTANT:
+- Do NOT rebuild the HRMS.
+- First inspect the existing repository and architecture.
+- Reuse existing authentication, tenant isolation, RBAC, users/employees, departments, notifications, documents/files, tasks/projects, audit logging, workflows, email infrastructure, settings, UI components and design system.
+- Do not duplicate existing infrastructure.
+- Preserve all existing functionality.
+- Do not introduce destructive database migrations.
+- Implement incrementally, test each stage, and keep the application production-ready.
+- Every meeting-related object must be tenant-isolated and permission-checked server-side.
+
+============================================================
+1. PRODUCT VISION
+============================================================
+
+Create a professional Meeting Manager where a meeting is a complete business object rather than merely a calendar event.
+
+Core lifecycle:
+Scheduled → Confirmed → In Progress → Completed → Minutes Pending → Minutes Published → Action Items Pending → Closed
+
+Central workflow:
+Meeting → Agenda → Notes → Decisions → Action Items → Minutes of Meeting (MoM) → Distribution → Follow-up → Closure
+
+Use Google Calendar/Notion/Linear/Slack-style UX only as inspiration; do not copy proprietary UI.
+
+============================================================
+2. RBAC
+============================================================
+
+Reuse the existing permission system. Add or map permissions for:
+
+meeting.read
+meeting.create
+meeting.update
+meeting.delete
+meeting.cancel
+meeting.manage
+meeting.invite
+meeting.view_all
+meeting.view_team
+meeting.view_own
+
+meeting.notes.create
+meeting.notes.edit
+meeting.notes.view_private
+
+meeting.minutes.create
+meeting.minutes.edit
+meeting.minutes.publish
+meeting.minutes.send
+
+meeting.action_item.create
+meeting.action_item.edit
+meeting.action_item.assign
+meeting.action_item.complete
+
+calendar.view
+calendar.manage
+calendar.integration.manage
+
+meeting.room.manage
+meeting.template.manage
+meeting.report.view
+
+Do not create a second RBAC system.
+
+============================================================
+3. MEETING TYPES
+============================================================
+
+Make meeting types tenant-configurable. Initial defaults:
+- 1:1
+- Team Meeting
+- Department Meeting
+- HR Meeting
+- Interview
+- Performance Review
+- Project Review
+- Management Meeting
+- Board Meeting
+- Training
+- Client Meeting
+- Onboarding
+- Exit Meeting
+- Other
+
+Allow future per-type defaults for duration, agenda template, reminders, MoM template and privacy.
+
+============================================================
+4. CREATE / EDIT MEETING
+============================================================
+
+Required:
+- title
+- meeting type
+- date
+- start/end or duration
+- timezone
+- organizer
+- participants
+- location or meeting link
+
+Optional:
+- description
+- agenda
+- attachments
+- external guests
+- recurrence
+- reminders
+- visibility
+- meeting room
+- project/team
+- employee
+- department
+- HR workflow
+- task/project reference
+- tags
+
+Participants support internal employees, external guests, required/optional attendees and organizer.
+
+Provide Find a Time and clear conflict warnings.
+
+============================================================
+5. AVAILABILITY ENGINE
+============================================================
+
+Consider:
+- connected external calendars
+- working hours
+- timezone
+- approved leave
+- holidays
+- shifts
+- existing HRMS meetings
+- meeting-room availability
+
+Show conflicts clearly. Never silently move meetings. Allow authorized override.
+
+============================================================
+6. GOOGLE CALENDAR INTEGRATION
+============================================================
+
+Implement Google Calendar first using official OAuth/API mechanisms.
+
+Required:
+- connect Google account
+- secure OAuth
+- list/select calendars
+- read availability
+- create/update/cancel events
+- synchronize attendees, time, title/description and meeting links
+- synchronize supported external changes
+- refresh tokens
+- disconnect/revoke
+
+Security:
+- encrypted server-side token storage
+- never expose tokens to frontend
+- secure OAuth state and CSRF protection
+- minimum required scopes
+- graceful handling of expired/revoked credentials
+- audit integration changes
+
+Create a provider abstraction for future:
+- Microsoft Outlook / Microsoft 365
+- Apple Calendar / CalDAV / ICS where appropriate
+- other providers
+
+============================================================
+7. DATA MODEL
+============================================================
+
+Use existing models where possible. Likely entities:
+Meeting
+MeetingParticipant
+MeetingType
+MeetingAgendaItem
+MeetingNote
+MeetingDecision
+MeetingActionItem
+MeetingMinute
+MeetingMinuteVersion
+MeetingAttachment
+MeetingReminder
+MeetingRoom
+CalendarConnection
+Calendar
+CalendarEventMapping
+MeetingInvitation
+MeetingTemplate
+
+Reuse:
+Tenant, User, Employee, Department, Task, Project, Notification, Document/File, AuditLog, Workflow.
+
+Store external calendar event IDs/mappings.
+
+============================================================
+8. VIDEO / MEETING LINKS
+============================================================
+
+Support:
+- Google Meet first
+- Microsoft Teams future
+- Zoom future
+- custom URL
+- physical
+- hybrid
+
+============================================================
+9. UNIFIED CALENDAR
+============================================================
+
+Views:
+- Day
+- Week
+- Month
+- Agenda/List
+
+Toggleable categories:
+- Meetings
+- Leave
+- Holidays
+- Attendance
+- Training
+- Birthdays
+- Other HR events
+
+Filters:
+- employee
+- department/team
+- meeting type
+- organizer
+- location
+- status
+
+============================================================
+10. MEETING DASHBOARD
+============================================================
+
+Show:
+- Today's meetings
+- Upcoming meetings
+- Meetings requiring action
+- Meetings awaiting minutes
+- Meetings with overdue action items
+- My meetings
+- Meetings I organize
+- Meetings requiring acknowledgement
+- Recent minutes
+- Calendar conflicts
+
+Quick actions:
+Schedule Meeting, Start Meeting, Add Notes, Create Minutes, Add Action Item, View Calendar.
+
+============================================================
+11. MEETING DETAIL / WORKSPACE
+============================================================
+
+Tabs:
+Overview | Agenda | Notes | Decisions | Action Items | Minutes | Files | Activity
+
+Overview:
+- title/type/status
+- organizer
+- participants
+- date/time/timezone
+- location/link
+- recurrence
+- project/team/employee references
+- description
+
+Actions:
+Edit, Cancel, Start, Join, Add Notes, Add Decision, Add Action Item, Create Minutes, Send Minutes, Close.
+
+============================================================
+12. STRUCTURED AGENDA
+============================================================
+
+Agenda items support:
+- order
+- title
+- description
+- presenter/owner
+- expected duration
+- status
+- attachments
+- notes linkage
+
+Provide drag/drop reordering, duration totals, templates and adding items during the meeting.
+
+============================================================
+13. MEETING MODE
+============================================================
+
+Create a distraction-free Meeting Mode showing:
+- agenda
+- current agenda item
+- notes
+- decisions
+- action items
+- participants
+- elapsed time
+
+Quick capture:
++ Note
++ Decision
++ Action Item
++ Mention
++ Highlight
++ Attach File
+
+Optimize for fast keyboard/mouse input.
+
+============================================================
+14. MANUAL MEETING NOTES
+============================================================
+
+Provide a rich editor supporting:
+- headings
+- paragraphs
+- bullets/numbering
+- checklists
+- tables
+- links
+- mentions
+- highlights
+- attachments
+- timestamps
+- formatting
+- autosave
+
+Support shared, organizer-only, private and HR-confidential notes. Enforce permissions server-side. Private notes must never automatically appear in MoM.
+
+============================================================
+15. DECISIONS
+============================================================
+
+Make decisions first-class records:
+- title
+- description
+- owner
+- timestamp
+- related agenda item
+- participants involved
+- attachments
+- status
+
+Allow inclusion in MoM.
+
+============================================================
+16. ACTION ITEMS
+============================================================
+
+Integrate with the existing task/project system rather than creating a duplicate task engine.
+
+Fields:
+- title
+- description
+- assignee
+- creator
+- due date
+- priority
+- status
+- related meeting
+- related agenda item
+- project/task
+- attachments
+- comments
+
+Statuses:
+Open, In Progress, Blocked, Completed, Cancelled
+
+Support reminders, overdue indicators and notifications.
+
+============================================================
+17. MINUTES OF MEETING
+============================================================
+
+MoM is a first-class object.
+
+Create an editable draft from:
+- meeting information
+- participants
+- agenda
+- notes
+- decisions
+- action items
+
+Suggested structure:
+Meeting Information
+Date / Time / Location
+Organizer
+Participants
+Agenda
+Discussion Summary
+Key Decisions
+Action Items
+Next Steps
+Next Meeting
+Attachments
+
+Templates:
+- Standard
+- Management
+- HR
+- Performance Review
+- Interview
+- Project Review
+- Board
+- Client
+
+Never publish automatically without human review.
+
+============================================================
+18. MINUTES LIFECYCLE
+============================================================
+
+Draft → Review → Published → Amended → Archived
+
+Published minutes retain version history, publisher, timestamps and amendment history. Previous versions should remain auditable.
+
+============================================================
+19. SEND MINUTES
+============================================================
+
+Provide Send Minutes.
+
+Recipients:
+- required participants
+- optional participants
+- organizer
+- selected internal employees
+- approved external recipients
+
+Use tenant-branded email templates.
+
+External recipients must never receive internal HRMS-only information.
+
+Optional tracking:
+sent, delivered, viewed, acknowledged.
+
+============================================================
+20. REMINDERS / NOTIFICATIONS
+============================================================
+
+Reuse existing notification infrastructure.
+
+Events:
+- invitation
+- accepted/declined/tentative
+- updated/cancelled
+- upcoming/start reminder
+- minutes pending/published/amended
+- action assigned/due/overdue
+- acknowledgement requested
+
+Reuse in-app/email/push channels where available.
+
+============================================================
+21. RECURRENCE / INVITATIONS
+============================================================
+
+Support daily, weekly, monthly and custom recurrence with end date/count.
+
+Editing recurring meetings:
+- this occurrence
+- this and future
+- entire series
+
+Support Accept, Decline, Tentative and response timestamps.
+
+============================================================
+22. HRMS INTEGRATION
+============================================================
+
+Integrate with leave, holidays, working hours and shifts.
+
+When scheduling, detect approved leave and working conflicts. Behavior should be configurable as warning, block, or authorized override.
+
+Respect privacy: do not expose unnecessary leave details.
+
+============================================================
+23. MEETING ROOMS
+============================================================
+
+Meeting rooms:
+- name
+- building
+- floor
+- capacity
+- equipment
+- location
+- availability
+- active/inactive
+
+Prevent double booking where possible.
+
+============================================================
+24. FILES / SEARCH / AUDIT
+============================================================
+
+Reuse existing file infrastructure for agendas, presentations, reports, PDFs and MoM.
+
+Search meetings by:
+title, participant, organizer, type, department, employee, project, date, status, action item, decision and minutes.
+
+Audit:
+- meeting changes/cancellation
+- participant changes
+- invitations/responses
+- notes
+- decisions
+- action items
+- minutes creation/publishing/amendment/sending
+- calendar connection/disconnection/sync failures
+- room changes
+
+Never log secrets/tokens.
+
+============================================================
+25. WORKFLOW ENGINE
+============================================================
+
+Integrate with existing workflows.
+
+Examples:
+- performance review
+- HR meeting
+- interview
+- onboarding
+- exit
+- project approval
+
+Possible triggers:
+meeting.created
+meeting.completed
+meeting.minutes.published
+meeting.action_item.overdue
+
+============================================================
+26. API
+============================================================
+
+Follow existing API conventions. Typical resources:
+
+/meetings
+/meetings/:id
+/meetings/:id/participants
+/meetings/:id/agenda
+/meetings/:id/notes
+/meetings/:id/decisions
+/meetings/:id/action-items
+/meetings/:id/minutes
+/meetings/:id/minutes/publish
+/meetings/:id/minutes/send
+/calendar
+/calendar/availability
+/calendar/calendars
+/calendar/integrations/google/connect
+/calendar/integrations/google/callback
+/calendar/integrations/google
+
+Adapt these to the repository's existing API patterns.
+
+============================================================
+27. DATABASE / PERFORMANCE
+============================================================
+
+Use normalized schemas and proper foreign keys.
+
+Index at least:
+- tenant_id
+- date/time
+- organizer
+- participant
+- status
+- type
+- external event ID
+- action-item due date
+- minutes status
+
+Avoid N+1 queries. Paginate large lists. Optimize calendar and availability queries.
+
+============================================================
+28. UI / UX
+============================================================
+
+Design:
+- modern
+- premium
+- professional
+- Gen-Z friendly but not childish
+- enterprise-ready
+- responsive
+- dark mode
+- accessible
+- keyboard-friendly
+- fast
+- information-dense without clutter
+
+Use existing design system. Add command palette/search integration if already present.
+
+Meeting page should feel like a workspace, not a form.
+
+============================================================
+29. POST-MEETING EXPERIENCE
+============================================================
+
+After completion, guide organizer through:
+1. Review notes
+2. Confirm decisions
+3. Create action items
+4. Draft MoM
+5. Review MoM
+6. Publish
+7. Send
+8. Track acknowledgements
+9. Monitor action items
+10. Close meeting
+
+============================================================
+30. AI-READY BUT HUMAN-CONTROLLED
+============================================================
+
+Do not make AI mandatory initially.
+
+Make the architecture future-ready for:
+- note summarization
+- decision extraction
+- action extraction
+- MoM drafting
+- follow-up email drafting
+- agenda suggestions
+
+Formal HR minutes must always require human review before publication.
+
+Do not implement automatic recording/transcription initially unless explicitly requested.
+
+============================================================
+31. ANALYTICS
+============================================================
+
+Useful analytics:
+- meetings by department/type
+- meetings organized/attended
+- minutes completion rate
+- minutes turnaround time
+- action items created/completed/overdue
+- room utilization
+- calendar conflicts
+- recurring meeting volume
+
+Avoid simplistic individual employee productivity scores.
+
+============================================================
+32. TESTING
+============================================================
+
+Automated tests must cover:
+- tenant isolation
+- RBAC
+- CRUD
+- participants
+- scheduling/conflicts
+- timezones/DST
+- recurrence
+- leave/working hours
+- room conflicts
+- note permissions
+- minutes versioning
+- action items
+- notifications
+- Google OAuth/token refresh
+- calendar sync
+- external event changes
+- cancellation
+- external participants
+
+Add integration tests for critical end-to-end workflows.
+
+============================================================
+33. IMPLEMENTATION ORDER
+============================================================
+
+A — Core Meeting Domain
+- schema
+- meeting types
+- CRUD
+- participants
+- RBAC
+- audit
+
+B — Scheduling
+- calendar UI
+- availability
+- conflicts
+- timezone
+- working hours
+- leave integration
+- reminders
+- recurrence
+
+C — Google Calendar
+- OAuth
+- calendar selection
+- event CRUD
+- synchronization
+- Google Meet
+- token refresh
+- disconnect
+
+D — Meeting Workspace
+- agenda
+- Meeting Mode
+- notes
+- decisions
+- files
+
+E — Minutes
+- templates
+- draft generation
+- editor
+- versioning
+- publishing
+- email distribution
+- acknowledgement
+
+F — Action Management
+- action items
+- task integration
+- reminders
+- overdue tracking
+
+G — Advanced Integrations
+- Microsoft 365/Outlook
+- Teams
+- Zoom
+- other calendar standards
+
+H — AI
+- summaries
+- action/decision extraction
+- MoM drafting
+- follow-up drafting
+
+============================================================
+34. DEVELOPMENT PROCESS
+============================================================
+
+Before coding:
+1. Inspect repository structure.
+2. Identify frontend/backend frameworks.
+3. Identify DB/ORM.
+4. Identify authentication.
+5. Identify tenant architecture.
+6. Identify RBAC.
+7. Identify notifications/email.
+8. Identify file/document system.
+9. Identify task/project system.
+10. Identify audit logging.
+11. Identify UI/design system.
+12. Identify date/calendar libraries.
+13. Identify deployment/build process.
+
+First produce a concise architecture assessment.
+
+Then implement one phase at a time:
+- explain changes
+- create safe migrations
+- implement backend/services/API
+- implement frontend
+- integrate existing systems
+- add tests
+- run typecheck
+- run lint
+- run tests
+- validate migrations
+- validate tenant isolation
+- fix regressions
+- summarize completed and remaining work
+
+============================================================
+35. DEFINITION OF DONE
+============================================================
+
+The module is complete when users can:
+- schedule meetings
+- invite internal/external participants
+- view meetings in calendar/list views
+- detect conflicts
+- account for leave/working hours
+- securely connect Google Calendar
+- synchronize meetings
+- use Google Meet
+- schedule recurring meetings
+- create agendas
+- take structured/manual notes
+- protect private/confidential notes
+- record decisions
+- create/manage action items
+- generate/edit/publish MoM
+- retain MoM versions
+- send MoM by email
+- track acknowledgements where enabled
+- receive notifications
+- view audit history
+- operate securely within tenant boundaries
+- use responsive/dark-mode UI
+- pass critical automated tests
+- retain all existing HRMS functionality
+
+FINAL PRODUCT PRINCIPLE:
+
+"Meetings are not calendar events. Meetings are business workflows."
+
+The experience should make it effortless to move from:
+Schedule → Prepare → Meet → Capture → Decide → Assign → Document → Communicate → Follow up → Close.
+
+Build this as a deeply integrated HRMS capability, not an isolated calendar widget.
+

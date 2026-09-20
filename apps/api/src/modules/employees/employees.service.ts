@@ -11,7 +11,7 @@ export class EmployeesService {
         department: true,
         designation: true,
         location: true,
-        user: { select: { id: true, email: true } },
+        user: { select: { id: true, email: true, presenceStatus: true } },
         manager: {
           select: { id: true, firstName: true, lastName: true },
         },
@@ -37,7 +37,7 @@ export class EmployeesService {
       lastName: u.lastName,
       workEmail: u.email,
       joiningDate: u.createdAt,
-      user: { id: u.id, email: u.email },
+      user: { id: u.id, email: u.email, presenceStatus: u.presenceStatus },
       department: null,
       designation: { id: 'admin', name: 'Tenant Admin', tenantId, level: 'Executive' },
       location: null,
@@ -60,7 +60,7 @@ export class EmployeesService {
           select: { id: true, firstName: true, lastName: true, avatarUrl: true },
         },
         user: {
-          select: { email: true, status: true, lastLoginAt: true },
+          select: { email: true, status: true, lastLoginAt: true, presenceStatus: true },
         },
       },
     });
@@ -81,7 +81,7 @@ export class EmployeesService {
           lastName: user.lastName,
           workEmail: user.email,
           joiningDate: user.createdAt,
-          user: { email: user.email, status: user.status, lastLoginAt: user.lastLoginAt },
+          user: { email: user.email, status: user.status, lastLoginAt: user.lastLoginAt, presenceStatus: user.presenceStatus },
           department: null,
           designation: { id: 'admin', name: 'Tenant Admin', tenantId, level: 'Executive' },
           location: null,

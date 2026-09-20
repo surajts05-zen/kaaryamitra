@@ -1,3 +1,6 @@
 @echo off
+echo Starting Docker services (Redis and Postgres)...
+docker compose up -d redis postgres
+echo.
 echo Starting KaaryaMitra Frontend and Backend...
 npm run dev

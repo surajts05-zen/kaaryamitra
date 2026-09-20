@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const milestoneSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  ownerId: z.string().optional(),
+  ownerId: z.string().nullable().optional(),
   plannedStart: z.string().optional(),
   plannedEnd: z.string().optional(),
   plannedBudget: z.number().min(0).default(0),

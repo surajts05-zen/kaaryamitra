@@ -13,6 +13,8 @@ export type User = {
   tenantId: string | null;
   tenantSlug?: string | null;
   roles: string[];
+  presenceStatus?: string;
+  pinnedEmployeeIds?: string[];
 };
 
 interface AuthState {

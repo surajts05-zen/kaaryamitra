@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { useEmployees, useBulkCreateEmployees } from '@/features/company/hooks/use-employee-queries';
+import { useEmployees, useBulkCreateEmployees, useUpdatePinnedColleagues, useBulkPresence } from '@/features/company/hooks/use-employee-queries';
+import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,17 +12,49 @@ import { OrgChartView } from './org-chart-view';
 import { CsvImportModal } from '@/components/ui/csv-import-modal';
 import { toast } from 'sonner';
 
+function StatusDot({ status }: { status?: string }) {
+  if (!status) return null;
+  const colors: Record<string, string> = {
+    AVAILABLE: 'bg-emerald-500',
+    BUSY: 'bg-red-500',
+    MEETING: 'bg-amber-500',
+    AWAY: 'bg-yellow-500',
+    OFFLINE: 'bg-gray-400',
+  };
+  return (
+    <div className={`h-2.5 w-2.5 rounded-full ${colors[status] || 'bg-gray-400'}`} title={status} />
+  );
+}
+
 export function DirectoryPage() {
+  const { user } = useAuthStore();
   const { data: employees, isLoading } = useEmployees();
   const bulkCreateMutation = useBulkCreateEmployees();
+  const updatePinnedColleagues = useUpdatePinnedColleagues();
   const [searchTerm, setSearchTerm] = useState('');
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
+
+  const pinnedEmployeeIds = user?.pinnedEmployeeIds || [];
+
+  const togglePin = async (employeeId: string) => {
+    const isPinned = pinnedEmployeeIds.includes(employeeId);
+    let newPins;
+    if (isPinned) {
+      newPins = pinnedEmployeeIds.filter(id => id !== employeeId);
+    } else {
+      newPins = [...pinnedEmployeeIds, employeeId];
+    }
+    await updatePinnedColleagues.mutateAsync(newPins);
+  };
 
   const filteredEmployees = employees?.filter((emp: any) => {
     const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase();
     return fullName.includes(searchTerm.toLowerCase()) || 
            emp.workEmail.toLowerCase().includes(searchTerm.toLowerCase());
   }) || [];
+
+  const visibleUserIds = filteredEmployees.map((e: any) => e.userId).filter(Boolean);
+  const { data: presenceMap } = useBulkPresence(visibleUserIds, searchTerm.length > 0);
 
   const handleBulkImport = async (rows: Record<string, string>[]) => {
     const items = rows.map(r => ({
@@ -127,7 +160,10 @@ export function DirectoryPage() {
                               </div>
                             )}
                             <div>
-                              <div className="font-medium">{emp.firstName} {emp.lastName}</div>
+                              <div className="font-medium flex items-center gap-2">
+                                {emp.firstName} {emp.lastName}
+                                {searchTerm.length > 0 && <StatusDot status={presenceMap?.[emp.userId]} />}
+                              </div>
                               <div className="text-xs text-muted-foreground">{emp.workEmail}</div>
                             </div>
                           </div>
@@ -137,11 +173,21 @@ export function DirectoryPage() {
                         <TableCell>{emp.designation?.name || '-'}</TableCell>
                         <TableCell>{emp.location?.name || '-'}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link to={emp.id}>
-                              View Profile
-                            </Link>
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => togglePin(emp.id)} 
+                              title={pinnedEmployeeIds.includes(emp.id) ? "Unpin from Dashboard" : "Pin to Dashboard"}
+                            >
+                              <span className="text-xs">{pinnedEmployeeIds.includes(emp.id) ? 'Unpin' : 'Pin'}</span>
+                            </Button>
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link to={emp.id}>
+                                View
+                              </Link>
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))

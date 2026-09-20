@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { useAuthStore } from '@/store/auth.store';
 
 export function useEmployees(options?: { enabled?: boolean }) {
   return useQuery({
@@ -69,5 +70,45 @@ export function useBulkCreateEmployees() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
     },
+  });
+}
+
+export function useUpdatePresence() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (status: string) => {
+      const res = await apiClient.put('/auth/me/presence', { status });
+      return res.data.data;
+    },
+    onSuccess: (data) => {
+      useAuthStore.getState().setUser(data);
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+    },
+  });
+}
+
+export function useUpdatePinnedColleagues() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (pinnedEmployeeIds: string[]) => {
+      const res = await apiClient.put('/auth/me/pinned-colleagues', { pinnedEmployeeIds });
+      return res.data.data;
+    },
+    onSuccess: (data) => {
+      useAuthStore.getState().setUser(data);
+    },
+  });
+}
+
+export function useBulkPresence(userIds: string[], enabled = true) {
+  return useQuery({
+    queryKey: ['presence', 'bulk', userIds],
+    queryFn: async () => {
+      if (!userIds.length) return {};
+      const res = await apiClient.post('/auth/presence/bulk', { userIds });
+      return res.data.data;
+    },
+    enabled: enabled && userIds.length > 0,
+    refetchInterval: 30000, // optionally refresh every 30s
   });
 }

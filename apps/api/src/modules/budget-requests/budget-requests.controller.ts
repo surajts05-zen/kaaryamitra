@@ -27,7 +27,7 @@ export async function createHandler(req: Request, res: Response) {
 
 export async function updateHandler(req: Request, res: Response) {
   const body = updateBudgetRequestSchema.parse(req.body);
-  const data = await BudgetRequestsService.update(req.tenantId!, req.params.id as string, body);
+  const data = await BudgetRequestsService.update(req.tenantId!, req.params.id as string, req.auth!.userId, body);
   res.status(200).json({ success: true, data });
 }
 

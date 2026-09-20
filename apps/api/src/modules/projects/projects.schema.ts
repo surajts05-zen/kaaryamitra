@@ -12,6 +12,11 @@ export const projectSchema = z.object({
   plannedEndDate: z.string().optional(),
   status: z.enum(['PLANNING', 'PROPOSED', 'APPROVED', 'ACTIVE', 'ON_HOLD', 'AT_RISK', 'COMPLETED', 'CANCELLED', 'CLOSED']).default('PLANNING'),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).default('MEDIUM'),
+  members: z.array(z.object({
+    employeeId: z.string().min(1),
+    role: z.string().min(1),
+    accessLevel: z.enum(['READ_ONLY', 'READ_WRITE']).default('READ_ONLY')
+  })).optional(),
 });
 
 export const updateProjectSchema = projectSchema.partial();

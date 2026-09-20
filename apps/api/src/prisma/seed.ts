@@ -44,6 +44,14 @@ async function main() {
     { action: 'budget:approve', description: 'Approve budget requests and expenses' },
     { action: 'budget:manage', description: 'Manage budget allocations and ledger' },
     { action: 'cost-centers:manage', description: 'Manage cost centers and budget categories' },
+    
+    // Meetings & Calendar
+    { action: 'meeting:read', description: 'View meetings' },
+    { action: 'meeting:create', description: 'Create and organize meetings' },
+    { action: 'meeting:update', description: 'Update meetings' },
+    { action: 'meeting:cancel', description: 'Cancel meetings' },
+    { action: 'meeting.template.manage', description: 'Manage meeting types' },
+    { action: 'calendar.sync', description: 'Sync with external calendar' },
   ];
 
   console.log('📋 Creating permissions...');

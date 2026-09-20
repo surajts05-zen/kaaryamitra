@@ -76,6 +76,28 @@ export async function getMeHandler(req: Request, res: Response) {
   res.json({ success: true, data: user });
 }
 
+export async function updatePresenceHandler(req: Request, res: Response) {
+  const { status } = req.body;
+  const user = await AuthService.updatePresence(req.auth!.userId, status);
+  res.json({ success: true, data: user, message: 'Status updated successfully' });
+}
+
+export async function updatePinnedColleaguesHandler(req: Request, res: Response) {
+  const { pinnedEmployeeIds } = req.body;
+  const user = await AuthService.updatePinnedColleagues(req.auth!.userId, pinnedEmployeeIds);
+  res.json({ success: true, data: user, message: 'Pinned colleagues updated successfully' });
+}
+
+export async function getBulkPresenceHandler(req: Request, res: Response) {
+  const { userIds } = req.body;
+  if (!Array.isArray(userIds)) {
+    res.status(400).json({ success: false, message: 'userIds must be an array' });
+    return;
+  }
+  const presenceMap = await AuthService.getBulkPresence(userIds);
+  res.json({ success: true, data: presenceMap });
+}
+
 import { OAuth2Client } from 'google-auth-library';
 
 export async function googleOAuthRedirect(req: Request, res: Response) {

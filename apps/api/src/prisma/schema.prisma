@@ -231,6 +231,11 @@ enum PayrollLineItemType {
   STATUTORY
 }
 
+enum AccessLevel {
+  READ_ONLY
+  READ_WRITE
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // PERFORMANCE MANAGEMENT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -429,11 +434,16 @@ model Tenant {
   budgetRequests     BudgetRequest[]
   projectExpenses    ProjectExpense[]
   budgetTransactions BudgetTransaction[]
-  
-  apiKeys            ApiKey[]
-  webhookEndpoints   WebhookEndpoint[]
-  integrations       TenantIntegration[]
-  encryptedSecrets   EncryptedSecret[]
+
+  // Meetings
+  meetings     Meeting[]
+  meetingTypes MeetingType[]
+  meetingRooms MeetingRoom[]
+
+  apiKeys          ApiKey[]
+  webhookEndpoints WebhookEndpoint[]
+  integrations     TenantIntegration[]
+  encryptedSecrets EncryptedSecret[]
 
   // Phase 24 — SaaS Billing
   subscription TenantSubscription?
@@ -447,16 +457,26 @@ model Tenant {
 // USER & AUTH
 // ─────────────────────────────────────────────────────────────────────────────
 
+enum PresenceStatus {
+  AVAILABLE
+  BUSY
+  MEETING
+  AWAY
+  OFFLINE
+}
+
 model User {
-  id           String       @id @default(cuid())
-  tenantId     String? // null = Super Admin (platform-level)
-  email        String       @unique
-  firstName    String
-  lastName     String
-  avatarUrl    String?
-  status       UserStatus   @default(PENDING_SETUP)
-  authProvider AuthProvider @default(LOCAL)
-  isSuperAdmin Boolean      @default(false)
+  id                String         @id @default(cuid())
+  tenantId          String? // null = Super Admin (platform-level)
+  email             String         @unique
+  firstName         String
+  lastName          String
+  avatarUrl         String?
+  status            UserStatus     @default(PENDING_SETUP)
+  authProvider      AuthProvider   @default(LOCAL)
+  isSuperAdmin      Boolean        @default(false)
+  presenceStatus    PresenceStatus @default(AVAILABLE)
+  pinnedEmployeeIds String[]       @default([])
 
   // LOCAL auth
   passwordHash           String?
@@ -942,10 +962,11 @@ model Resignation {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Employee {
-  id           String  @id @default(cuid())
-  tenantId     String
-  userId       String  @unique
-  employeeCode String?
+  id                   String                @id @default(cuid())
+  tenantId             String
+  budgetRequestMembers BudgetRequestMember[]
+  userId               String                @unique
+  employeeCode         String?
 
   // Personal
   firstName     String
@@ -1015,6 +1036,11 @@ model Employee {
   payrollEntries         PayrollEntry[]
   policyAcknowledgements PolicyAcknowledgement[]
   workflowInstance       WorkflowInstance?
+
+  // Meetings
+  meetingsOrganized     Meeting[]            @relation("MeetingOrganizer")
+  meetingParticipations MeetingParticipant[]
+  meetingRoomsManaged   MeetingRoom[]        @relation("MeetingRoomManager")
 
   @@index([tenantId])
   @@index([managerId])
@@ -1590,9 +1616,9 @@ model HelpdeskComment {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model PlatformSettings {
-  id           String   @id @default("global")
+  id           String  @id @default("global")
   smtpHost     String?
-  smtpPort     Int?     @default(587)
+  smtpPort     Int?    @default(587)
   smtpUser     String?
   smtpPass     String?
   smtpFrom     String?
@@ -1604,10 +1630,10 @@ model PlatformSettings {
   razorpayWebhookSecret String?
 
   // File Storage / S3
-  s3Bucket     String?
-  s3Region     String?
-  s3AccessKey  String?
-  s3SecretKey  String?
+  s3Bucket    String?
+  s3Region    String?
+  s3AccessKey String?
+  s3SecretKey String?
 
   updatedAt DateTime @updatedAt
 
@@ -1935,23 +1961,23 @@ model LibraryFolder {
 }
 
 model LibraryItem {
-  id        String          @id @default(uuid())
-  tenantId  String
-  folderId  String?
-  type      LibraryItemType
-  title     String
-  content   String?
-  fileUrl   String?
-  fileKey   String?
-  mimeType  String?
-  sizeBytes Int?
-  tags      String[]
+  id          String          @id @default(uuid())
+  tenantId    String
+  folderId    String?
+  type        LibraryItemType
+  title       String
+  content     String?
+  fileUrl     String?
+  fileKey     String?
+  mimeType    String?
+  sizeBytes   Int?
+  tags        String[]
   isPinned    Boolean         @default(false)
   pinnedUntil DateTime?
   isArchived  Boolean         @default(false)
   createdBy   String
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   tenant  Tenant         @relation(fields: [tenantId], references: [id])
   folder  LibraryFolder? @relation(fields: [folderId], references: [id])
@@ -2117,13 +2143,14 @@ model Project {
 }
 
 model ProjectMember {
-  id            String    @id @default(cuid())
+  id            String      @id @default(cuid())
   projectId     String
   employeeId    String
   role          String
-  allocationPct Int       @default(100)
-  startDate     DateTime? @db.Date
-  endDate       DateTime? @db.Date
+  accessLevel   AccessLevel @default(READ_ONLY)
+  allocationPct Int         @default(100)
+  startDate     DateTime?   @db.Date
+  endDate       DateTime?   @db.Date
   billingRate   Decimal?
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -2161,9 +2188,25 @@ model ProjectMilestone {
   @@map("project_milestones")
 }
 
+model BudgetRequestMember {
+  id              String      @id @default(cuid())
+  budgetRequestId String
+  employeeId      String
+  accessLevel     AccessLevel @default(READ_ONLY)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  budgetRequest BudgetRequest @relation(fields: [budgetRequestId], references: [id], onDelete: Cascade)
+  employee      Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([budgetRequestId, employeeId])
+  @@map("budget_request_members")
+}
+
 model BudgetRequest {
-  id            String  @id @default(cuid())
+  id            String                @id @default(cuid())
   tenantId      String
+  members       BudgetRequestMember[]
   requestNumber String
   requesterId   String // Employee ID
   departmentId  String?
@@ -2193,7 +2236,7 @@ model BudgetRequest {
   period           BudgetPeriod?           @relation(fields: [periodId], references: [id])
   lineItems        BudgetRequestLineItem[]
   workflowInstance WorkflowInstance?
-  isArchived       Boolean @default(false)
+  isArchived       Boolean                 @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2396,22 +2439,22 @@ enum ApiKeyStatus {
 }
 
 model ApiKey {
-  id          String       @id @default(cuid())
-  tenantId    String
-  name        String                         // "Payroll Integration", etc.
-  keyHash     String       @unique           // bcrypt/SHA-256 hash of actual key
-  keyPrefix   String                         // first 8 chars for display (km_live_xxxx)
-  scopes      String[]                       // ["employees:read","payroll:read"]
-  status      ApiKeyStatus @default(ACTIVE)
-  expiresAt   DateTime?
-  lastUsedAt  DateTime?
+  id              String       @id @default(cuid())
+  tenantId        String
+  name            String // "Payroll Integration", etc.
+  keyHash         String       @unique // bcrypt/SHA-256 hash of actual key
+  keyPrefix       String // first 8 chars for display (km_live_xxxx)
+  scopes          String[] // ["employees:read","payroll:read"]
+  status          ApiKeyStatus @default(ACTIVE)
+  expiresAt       DateTime?
+  lastUsedAt      DateTime?
   createdByUserId String
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
-  tenant      Tenant       @relation(fields: [tenantId], references: [id])
-  createdBy   User         @relation(fields: [createdByUserId], references: [id])
-  auditLogs   ApiKeyAuditLog[]
+  tenant    Tenant           @relation(fields: [tenantId], references: [id])
+  createdBy User             @relation(fields: [createdByUserId], references: [id])
+  auditLogs ApiKeyAuditLog[]
 
   @@index([tenantId])
   @@map("api_keys")
@@ -2420,7 +2463,7 @@ model ApiKey {
 model ApiKeyAuditLog {
   id        String   @id @default(cuid())
   apiKeyId  String
-  action    String   // "CREATED" | "REVOKED" | "USED"
+  action    String // "CREATED" | "REVOKED" | "USED"
   ipAddress String?
   userAgent String?
   endpoint  String?
@@ -2451,19 +2494,19 @@ enum WebhookDeliveryStatus {
 }
 
 model WebhookEndpoint {
-  id        String  @id @default(cuid())
-  tenantId  String
-  name      String
-  url       String
-  secret    String  // HMAC signing secret (stored encrypted)
-  events    WebhookEventType[]
-  isActive  Boolean @default(true)
-  headers   Json    @default("{}")  // custom headers
+  id       String             @id @default(cuid())
+  tenantId String
+  name     String
+  url      String
+  secret   String // HMAC signing secret (stored encrypted)
+  events   WebhookEventType[]
+  isActive Boolean            @default(true)
+  headers  Json               @default("{}") // custom headers
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tenant    Tenant             @relation(fields: [tenantId], references: [id])
+  tenant     Tenant            @relation(fields: [tenantId], references: [id])
   deliveries WebhookDelivery[]
 
   @@index([tenantId])
@@ -2471,17 +2514,17 @@ model WebhookEndpoint {
 }
 
 model WebhookDelivery {
-  id              String                @id @default(cuid())
-  endpointId      String
-  event           WebhookEventType
-  payload         Json
-  status          WebhookDeliveryStatus @default(PENDING)
-  responseStatus  Int?
-  responseBody    String?
-  attemptCount    Int                   @default(0)
-  nextRetryAt     DateTime?
-  deliveredAt     DateTime?
-  createdAt       DateTime              @default(now())
+  id             String                @id @default(cuid())
+  endpointId     String
+  event          WebhookEventType
+  payload        Json
+  status         WebhookDeliveryStatus @default(PENDING)
+  responseStatus Int?
+  responseBody   String?
+  attemptCount   Int                   @default(0)
+  nextRetryAt    DateTime?
+  deliveredAt    DateTime?
+  createdAt      DateTime              @default(now())
 
   endpoint WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
 
@@ -2494,11 +2537,11 @@ enum IntegrationProvider {
   MICROSOFT_365
   SLACK
   TEAMS
-  GREYTHR          // payroll
-  KEKA             // payroll
-  TALLY            // accounting
-  QUICKBOOKS       // accounting
-  ZOHO_BOOKS       // accounting
+  GREYTHR // payroll
+  KEKA // payroll
+  TALLY // accounting
+  QUICKBOOKS // accounting
+  ZOHO_BOOKS // accounting
   BIOMETRIC_ZKTIME // attendance device
   GOOGLE_CALENDAR
   OUTLOOK_CALENDAR
@@ -2516,11 +2559,11 @@ model TenantIntegration {
   tenantId     String
   provider     IntegrationProvider
   status       IntegrationStatus   @default(DISCONNECTED)
-  config       Json                @default("{}")  // encrypted at app layer
-  accessToken  String?             // encrypted
-  refreshToken String?             // encrypted
+  config       Json                @default("{}") // encrypted at app layer
+  accessToken  String? // encrypted
+  refreshToken String? // encrypted
   tokenExpiry  DateTime?
-  metadata     Json                @default("{}")  // scopes, user info, etc.
+  metadata     Json                @default("{}") // scopes, user info, etc.
   lastSyncAt   DateTime?
   errorMessage String?
 
@@ -2535,12 +2578,12 @@ model TenantIntegration {
 }
 
 model EncryptedSecret {
-  id        String   @id @default(cuid())
-  tenantId  String
-  key       String   // e.g. "google_oauth_token", "webhook_secret_123"
-  value     String   // The AES-256-GCM encrypted value
-  iv        String   // Initialization vector
-  authTag   String   // Authentication tag
+  id       String @id @default(cuid())
+  tenantId String
+  key      String // e.g. "google_oauth_token", "webhook_secret_123"
+  value    String // The AES-256-GCM encrypted value
+  iv       String // Initialization vector
+  authTag  String // Authentication tag
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2579,24 +2622,24 @@ enum InvoiceStatus {
 
 // Plan definitions — editable by Super Admin
 model PlanDefinition {
-  id                    String     @id @default(cuid())
-  name                  String     @unique // "Free" | "Starter" | "Growth" | "Enterprise"
-  slug                  TenantPlan @unique // maps to TenantPlan enum
-  description           String?
-  monthlyPriceInr       Decimal    @default(0) @db.Decimal(10, 2)
-  monthlyPriceUsd       Decimal    @default(0) @db.Decimal(10, 2)
-  annualDiscountPct     Int        @default(16) // % off annual vs 12x monthly
-  maxEmployees          Int? // null = unlimited
-  maxStorageMb          Int? // null = unlimited
-  maxApiCallsPerMonth   Int? // null = unlimited
-  employeeOverageRateInr Decimal?  @db.Decimal(10, 2)
-  employeeOverageRateUsd Decimal?  @db.Decimal(10, 2)
-  trialDays             Int        @default(14)
-  isPublic              Boolean    @default(true)
-  razorpayMonthlyPlanId String? // Razorpay Plan ID for monthly billing
-  razorpayAnnualPlanId  String? // Razorpay Plan ID for annual billing
-  modules               Json       @default("[]") // string[] of enabled module keys
-  sortOrder             Int        @default(0)
+  id                     String     @id @default(cuid())
+  name                   String     @unique // "Free" | "Starter" | "Growth" | "Enterprise"
+  slug                   TenantPlan @unique // maps to TenantPlan enum
+  description            String?
+  monthlyPriceInr        Decimal    @default(0) @db.Decimal(10, 2)
+  monthlyPriceUsd        Decimal    @default(0) @db.Decimal(10, 2)
+  annualDiscountPct      Int        @default(16) // % off annual vs 12x monthly
+  maxEmployees           Int? // null = unlimited
+  maxStorageMb           Int? // null = unlimited
+  maxApiCallsPerMonth    Int? // null = unlimited
+  employeeOverageRateInr Decimal?   @db.Decimal(10, 2)
+  employeeOverageRateUsd Decimal?   @db.Decimal(10, 2)
+  trialDays              Int        @default(14)
+  isPublic               Boolean    @default(true)
+  razorpayMonthlyPlanId  String? // Razorpay Plan ID for monthly billing
+  razorpayAnnualPlanId   String? // Razorpay Plan ID for annual billing
+  modules                Json       @default("[]") // string[] of enabled module keys
+  sortOrder              Int        @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2628,17 +2671,17 @@ model ModuleAddon {
 
 // One subscription per tenant
 model TenantSubscription {
-  id                     String             @id @default(cuid())
-  tenantId               String             @unique
-  planId                 String
-  billingCycle           BillingCycle       @default(MONTHLY)
-  status                 SubscriptionStatus @default(TRIALING)
-  currency               String             @default("INR") // "INR" | "USD"
-  currentPeriodStart     DateTime
-  currentPeriodEnd       DateTime
-  trialStart             DateTime?
-  trialEnd               DateTime?
-  cancelAtPeriodEnd      Boolean            @default(false)
+  id                 String             @id @default(cuid())
+  tenantId           String             @unique
+  planId             String
+  billingCycle       BillingCycle       @default(MONTHLY)
+  status             SubscriptionStatus @default(TRIALING)
+  currency           String             @default("INR") // "INR" | "USD"
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  trialStart         DateTime?
+  trialEnd           DateTime?
+  cancelAtPeriodEnd  Boolean            @default(false)
 
   // Razorpay references
   razorpaySubscriptionId String?
@@ -2722,4 +2765,317 @@ model UsageRecord {
 
   @@index([tenantId, metric, recordedAt])
   @@map("usage_records")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MEETINGS & CALENDAR
+// ─────────────────────────────────────────────────────────────────────────────
+
+model MeetingType {
+  id          String    @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  color       String?
+  icon        String?
+  isDefault   Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  meetings    Meeting[]
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+}
+
+model Meeting {
+  id              String            @id @default(cuid())
+  tenantId        String
+  title           String
+  description     String?
+  meetingTypeId   String
+  status          MeetingStatus     @default(SCHEDULED)
+  organizedById   String // Employee.id
+  startTime       DateTime
+  endTime         DateTime
+  timezone        String
+  location        String?
+  meetingLink     String?
+  videoProvider   VideoProvider?
+  visibility      MeetingVisibility @default(ALL_PARTICIPANTS)
+  isRecurring     Boolean           @default(false)
+  recurrenceRule  Json?
+  parentMeetingId String? // for recurring series
+  projectId       String?
+  departmentId    String?
+  employeeId      String? // HR-linked employee
+  roomId          String?
+  tags            String[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  cancelledAt     DateTime?
+  cancelReason    String?
+
+  meetingType      MeetingType            @relation(fields: [meetingTypeId], references: [id])
+  organizer        Employee               @relation("MeetingOrganizer", fields: [organizedById], references: [id])
+  room             MeetingRoom?           @relation(fields: [roomId], references: [id])
+  participants     MeetingParticipant[]
+  agendaItems      MeetingAgendaItem[]
+  notes            MeetingNote[]
+  decisions        MeetingDecision[]
+  actionItems      MeetingActionItem[]
+  minutes          MeetingMinute[]
+  attachments      MeetingAttachment[]
+  reminders        MeetingReminder[]
+  calendarMappings CalendarEventMapping[]
+  tenant           Tenant                 @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, startTime])
+  @@index([tenantId, status])
+  @@index([organizedById])
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  MINUTES_PENDING
+  MINUTES_PUBLISHED
+  ACTION_ITEMS_PENDING
+  CLOSED
+  CANCELLED
+}
+
+enum VideoProvider {
+  GOOGLE_MEET
+  TEAMS
+  ZOOM
+  CUSTOM
+}
+
+enum MeetingVisibility {
+  ALL_PARTICIPANTS
+  ORGANIZER_ONLY
+  DEPARTMENT
+  COMPANY
+}
+
+model MeetingParticipant {
+  id             String          @id @default(cuid())
+  meetingId      String
+  employeeId     String?
+  externalEmail  String?
+  externalName   String?
+  role           ParticipantRole @default(REQUIRED)
+  responseStatus InviteResponse  @default(PENDING)
+  respondedAt    DateTime?
+  meeting        Meeting         @relation(fields: [meetingId], references: [id])
+  employee       Employee?       @relation(fields: [employeeId], references: [id])
+
+  @@index([meetingId])
+}
+
+enum ParticipantRole {
+  ORGANIZER
+  REQUIRED
+  OPTIONAL
+}
+
+enum InviteResponse {
+  PENDING
+  ACCEPTED
+  DECLINED
+  TENTATIVE
+}
+
+model MeetingAgendaItem {
+  id          String  @id @default(cuid())
+  meetingId   String
+  order       Int
+  title       String
+  description String?
+  presenterId String?
+  durationMin Int?
+  status      String  @default("PENDING")
+  meeting     Meeting @relation(fields: [meetingId], references: [id])
+
+  @@index([meetingId])
+}
+
+model MeetingNote {
+  id           String         @id @default(cuid())
+  tenantId     String
+  meetingId    String
+  authorId     String
+  visibility   NoteVisibility @default(SHARED)
+  content      Json
+  agendaItemId String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  meeting      Meeting        @relation(fields: [meetingId], references: [id])
+
+  @@index([meetingId])
+}
+
+enum NoteVisibility {
+  SHARED
+  ORGANIZER_ONLY
+  PRIVATE
+  HR_CONFIDENTIAL
+}
+
+model MeetingDecision {
+  id           String   @id @default(cuid())
+  meetingId    String
+  title        String
+  description  String?
+  ownerId      String?
+  agendaItemId String?
+  status       String   @default("OPEN")
+  decidedAt    DateTime @default(now())
+  meeting      Meeting  @relation(fields: [meetingId], references: [id])
+
+  @@index([meetingId])
+}
+
+model MeetingActionItem {
+  id           String           @id @default(cuid())
+  tenantId     String
+  meetingId    String
+  title        String
+  description  String?
+  assigneeId   String?
+  creatorId    String
+  dueDate      DateTime?
+  priority     String           @default("MEDIUM")
+  status       ActionItemStatus @default(OPEN)
+  agendaItemId String?
+  taskId       String? // optional link to existing Task
+  projectId    String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  meeting      Meeting          @relation(fields: [meetingId], references: [id])
+
+  @@index([tenantId])
+  @@index([meetingId])
+  @@index([assigneeId])
+  @@index([dueDate])
+}
+
+enum ActionItemStatus {
+  OPEN
+  IN_PROGRESS
+  BLOCKED
+  COMPLETED
+  CANCELLED
+}
+
+model MeetingMinute {
+  id            String                 @id @default(cuid())
+  tenantId      String
+  meetingId     String
+  content       Json
+  status        MinuteStatus           @default(DRAFT)
+  templateType  String                 @default("STANDARD")
+  publishedById String?
+  publishedAt   DateTime?
+  sentAt        DateTime?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  versions      MeetingMinuteVersion[]
+  meeting       Meeting                @relation(fields: [meetingId], references: [id])
+
+  @@index([tenantId])
+  @@index([meetingId])
+}
+
+enum MinuteStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  AMENDED
+  ARCHIVED
+}
+
+model MeetingMinuteVersion {
+  id        String        @id @default(cuid())
+  minuteId  String
+  version   Int
+  content   Json
+  changedBy String
+  createdAt DateTime      @default(now())
+  minute    MeetingMinute @relation(fields: [minuteId], references: [id])
+
+  @@index([minuteId])
+}
+
+model MeetingRoom {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  building    String?
+  floor       String?
+  capacity    Int?
+  equipment   String[]
+  location    String?
+  isActive    Boolean  @default(true)
+  managedById String?
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  manager  Employee? @relation("MeetingRoomManager", fields: [managedById], references: [id])
+  meetings Meeting[]
+
+  @@index([tenantId])
+}
+
+model CalendarConnection {
+  id              String                 @id @default(cuid())
+  tenantId        String
+  userId          String
+  provider        String // "google" | "microsoft"
+  email           String
+  encryptedTokens Json // AES-256-GCM encrypted
+  scopes          String[]
+  isActive        Boolean                @default(true)
+  lastSyncAt      DateTime?
+  connectedAt     DateTime               @default(now())
+  revokedAt       DateTime?
+  mappings        CalendarEventMapping[]
+
+  @@index([tenantId, userId])
+}
+
+model CalendarEventMapping {
+  id                 String             @id @default(cuid())
+  meetingId          String
+  connectionId       String
+  externalEventId    String
+  externalCalendarId String
+  lastSyncAt         DateTime           @default(now())
+  meeting            Meeting            @relation(fields: [meetingId], references: [id])
+  connection         CalendarConnection @relation(fields: [connectionId], references: [id])
+
+  @@index([externalEventId])
+  @@index([meetingId])
+}
+
+model MeetingAttachment {
+  id           String   @id @default(cuid())
+  meetingId    String
+  fileId       String // links to existing Document/File model
+  uploadedById String
+  uploadedAt   DateTime @default(now())
+  meeting      Meeting  @relation(fields: [meetingId], references: [id])
+}
+
+model MeetingReminder {
+  id        String    @id @default(cuid())
+  meetingId String
+  offsetMin Int // minutes before start
+  channel   String // "EMAIL" | "IN_APP" | "PUSH"
+  sentAt    DateTime?
+  meeting   Meeting   @relation(fields: [meetingId], references: [id])
+
+  @@index([meetingId])
 }

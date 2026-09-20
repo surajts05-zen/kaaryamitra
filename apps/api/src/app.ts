@@ -55,6 +55,9 @@ import { budgetDashboardRouter } from './modules/budget-dashboard/budget-dashboa
 import { apiKeysRouter } from './modules/api-keys/api-keys.router.js';
 import { webhooksRouter } from './modules/webhooks/webhooks.router.js';
 import { integrationsRouter } from './modules/integrations/integrations.router.js';
+import { meetingsRouter } from './modules/meetings/meetings.router.js';
+import { roomsRouter } from './modules/meetings/rooms.router.js';
+import { meetingTypesRouter } from './modules/meetings/meeting-types.router.js';
 import { openapiRouter } from './modules/openapi/openapi.router.js';
 // Must be imported AFTER openapiRouter (which exports `registry`) so paths register correctly
 import './modules/openapi/openapi.definitions.js';
@@ -232,6 +235,12 @@ export function createApp() {
   app.use('/api/v1/library', requireAuth, resolveTenant, libraryRouter);
   app.use('/api/v1/t/:slug/library', requireAuth, resolveTenant, libraryRouter);
 
+  // Tenant-scoped Meetings & Calendar routes
+  app.use('/api/v1/meetings', requireAuth, resolveTenant, meetingsRouter);
+  app.use('/api/v1/t/:slug/meetings', requireAuth, resolveTenant, meetingsRouter);
+  app.use('/api/v1/rooms', requireAuth, resolveTenant, roomsRouter);
+  app.use('/api/v1/t/:slug/rooms', requireAuth, resolveTenant, roomsRouter);
+
   // Reports
   app.use('/api/v1/t/:slug/reports', requireAuth, resolveTenant, reportsRouter);
 
@@ -266,6 +275,12 @@ export function createApp() {
   // Integrations routes
   app.use('/api/v1/integrations', requireAuth, resolveTenant, integrationsRouter);
   app.use('/api/v1/t/:slug/integrations', requireAuth, resolveTenant, integrationsRouter);
+
+  // Meetings & Calendar routes
+  app.use('/api/v1/meetings', requireAuth, resolveTenant, meetingsRouter);
+  app.use('/api/v1/t/:slug/meetings', requireAuth, resolveTenant, meetingsRouter);
+  app.use('/api/v1/meeting-types', requireAuth, resolveTenant, meetingTypesRouter);
+  app.use('/api/v1/t/:slug/meeting-types', requireAuth, resolveTenant, meetingTypesRouter);
 
   // Notifications (user-scoped, no tenant resolution needed — userId from JWT is enough)
   app.use('/api/v1/notifications', requireAuth, notificationsRouter);

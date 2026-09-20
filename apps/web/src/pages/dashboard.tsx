@@ -8,6 +8,8 @@ import { format } from 'date-fns';
 import { useAiInsights } from '@/features/ai/hooks/use-ai-chat';
 import ReactMarkdown from 'react-markdown';
 import { Link } from 'react-router-dom';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useUpdatePresence, useEmployees } from '@/features/company/hooks/use-employee-queries';
 
 function getActivityMeta(action: string) {
   if (action.includes('onboarded')) {
@@ -48,10 +50,34 @@ export function DashboardPage() {
   const { data: announcements, isLoading: announcementsLoading } = usePinnedAnnouncements();
   const { data: companySettings } = useCompanySettings();
 
+  const updatePresence = useUpdatePresence();
+  const { data: employees } = useEmployees();
+  const pinnedEmployeeIds = user?.pinnedEmployeeIds || [];
+  const pinnedEmployees = employees?.filter((emp: any) => pinnedEmployeeIds.includes(emp.id)) || [];
+
+  const handleStatusChange = async (status: string) => {
+    await updatePresence.mutateAsync(status);
+  };
+
   const currentDate = format(new Date(), 'EEEE, MMMM do, yyyy');
 
   return (
     <div className="flex-1 space-y-6 pb-12">
+      <div className="flex justify-end">
+        <Select value={user?.presenceStatus || 'AVAILABLE'} onValueChange={handleStatusChange}>
+          <SelectTrigger className="w-[150px] h-9">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="AVAILABLE">🟢 Available</SelectItem>
+            <SelectItem value="BUSY">🔴 Busy</SelectItem>
+            <SelectItem value="MEETING">🟠 In a Meeting</SelectItem>
+            <SelectItem value="AWAY">🟡 Away</SelectItem>
+            <SelectItem value="OFFLINE">⚪ Offline</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* HERO BANNER */}
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-km-forest to-km-forest/80 text-white p-6 shadow-lg">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-km-lime/10 blur-3xl mix-blend-overlay"></div>
@@ -182,6 +208,42 @@ export function DashboardPage() {
 
         {/* RIGHT COLUMN: Widgets & Stats */}
         <div className="md:col-span-4 space-y-6">
+
+          {/* PINNED COLLEAGUES */}
+          <Card className="border-muted/60 shadow-sm">
+            <CardHeader className="pb-3 border-b border-border/50">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" /> Pinned Colleagues
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              {pinnedEmployees.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-2">No colleagues pinned.</p>
+              ) : (
+                <div className="space-y-3">
+                  {pinnedEmployees.map((emp: any) => {
+                    const status = emp.user?.presenceStatus || 'AVAILABLE';
+                    const colors: Record<string, string> = {
+                      AVAILABLE: 'bg-emerald-500',
+                      BUSY: 'bg-red-500',
+                      MEETING: 'bg-amber-500',
+                      AWAY: 'bg-yellow-500',
+                      OFFLINE: 'bg-gray-400',
+                    };
+                    return (
+                      <div key={emp.id} className="flex items-center justify-between border-b border-border/50 pb-2 last:border-0 last:pb-0">
+                        <div className="flex items-center gap-2">
+                          <div className={`h-2 w-2 rounded-full ${colors[status] || 'bg-gray-400'}`} />
+                          <p className="font-medium text-xs text-foreground">{emp.firstName} {emp.lastName}</p>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground capitalize">{status.toLowerCase().replace('_', ' ')}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
           
           {/* ORG STATS */}
           <div className="grid grid-cols-2 gap-4">

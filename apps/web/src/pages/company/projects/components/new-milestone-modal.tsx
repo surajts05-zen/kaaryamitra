@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useCurrency } from '@/hooks/use-currency';
+import { useEmployees } from '@/features/company/hooks/use-employee-queries';
 
 interface NewMilestoneModalProps {
   isOpen: boolean;
@@ -25,7 +26,9 @@ export function NewMilestoneModal({ isOpen, projectId, onClose, initialData }: N
   const [plannedEnd, setPlannedEnd] = useState('');
   const [plannedBudget, setPlannedBudget] = useState<number | ''>('');
   const [actualCost, setActualCost] = useState<number | ''>('');
+  const [ownerId, setOwnerId] = useState('unassigned');
 
+  const { data: employees } = useEmployees();
   const createMutation = useCreateMilestone();
   const updateMutation = useUpdateMilestone();
 
@@ -38,6 +41,7 @@ export function NewMilestoneModal({ isOpen, projectId, onClose, initialData }: N
       setPlannedEnd(initialData.plannedEnd ? new Date(initialData.plannedEnd).toISOString().slice(0, 10) : '');
       setPlannedBudget(initialData.plannedBudget !== undefined ? Number(initialData.plannedBudget) : '');
       setActualCost(initialData.actualCost !== undefined ? Number(initialData.actualCost) : '');
+      setOwnerId(initialData.ownerId || 'unassigned');
     } else {
       setName('');
       setStatus('NOT_STARTED');
@@ -46,6 +50,7 @@ export function NewMilestoneModal({ isOpen, projectId, onClose, initialData }: N
       setPlannedEnd('');
       setPlannedBudget('');
       setActualCost('');
+      setOwnerId('unassigned');
     }
   }, [initialData, isOpen]);
 
@@ -63,6 +68,8 @@ export function NewMilestoneModal({ isOpen, projectId, onClose, initialData }: N
         plannedBudget: Number(plannedBudget) || 0,
         actualCost: Number(actualCost) || 0,
       };
+      if (ownerId && ownerId !== 'unassigned') payload.ownerId = ownerId;
+      if (ownerId === 'unassigned') payload.ownerId = null;
       if (description) payload.description = description;
       if (plannedStart) payload.plannedStart = plannedStart;
       if (plannedEnd) payload.plannedEnd = plannedEnd;
@@ -107,6 +114,21 @@ export function NewMilestoneModal({ isOpen, projectId, onClose, initialData }: N
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Design Prototype Signoff"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Assignee</Label>
+            <Select value={ownerId} onValueChange={setOwnerId}>
+              <SelectTrigger><SelectValue placeholder="Select assignee" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
+                {employees?.map((emp: any) => (
+                  <SelectItem key={emp.id} value={emp.id}>
+                    {emp.firstName} {emp.lastName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

@@ -9,11 +9,13 @@ import { Plus, Edit } from 'lucide-react';
 import { useCurrency } from '@/hooks/use-currency';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { NewMilestoneModal } from './components/new-milestone-modal';
+import { useEmployees } from '@/features/company/hooks/use-employee-queries';
 
 export function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: project, isLoading: projectLoading } = useProject(id);
   const { data: milestones, isLoading: milestonesLoading } = useMilestones(id!);
+  const { data: employees } = useEmployees();
   const { formatCurrency } = useCurrency();
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<ProjectMilestone | null>(null);
@@ -91,6 +93,7 @@ export function ProjectDetailPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Milestone</TableHead>
+                <TableHead>Assignee</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Planned Start</TableHead>
                 <TableHead>Planned End</TableHead>
@@ -102,13 +105,13 @@ export function ProjectDetailPage() {
             <TableBody>
               {milestonesLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-4 text-gray-500">
+                  <TableCell colSpan={8} className="text-center py-4 text-gray-500">
                     Loading milestones...
                   </TableCell>
                 </TableRow>
               ) : milestones?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-4 text-gray-500">
+                  <TableCell colSpan={8} className="text-center py-4 text-gray-500">
                     No milestones found for this project.
                   </TableCell>
                 </TableRow>
@@ -116,6 +119,12 @@ export function ProjectDetailPage() {
                 milestones?.map((m) => (
                   <TableRow key={m.id}>
                     <TableCell className="font-medium">{m.name}</TableCell>
+                    <TableCell>
+                      {m.ownerId ? (() => {
+                        const emp = employees?.find((e: any) => e.id === m.ownerId);
+                        return emp ? `${emp.firstName} ${emp.lastName}` : 'Unknown';
+                      })() : <span className="text-gray-400 italic">Unassigned</span>}
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline">{m.status}</Badge>
                     </TableCell>

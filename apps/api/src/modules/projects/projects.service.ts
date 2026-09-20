@@ -66,6 +66,7 @@ export class ProjectsService {
   }
 
   static async create(tenantId: string, data: any) {
+    const { members, ...projectData } = data;
     const existing = await prisma.project.findFirst({
       where: { tenantId, code: data.code }
     });
@@ -82,8 +83,16 @@ export class ProjectsService {
         approvedBudget,
         actualCost,
         availableBudget,
-        startDate: data.startDate ? new Date(data.startDate) : undefined,
-        plannedEndDate: data.plannedEndDate ? new Date(data.plannedEndDate) : undefined,
+        startDate: projectData.startDate ? new Date(projectData.startDate) : undefined,
+        plannedEndDate: projectData.plannedEndDate ? new Date(projectData.plannedEndDate) : undefined,
+        members: members ? {
+          create: members.map((m: any) => ({
+            employeeId: m.employeeId,
+            role: m.role,
+            accessLevel: m.accessLevel || 'READ_ONLY',
+            allocationPct: 100
+          }))
+        } : undefined
       }
     });
   }
@@ -109,24 +118,51 @@ export class ProjectsService {
     });
   }
 
-  static async update(tenantId: string, id: string, data: any) {
-    await this.getById(tenantId, id);
+  static async update(tenantId: string, id: string, userId: string, data: any) {
+    const project = await this.getById(tenantId, id);
+
+    const employee = await prisma.employee.findUnique({ where: { userId } });
+    if (employee) {
+      const member = project.members?.find((m: any) => m.employeeId === employee.id);
+      if (member && member.accessLevel === 'READ_ONLY') {
+        throw AppError.forbidden('You only have read-only access to this project');
+      }
+    }
     
-    if (data.code) {
+    const { members, ...updateData } = data;
+    
+    if (updateData.code) {
       const existing = await prisma.project.findFirst({
-        where: { tenantId, code: data.code, id: { not: id } }
+        where: { tenantId, code: updateData.code, id: { not: id } }
       });
       if (existing) throw AppError.conflict('Project code already exists');
     }
 
-    const updateData = { ...data };
+
     if (updateData.startDate) updateData.startDate = new Date(updateData.startDate);
     if (updateData.plannedEndDate) updateData.plannedEndDate = new Date(updateData.plannedEndDate);
 
-    return prisma.project.update({
+    const updated = await prisma.project.update({
       where: { id },
       data: updateData
     });
+
+    if (members) {
+      // Sync members
+      await prisma.projectMember.deleteMany({ where: { projectId: id } });
+      if (members.length > 0) {
+        await prisma.projectMember.createMany({
+          data: members.map((m: any) => ({
+            projectId: id,
+            employeeId: m.employeeId,
+            role: m.role,
+            accessLevel: m.accessLevel || 'READ_ONLY',
+            allocationPct: 100
+          }))
+        });
+      }
+    }
+    return updated;
   }
   
   // Members

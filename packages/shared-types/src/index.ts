@@ -104,7 +104,14 @@ export type PermissionAction =
   | 'budget:request'
   | 'budget:approve'
   | 'budget:manage'
-  | 'cost-centers:manage';
+  | 'cost-centers:manage'
+  // Meetings & Calendar
+  | 'meeting:read'
+  | 'meeting:create'
+  | 'meeting:update'
+  | 'meeting:cancel'
+  | 'meeting.template.manage'
+  | 'calendar.sync';
 
 export interface Permission {
   id: string;

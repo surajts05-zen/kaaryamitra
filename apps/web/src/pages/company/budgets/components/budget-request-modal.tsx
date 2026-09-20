@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useCreateBudgetRequest, useUpdateBudgetRequest, useBudgetCategories, useCostCenters, BudgetRequest } from '@/features/budgets/budgets.service';
 import { useProjects } from '@/features/projects/projects.service';
+import { useEmployees } from '@/features/company/hooks/use-employee-queries';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,10 +30,12 @@ export function BudgetRequestModal({ isOpen, onClose, initialData }: BudgetReque
   const [lineItems, setLineItems] = useState([
     { description: '', quantity: 1, unitCost: 0, capexOpex: 'OPEX', categoryId: '' }
   ]);
+  const [members, setMembers] = useState<{employeeId: string, accessLevel: string}[]>([]);
 
   const { data: projects } = useProjects();
   const { data: categories } = useBudgetCategories();
   const { data: costCenters } = useCostCenters();
+  const { data: employees } = useEmployees();
   
   const createMutation = useCreateBudgetRequest();
   const updateMutation = useUpdateBudgetRequest();
@@ -56,6 +59,14 @@ export function BudgetRequestModal({ isOpen, onClose, initialData }: BudgetReque
       } else {
         setLineItems([{ description: '', quantity: 1, unitCost: 0, capexOpex: 'OPEX', categoryId: '' }]);
       }
+      if ((initialData as any).members && (initialData as any).members.length > 0) {
+        setMembers((initialData as any).members.map((m: any) => ({
+          employeeId: m.employeeId,
+          accessLevel: m.accessLevel || 'READ_ONLY'
+        })));
+      } else {
+        setMembers([]);
+      }
     } else {
       setRequestType('NEW_PROJECT');
       setPriority('MEDIUM');
@@ -64,6 +75,7 @@ export function BudgetRequestModal({ isOpen, onClose, initialData }: BudgetReque
       setObjective('');
       setBusinessJustification('');
       setLineItems([{ description: '', quantity: 1, unitCost: 0, capexOpex: 'OPEX', categoryId: '' }]);
+      setMembers([]);
     }
   }, [initialData, isOpen]);
 
@@ -81,6 +93,14 @@ export function BudgetRequestModal({ isOpen, onClose, initialData }: BudgetReque
     const newItems = [...lineItems];
     newItems[index] = { ...newItems[index], [field]: value } as typeof lineItems[0];
     setLineItems(newItems);
+  };
+
+  const handleAddMember = () => setMembers([...members, { employeeId: '', accessLevel: 'READ_ONLY' }]);
+  const handleRemoveMember = (index: number) => setMembers(members.filter((_, i) => i !== index));
+  const handleMemberChange = (index: number, field: string, value: string) => {
+    const newMembers = [...members];
+    newMembers[index] = { ...newMembers[index], [field]: value } as any;
+    setMembers(newMembers);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -105,7 +125,8 @@ export function BudgetRequestModal({ isOpen, onClose, initialData }: BudgetReque
         costCenterId: (!costCenterId || costCenterId === 'NONE') ? undefined : costCenterId,
         objective,
         businessJustification,
-        lineItems: sanitizedLineItems
+        lineItems: sanitizedLineItems,
+        members: members.filter(m => m.employeeId !== '') as { employeeId: string; accessLevel: string }[]
       };
 
       if (initialData?.id) {
@@ -247,6 +268,48 @@ export function BudgetRequestModal({ isOpen, onClose, initialData }: BudgetReque
                 
                 <div className="col-span-2 md:col-span-1 flex justify-end mt-6">
                   <Button type="button" variant="ghost" size="icon" className="text-red-500 h-9 w-9" onClick={() => handleRemoveLineItem(index)} disabled={lineItems.length === 1}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-4 pt-2">
+            <div className="flex justify-between items-center border-b pb-2">
+              <h3 className="text-sm font-semibold">Budget Members</h3>
+              <Button type="button" variant="outline" size="sm" onClick={handleAddMember}>
+                <Plus className="h-4 w-4 mr-2" /> Add Member
+              </Button>
+            </div>
+            
+            {members.map((member, index) => (
+              <div key={index} className="grid grid-cols-12 gap-3 items-start bg-muted/50 p-3 rounded-md border">
+                <div className="col-span-12 md:col-span-6 space-y-1">
+                  <Label className="text-xs">Employee</Label>
+                  <Select value={member.employeeId} onValueChange={(val) => handleMemberChange(index, 'employeeId', val)}>
+                    <SelectTrigger className="h-9"><SelectValue placeholder="Select..." /></SelectTrigger>
+                    <SelectContent>
+                      {employees?.map((emp: any) => (
+                        <SelectItem key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="col-span-10 md:col-span-4 space-y-1">
+                  <Label className="text-xs">Access Level</Label>
+                  <Select value={member.accessLevel} onValueChange={(val) => handleMemberChange(index, 'accessLevel', val)}>
+                    <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="READ_ONLY">Read Only</SelectItem>
+                      <SelectItem value="READ_WRITE">Read/Write</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="col-span-2 md:col-span-2 flex justify-end mt-6">
+                  <Button type="button" variant="ghost" size="icon" className="text-red-500 h-9 w-9" onClick={() => handleRemoveMember(index)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
