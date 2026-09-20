@@ -112,6 +112,9 @@ import { FinanceSettingsPage } from '@/pages/company/settings/finance';
 // Developer Hub
 import { DeveloperHubPage } from '@/pages/company/settings/developer-hub';
 
+// Meeting Rooms Configuration
+import { MeetingRoomsPage } from '@/pages/company/rooms';
+
 // Phase 24 - SaaS Billing
 import { CompanyBillingPage } from '@/pages/company/settings/billing';
 import { CompanyPlanComparePage } from '@/pages/company/settings/billing/plan-compare';
@@ -177,6 +180,7 @@ export function App() {
             <Route path="settings/statutory" element={<SalarySettingsHubPage defaultTab="statutory" />} />
             <Route path="settings/finance" element={<FinanceSettingsPage />} />
             <Route path="settings/developer" element={<DeveloperHubPage />} />
+            <Route path="settings/rooms" element={<MeetingRoomsPage />} />
             {/* Phase 26 - Policies */}
             <Route path="settings/policies" element={<PoliciesAdminList />} />
             <Route path="settings/policies/:id/edit" element={<PolicyEditor />} />

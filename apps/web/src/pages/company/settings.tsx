@@ -178,6 +178,20 @@ export function CompanySettingsPage() {
               </Card>
             </Link>
 
+            <Link to="rooms">
+              <Card className="hover:border-primary/50 hover:shadow-md transition-all cursor-pointer h-full border-border/60">
+                <CardHeader>
+                  <div className="p-2.5 w-fit rounded-lg bg-rose-500/10 text-rose-600 mb-2">
+                    <CalendarClock className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-lg">Meeting Rooms</CardTitle>
+                  <CardDescription className="text-xs">
+                    Configure physical meeting rooms, capacity, and equipment.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+
             <Link to="shifts">
               <Card className="hover:border-primary/50 hover:shadow-md transition-all cursor-pointer h-full border-border/60">
                 <CardHeader>
