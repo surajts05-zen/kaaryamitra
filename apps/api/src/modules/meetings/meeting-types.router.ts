@@ -8,6 +8,7 @@ router.use(requireAuth);
 
 router.get('/', asyncHandler(controller.listHandler));
 router.post('/', requirePermission('meeting.template.manage'), asyncHandler(controller.createHandler));
+router.post('/seed-defaults', requirePermission('meeting.template.manage'), asyncHandler(controller.seedDefaultsHandler));
 router.patch('/:id', requirePermission('meeting.template.manage'), asyncHandler(controller.updateHandler));
 
 export { router as meetingTypesRouter };

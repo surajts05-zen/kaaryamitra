@@ -88,10 +88,18 @@ export class AdminService {
         },
         meetingTypes: {
           create: [
-            { name: '1-on-1', color: '#3b82f6', description: 'One-on-one sync' },
-            { name: 'Team Sync', color: '#10b981', description: 'Weekly team sync' },
-            { name: 'Interview', color: '#8b5cf6', description: 'Candidate interview' },
-            { name: 'All Hands', color: '#f59e0b', description: 'Company all-hands' }
+            { name: '1-on-1', color: '#3b82f6', icon: 'Users', description: 'Private one-on-one check-in between manager and team member', isDefault: true },
+            { name: 'Team Sync', color: '#10b981', icon: 'UsersRound', description: 'Regular team stand-up or weekly sync meeting' },
+            { name: 'All Hands', color: '#f59e0b', icon: 'Megaphone', description: 'Company-wide all-hands or town hall meeting' },
+            { name: 'Interview', color: '#8b5cf6', icon: 'ClipboardList', description: 'Candidate interview — technical, cultural, or HR round' },
+            { name: 'Performance Review', color: '#ec4899', icon: 'BarChart2', description: 'Quarterly or annual employee performance appraisal' },
+            { name: 'Project Kickoff', color: '#06b6d4', icon: 'Rocket', description: 'Project initiation meeting to align scope, goals, and team' },
+            { name: 'Sprint Planning', color: '#6366f1', icon: 'CalendarDays', description: 'Agile sprint planning session to assign tasks and set goals' },
+            { name: 'Retrospective', color: '#14b8a6', icon: 'RefreshCw', description: 'End-of-sprint or project retrospective to discuss improvements' },
+            { name: 'Client Call', color: '#f97316', icon: 'PhoneCall', description: 'External client or stakeholder meeting / status update' },
+            { name: 'Training', color: '#a855f7', icon: 'GraduationCap', description: 'Internal training session, workshop, or knowledge sharing' },
+            { name: 'Board Meeting', color: '#dc2626', icon: 'Briefcase', description: 'Board of directors or executive leadership meeting' },
+            { name: 'Workshop', color: '#84cc16', icon: 'Wrench', description: 'Collaborative working session or brainstorming workshop' },
           ]
         },
         roles: {

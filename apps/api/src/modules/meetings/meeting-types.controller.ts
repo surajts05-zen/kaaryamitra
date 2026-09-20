@@ -26,3 +26,8 @@ export async function updateHandler(req: Request, res: Response) {
   const data = await MeetingTypesService.update(req.tenantId!, req.params.id as string, body);
   res.status(200).json({ success: true, data });
 }
+
+export async function seedDefaultsHandler(req: Request, res: Response) {
+  const result = await MeetingTypesService.seedDefaults(req.tenantId!);
+  res.status(200).json({ success: true, data: result });
+}
