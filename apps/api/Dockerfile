@@ -22,7 +22,8 @@ COPY apps/api ./apps/api
 # Generate Prisma client
 RUN cd apps/api && npx prisma generate
 
-# Build TypeScript
+# Build TypeScript with increased memory limit
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN cd apps/api && npm run build && mkdir -p node_modules
 
 # ── Production stage ──────────────────────────────────────────────────────────

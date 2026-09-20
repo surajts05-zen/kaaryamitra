@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-kaaryamitra}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-km_secret_change_me}
-      POSTGRES_DB: ${POSTGRES_DB:-kaaryamitra_db}
+      POSTGRES_DB: ${POSTGRES_DB:-kaaryamitra}
     ports:
       - '5432:5432'
     volumes:
@@ -48,7 +48,7 @@ services:
       - .env
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER:-kaaryamitra}:${POSTGRES_PASSWORD:-km_secret_change_me}@postgres:5432/${POSTGRES_DB:-kaaryamitra_db}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-kaaryamitra}:${POSTGRES_PASSWORD:-km_secret_change_me}@postgres:5432/${POSTGRES_DB:-kaaryamitra}
       REDIS_URL: redis://redis:6379
     networks:
       - default
