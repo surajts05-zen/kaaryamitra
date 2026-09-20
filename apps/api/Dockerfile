@@ -13,7 +13,7 @@ COPY packages/shared-types ./packages/shared-types
 # Copy API package
 COPY apps/api/package.json ./apps/api/
 
-# Install dependencies
+# Install dependencies (including devDependencies for tsx and prisma)
 RUN npm install --workspace=apps/api
 
 # Copy API source
@@ -21,10 +21,6 @@ COPY apps/api ./apps/api
 
 # Generate Prisma client
 RUN cd apps/api && npx prisma generate
-
-# Build TypeScript with increased memory limit
-ENV NODE_OPTIONS="--max-old-space-size=4096"
-RUN cd apps/api && npm run build && mkdir -p node_modules
 
 # ── Production stage ──────────────────────────────────────────────────────────
 FROM node:22-alpine AS runner
@@ -36,17 +32,14 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy root workspace configurations and hoisted node_modules
+# Copy everything from builder (source + node_modules with tsx + prisma client)
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/apps/api ./apps/api
+COPY --from=builder /app/tsconfig.base.json ./
 
-# Copy API artifacts retaining workspace structure
-COPY --from=builder /app/apps/api/package.json ./apps/api/
-COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/src/prisma ./apps/api/src/prisma
-
-# We don't strictly need to expose port for Dokploy Traefik, but it's good documentation
 EXPOSE 3000
 
-CMD ["sh", "-c", "cd apps/api && npx prisma db push --accept-data-loss && npx prisma db seed && node dist/index.js"]
+# Run via tsx (no compilation needed) — memory-efficient and fast startup
+CMD ["sh", "-c", "cd apps/api && npx prisma db push --accept-data-loss && npx prisma db seed && npx tsx src/index.ts"]
