@@ -46,6 +46,14 @@ export function Editor({ value, onChange, placeholder, editable = true }: Editor
     },
   });
 
+  React.useEffect(() => {
+    if (editor && value !== editor.getHTML()) {
+      // Check if value is truly different to avoid cursor jumping
+      if (value === '' && editor.getHTML() === '<p></p>') return;
+      editor.commands.setContent(value || '');
+    }
+  }, [value, editor]);
+
   if (!editor) return null;
 
   return (

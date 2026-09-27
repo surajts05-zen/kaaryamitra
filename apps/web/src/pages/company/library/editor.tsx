@@ -60,6 +60,11 @@ export function LibraryEditorPage() {
     onUpdate: ({ editor }) => {
       setContent(editor.getHTML());
     },
+    editorProps: {
+      attributes: {
+        class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[600px] w-full',
+      },
+    },
   });
 
   useEffect(() => {
@@ -247,7 +252,10 @@ export function LibraryEditorPage() {
           )}
 
           {/* Editor Content */}
-          <div className="p-4 min-h-[600px] prose prose-sm dark:prose-invert max-w-none focus:outline-none">
+          <div 
+            className="p-4 min-h-[600px] cursor-text"
+            onClick={() => editor?.commands.focus()}
+          >
             <EditorContent editor={editor} />
           </div>
         </div>

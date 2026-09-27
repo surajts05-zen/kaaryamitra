@@ -1,0 +1,1400 @@
+﻿SUPER PROMPT ΓÇö PRODUCTION-GRADE HRMS ATTENDANCE, SHIFT PUNCH & ANTI-MISUSE SYSTEM
+ROLE
+Act as a senior enterprise HRMS architect, product designer, backend architect, mobile/web architect, security engineer, QA engineer and UX designer.
+I am building a modern multi-tenant HRMS application.
+The application already has, or will have, employee management, companies/tenants, authentication, roles, shifts and attendance.
+Your task is to design and implement a production-grade Attendance & Shift Punching System that is:
+Extremely simple for employees to use
+Difficult to misuse
+Flexible enough for different organizations
+Technology-tolerant
+Reliable on poor networks and heterogeneous hardware
+Suitable for both desktop web and mobile
+Auditable
+Payroll-ready
+Multi-tenant
+Configurable by each organization
+Capable of supporting future native Android/iOS applications without redesigning the backend
+DO NOT over-engineer the employee experience.
+The principle is:
+SIMPLE EMPLOYEE EXPERIENCE + STRONG SERVER-SIDE VALIDATION + CONFIGURABLE ORGANIZATION POLICIES + COMPLETE AUDITABILITY
+
+1. CORE PRODUCT PHILOSOPHY
+Do NOT try to prevent every possible form of attendance fraud by making attendance difficult.
+Instead:
+Make normal attendance extremely easy.
+Validate the punch against the employee's assigned shift.
+Validate the punch against organization policies.
+Collect appropriate contextual evidence.
+Detect anomalies.
+Provide legitimate exception workflows.
+Preserve a complete immutable audit trail.
+The system must never unnecessarily prevent legitimate attendance because of:
+weak GPS
+poor camera hardware
+browser limitations
+temporary network problems
+unsupported sensors
+mobile hardware differences
+temporary server/network latency
+employees working from approved remote locations
+When technology cannot provide evidence, the system should preferably record the limitation and route the attendance through an appropriate policy/review mechanism rather than silently losing attendance data.
+
+2. ATTENDANCE CHANNELS
+Support two attendance channels:
+A. DESKTOP / WEB
+Desktop attendance is primarily intended for:
+Office desktops
+Office laptops
+Remote employees
+Shared organizational computers where permitted
+Desktop attendance MUST NOT use GPS/geofencing.
+Desktop validation should use:
+Authentication
+Employee status
+Assigned shift
+Server timestamp
+Browser/session information
+Device/browser identifier where appropriate
+Public IP address
+Organization-configured IP ranges
+Organization-configured Wi-Fi/network identification where technically available
+Attendance policy
+Previous attendance state
+IMPORTANT:
+Do NOT require GPS permission on desktop.
+Do NOT implement desktop geofencing.
+
+3. MOBILE ATTENDANCE
+Mobile attendance should provide stronger presence evidence.
+Mobile Punch In / Punch Out may use:
+GPS location
+Camera/selfie
+Date/time
+Localized location information
+Device/application information
+Network information
+Server timestamp
+The mobile attendance evidence should optionally produce an attendance snapshot containing:
+Employee selfie
+Date
+Time
+Location
+Latitude/longitude where permitted
+Human-readable location/address if available
+Accuracy radius
+Organization/site name where applicable
+The date/time/location overlay must be generated in a trustworthy way.
+DO NOT simply trust a date/time typed or supplied by the mobile client.
+The server timestamp is authoritative.
+
+4. MOBILE TECHNOLOGY MUST BE PLATFORM-AGNOSTIC
+I have NOT finalized whether the mobile application will be:
+Native Android
+Capacitor
+React Native
+Another hybrid approach
+Therefore:
+DO NOT tightly couple the attendance backend to Capacitor, Android APIs, or a specific mobile framework.
+Create a clean mobile attendance API contract.
+The backend should receive structured attendance data such as:
+{
+  "employeeId": "...",
+  "attendanceAction": "PUNCH_IN",
+  "clientTimestamp": "...",
+  "latitude": 0,
+  "longitude": 0,
+  "accuracyMeters": 0,
+  "locationPermissionStatus": "...",
+  "cameraPermissionStatus": "...",
+  "deviceId": "...",
+  "appVersion": "...",
+  "platform": "ANDROID",
+  "networkType": "...",
+  "evidenceId": "..."
+}
+The exact schema may be improved by the architect.
+The backend MUST remain independent of whether the mobile client is Capacitor or native Android.
+
+5. HARDWARE COMPATIBILITY IS A FIRST-CLASS REQUIREMENT
+This is critical.
+The mobile attendance system must NOT assume that every Android device has:
+high-quality GPS
+GPS available indoors
+fast GPS lock
+high-resolution camera
+autofocus
+front camera
+stable compass
+stable network
+Google Play Services
+modern Android APIs
+identical camera APIs
+identical GPS behavior
+Design the system around real-world Android fragmentation.
+The implementation MUST include capability detection.
+Before attempting attendance capture, determine:
+Camera available?
+Front camera available?
+Location service available?
+Location permission granted?
+Precise location available?
+Approximate location only?
+GPS fix available?
+Location accuracy acceptable?
+Network available?
+Device supported?
+Application permissions available?
+Do not simply crash or block the employee if a capability is unavailable.
+
+6. MOBILE PERMISSION STRATEGY
+Permissions should be requested contextually.
+Do NOT request:
+Camera
+GPS
+Location
+Storage
+Notifications
+all at application startup.
+Instead:
+When the employee taps:
+PUNCH IN
+explain why the required capability is needed.
+Example:
+To verify your attendance, we need your current location and a quick selfie.
+Then request the necessary permissions.
+If permission is denied:
+Provide an appropriate fallback according to organization policy.
+Example:
+Location permission is required for mobile attendance under your organization's policy.
+or:
+Location could not be verified. You can submit this attendance for review.
+The exact behavior must be configurable.
+
+7. LOCATION HANDLING
+GPS should be treated as evidence, not as an absolute truth.
+Capture:
+latitude
+longitude
+accuracy
+timestamp
+provider/source where available
+permission state
+whether precise or approximate location was supplied
+Do NOT accept obviously impossible values.
+Implement validation for:
+invalid coordinates
+impossible accuracy
+stale location
+mocked/suspicious location where detectable
+location timestamp too old
+location outside expected bounds
+Do NOT automatically reject legitimate employees solely because GPS accuracy is poor.
+Example:
+GPS accuracy = 8m
+ΓåÆ GOOD
+GPS accuracy = 45m
+ΓåÆ ACCEPTABLE / REVIEW depending on policy
+GPS accuracy = 500m
+ΓåÆ LOW CONFIDENCE
+GPS unavailable
+ΓåÆ fallback according to policy
+
+8. MOBILE SELFIE
+For organizations that enable selfie verification:
+Capture a selfie immediately before the attendance action.
+The system should:
+Open front camera.
+Display a face positioning guide.
+Capture image.
+Check basic image quality.
+Ensure an image was actually captured.
+Associate image with the attendance event.
+Generate evidence record.
+Store securely.
+The system should NOT require sophisticated facial recognition for the first implementation.
+Separate:
+Identity evidence
+"Employee submitted this selfie."
+from:
+Biometric identity verification
+"AI determined that this is definitely the employee."
+Do not make biometric recognition mandatory.
+Design the system so biometric verification can be added later.
+
+9. DATE / TIME / LOCATION OVERLAY
+The mobile attendance evidence should display an overlay such as:
+RE:SYSTEM HRMS
+
+27 Sep 2026
+09:02:14 AM
+
+Bengaluru, Karnataka
+Location: 12.xxxxx, 77.xxxxx
+Accuracy: 12m
+
+PUNCH IN
+However:
+THE CLIENT MUST NOT BE THE AUTHORITY FOR THE TIME.
+The system should record:
+Server time
+Authoritative attendance timestamp.
+Client time
+Diagnostic information.
+If they differ materially, flag the discrepancy.
+The overlay should preferably be generated using trusted attendance data after capture rather than relying exclusively on the phone's local clock.
+
+10. DESKTOP NETWORK VALIDATION
+Desktop MUST NOT use GPS.
+Instead implement organization-configurable network validation.
+An organization administrator should be able to configure trusted office networks.
+Support:
+Public IP ranges
+Example:
+203.0.113.0/24
+203.0.114.10/32
+Use CIDR notation.
+Do NOT store only string prefixes such as:
+192.168.1
+unless there is a compelling reason.
+Implement proper IP/CIDR matching.
+IMPORTANT:
+A browser cannot reliably identify the local Wi-Fi SSID in a normal web application.
+Therefore:
+DO NOT pretend that the web browser can universally provide Wi-Fi SSID.
+Instead use:
+public IP
+organization-configured public IP/CIDR ranges
+optional network metadata supplied by an enterprise environment where available
+Document this limitation clearly.
+If a company wants stronger office-network validation, support future integration with:
+VPN
+enterprise identity
+network gateway
+MDM
+managed desktop agent
+without making those dependencies mandatory.
+
+11. DESKTOP PUNCH FLOW
+Employee opens HRMS.
+System determines:
+Employee authenticated?
+Employee active?
+Attendance policy active?
+Shift assigned?
+Already punched in?
+Already punched out?
+Within permitted punch window?
+Network trusted?
+If everything is normal:
+PUNCH IN
+One click.
+Then:
+PUNCH IN RECORDED
+
+09:02 AM
+
+General Shift
+9:00 AM ΓÇô 6:00 PM
+
+Status: On Time
+After punching in:
+The Punch In action must disappear.
+Show:
+WORKING
+
+Punched in: 09:02 AM
+Duration: 3h 27m
+
+[ PUNCH OUT ]
+
+12. MOBILE PUNCH FLOW
+The employee should still experience a simple flow.
+Example:
+                    PUNCH IN
+                       Γåô
+             Validate attendance state
+                       Γåô
+          Check mobile attendance policy
+                       Γåô
+              Obtain location
+                       Γåô
+             Validate GPS quality
+                       Γåô
+              Capture selfie
+                       Γåô
+          Generate attendance evidence
+                       Γåô
+           Send attendance transaction
+                       Γåô
+             Server validation
+                       Γåô
+             Attendance recorded
+Do not make the employee manually enter:
+latitude
+longitude
+date
+time
+shift
+location
+IP address
+All of this should be automatic.
+
+13. SHIFT ENGINE
+Attendance MUST be driven by an explicit shift engine.
+Each shift should support:
+Shift name
+Start time
+End time
+Time zone
+Early punch allowance
+Late tolerance
+Minimum working hours
+Break duration
+Break policy
+Early departure tolerance
+Overtime policy
+Punch-in requirement
+Punch-out requirement
+Location policy
+Network policy
+Mobile evidence policy
+Selfie requirement
+Correction policy
+Example:
+General Shift
+
+Start: 09:00
+End: 18:00
+
+Early Punch Window: 30 min
+Late Grace: 10 min
+Early Departure Grace: 10 min
+
+Mobile Location: Required
+Mobile Selfie: Optional
+
+Desktop Trusted Network: Required
+
+14. PUNCH WINDOW
+Employees must not be able to arbitrarily punch at any time.
+Example:
+Shift:
+09:00 ΓÇô 18:00
+Policy:
+Early punch window = 30 minutes
+Therefore:
+08:30 ΓåÆ allowed
+08:55 ΓåÆ allowed
+09:00 ΓåÆ allowed
+09:07 ΓåÆ allowed but potentially late depending on grace
+07:00 ΓåÆ not normal punch
+If the organization allows exceptions:
+REQUEST EARLY PUNCH
+The employee provides a reason.
+
+15. LATE ARRIVAL
+Late attendance should be automatically classified.
+Example:
+Shift starts:
+09:00
+Grace period:
+10 minutes
+09:05:
+ON TIME
+09:11:
+LATE
+The system should preserve:
+actual punch time
+scheduled shift start
+grace period
+calculated status
+Never overwrite the actual timestamp.
+
+16. EARLY DEPARTURE
+If employee punches out before the allowed threshold:
+Display:
+You are leaving before your scheduled shift ends.
+Allow:
+Punch Out
+but optionally require:
+Reason
+Example:
+Personal emergency
+Approved appointment
+Manager instruction
+Client visit
+Other
+Do not simply destroy or reject the punch.
+Record the exception.
+
+17. DUPLICATE PUNCH PREVENTION
+This MUST be enforced server-side.
+Never rely only on the frontend hiding buttons.
+Database/state logic must ensure:
+NOT_STARTED
+    Γåô
+PUNCHED_IN
+    Γåô
+PUNCHED_OUT
+Invalid transitions:
+PUNCHED_IN ΓåÆ PUNCHED_IN
+PUNCHED_OUT ΓåÆ PUNCHED_IN
+PUNCHED_OUT ΓåÆ PUNCHED_OUT
+The backend must reject invalid transitions.
+
+18. SERVER TIME
+The server is the authoritative attendance clock.
+Never use:
+phone time
+browser time
+JavaScript Date()
+as the authoritative punch timestamp.
+Record:
+serverTimestamp
+clientTimestamp
+timezone
+This also allows detection of device-clock manipulation.
+
+19. ATTENDANCE DATABASE DESIGN
+Design a robust attendance model.
+At minimum consider:
+attendance_sessions
+id
+tenant_id
+employee_id
+shift_id
+
+date
+scheduled_start
+scheduled_end
+
+punch_in_at
+punch_out_at
+
+status
+
+punch_in_channel
+punch_out_channel
+
+punch_in_evidence_id
+punch_out_evidence_id
+
+created_at
+updated_at
+attendance_events
+Every action must be recorded.
+id
+attendance_session_id
+employee_id
+event_type
+event_timestamp
+server_timestamp
+
+channel
+ip_address
+device_id
+platform
+
+latitude
+longitude
+location_accuracy
+
+client_timestamp
+
+metadata
+created_at
+attendance_evidence
+id
+attendance_event_id
+photo_url
+location_data
+server_timestamp
+client_timestamp
+device_metadata
+network_metadata
+integrity_hash
+created_at
+attendance_exceptions
+id
+attendance_session_id
+employee_id
+exception_type
+reason
+requested_at
+approved_by
+approved_at
+status
+comments
+The exact schema may be improved during implementation.
+
+20. IMMUTABLE AUDIT LOG
+Attendance records should be treated as highly auditable records.
+Never allow employees to directly edit:
+punch-in time
+punch-out time
+location
+evidence
+server timestamp
+If correction is needed:
+Original Attendance
+        Γåô
+Correction Request
+        Γåô
+Manager/HR Approval
+        Γåô
+Adjustment Record
+        Γåô
+Audit Trail
+Never silently overwrite the original record.
+
+21. MISSED PUNCH
+If employee forgets to punch out:
+Next login:
+ΓÜá You have a missing punch-out from yesterday.
+Provide:
+Request Attendance Correction
+Example:
+Date: 26 Sep
+Punch In: 08:57 AM
+Punch Out: Missing
+
+Requested Punch Out:
+06:11 PM
+
+Reason:
+Forgot to punch out
+Submit.
+Manager receives approval request.
+
+22. ATTENDANCE EXCEPTION ENGINE
+Create standardized exception types.
+Examples:
+EARLY_PUNCH
+LATE_PUNCH
+EARLY_DEPARTURE
+OUTSIDE_TRUSTED_NETWORK
+LOCATION_UNAVAILABLE
+LOW_LOCATION_ACCURACY
+CAMERA_UNAVAILABLE
+SELFIE_REJECTED
+UNREGISTERED_DEVICE
+DEVICE_CHANGED
+MISSING_PUNCH
+DUPLICATE_PUNCH_ATTEMPT
+CLIENT_SERVER_TIME_MISMATCH
+SUSPICIOUS_LOCATION
+SUSPICIOUS_DEVICE
+MANUAL_CORRECTION
+Exceptions should be configurable as:
+ALLOW
+ALLOW_AND_FLAG
+REQUIRE_REASON
+REQUIRE_APPROVAL
+BLOCK
+
+23. TRUST LEVELS
+Implement a configurable validation result.
+For example:
+VERIFIED
+All required evidence available.
+ACCEPTED
+Attendance valid but some optional evidence unavailable.
+FLAGGED
+Attendance recorded but requires review.
+PENDING_APPROVAL
+Attendance requires manager/HR approval.
+BLOCKED
+Policy explicitly prevents attendance.
+Do not create unnecessary hard blocks.
+
+24. ANOMALY DETECTION
+Build the foundation for an attendance anomaly engine.
+Examples:
+Multiple devices
+Repeated IP changes
+Frequent outside-network punches
+Large time discrepancies
+Repeated manual corrections
+Impossible location movement
+Multiple punches from same device for different employees
+Repeated suspicious patterns
+Unusual punch timing
+Do not automatically accuse employees of fraud.
+Use neutral terminology:
+Attendance Anomaly
+Verification Required
+Policy Exception
+Review Recommended
+
+25. DEVICE MANAGEMENT
+For mobile, support optional device registration.
+Example:
+Employee
+   Γåô
+Mobile Device A
+   Γåô
+Registered
+If a new device appears:
+New device detected.
+
+Device:
+Samsung Galaxy ...
+
+Last registered device:
+...
+
+[Continue]
+[Request Device Registration]
+Organization policy determines whether this should:
+Allow
+Flag
+Require approval
+Block
+Do NOT make device registration mandatory for every organization.
+
+26. MOBILE HARDWARE FAILURE STRATEGY
+This is a critical requirement.
+The application MUST gracefully handle:
+No camera
+Show:
+Camera unavailable on this device.
+Then follow organization policy.
+Camera permission denied
+Show instructions for enabling permission.
+GPS unavailable
+Show:
+Unable to obtain your current location.
+Retry.
+If still unavailable, follow policy.
+GPS poor accuracy
+Display:
+Location accuracy is currently low. Move to an open area and try again.
+Provide:
+Retry
+and, if policy allows:
+Continue with verification warning
+Network unavailable
+Do not lose the attendance transaction.
+Implement a robust transaction strategy.
+If offline attendance is permitted by organization policy:
+securely queue transaction
+preserve capture time
+synchronize later
+mark as offline-submitted
+perform server validation when connectivity returns
+If offline attendance is not permitted:
+Internet connection required for attendance.
+App interrupted
+If camera/GPS flow is interrupted:
+restore state where possible
+don't create duplicate attendance
+allow safe retry
+App killed
+Attendance transaction must remain consistent.
+
+27. OFFLINE MODE
+Design the architecture so offline mode CAN be supported, even if it is disabled initially.
+If enabled:
+CAPTURE
+ Γåô
+LOCAL SECURE QUEUE
+ Γåô
+NETWORK AVAILABLE
+ Γåô
+SERVER
+ Γåô
+VALIDATION
+ Γåô
+SYNC
+Important:
+Offline mode must not allow employees to arbitrarily alter timestamps.
+Use:
+secure local storage
+transaction ID
+capture timestamp
+device identifier
+application integrity metadata
+server reconciliation
+Offline punches should be clearly marked.
+
+28. NETWORK FAILURE
+The system must distinguish:
+Attendance failed
+from:
+Attendance recorded but synchronization pending
+Never tell an employee that attendance failed when the server actually accepted it.
+Use idempotency keys.
+Example:
+attendance_transaction_id = UUID
+If the same request is retried:
+Do not create a second attendance record.
+
+29. DESKTOP IP SECURITY
+Do not rely solely on IP.
+Public IP addresses can change.
+Therefore organization configuration should support:
+Trusted Network
+
+Name:
+Bengaluru HQ
+
+CIDR:
+203.0.113.0/24
+
+Status:
+Active
+Multiple networks must be supported.
+Example:
+Bengaluru HQ
+Mumbai Office
+Hyderabad Office
+Factory
+VPN
+Employees can be assigned network policies through:
+organization
+department
+location/site
+shift
+
+30. MULTI-TENANCY
+Every attendance object must be tenant-aware.
+Never allow:
+Tenant A employee
+to query or access:
+Tenant B attendance.
+Enforce tenant isolation at:
+API
+service
+database query
+authorization
+file/evidence storage
+Evidence files must also be tenant-isolated.
+
+31. ADMIN CONFIGURATION
+Create an Attendance Policy administration interface.
+General
+Enable attendance
+Enable punch in/out
+Allow manual correction
+Manager approval
+Desktop
+Trusted IP required
+Trusted IP optional
+Allow remote punching
+Untrusted network behavior
+Mobile
+GPS required
+GPS optional
+Selfie required
+Selfie optional
+Device registration
+Offline attendance
+Shift
+Early punch window
+Late tolerance
+Early departure tolerance
+Minimum hours
+Break rules
+Overtime rules
+Exceptions
+For each:
+ALLOW
+ALLOW + FLAG
+REQUIRE REASON
+REQUIRE APPROVAL
+BLOCK
+
+32. EMPLOYEE DASHBOARD
+Keep it extremely simple.
+Before Punch In
+GOOD MORNING, [NAME]
+
+Today's Shift
+
+09:00 AM ΓÇô 06:00 PM
+
+Punch-in available from 08:30 AM
+
+             [ PUNCH IN ]
+After Punch In
+YOU ARE WORKING
+
+Punched in:
+09:04 AM
+
+Shift:
+09:00 AM ΓÇô 06:00 PM
+
+Working:
+4h 17m
+
+             [ PUNCH OUT ]
+After Punch Out
+ATTENDANCE COMPLETED
+
+09:04 AM ΓÇô 06:08 PM
+
+Total:
+9h 04m
+
+Status:
+Present
+Do not overwhelm employees with technical validation information.
+
+33. ADMIN ATTENDANCE DASHBOARD
+Administrators should see:
+Today's Attendance
+
+Present
+Late
+Absent
+Working
+Completed
+Missing Punch
+Exceptions
+Pending Approval
+Then:
+Attendance anomaly view
+Employee
+Date
+Shift
+Punch In
+Punch Out
+Channel
+Verification
+Exception
+Action
+
+34. SECURITY
+Implement:
+Authentication
+Authorization
+Tenant isolation
+Rate limiting
+CSRF protection where applicable
+Secure session management
+API authentication
+Input validation
+File upload validation
+Image size limits
+MIME validation
+Malware scanning where appropriate
+Secure object storage
+Encryption in transit
+Encryption at rest
+Audit logs
+Idempotency
+Replay protection
+Abuse detection
+Do not expose sensitive location/evidence information unnecessarily.
+
+35. PRIVACY
+Location and selfies are sensitive employee data.
+The architecture must support:
+Explicit employee consent/notice where appropriate
+Organization policy disclosure
+Purpose limitation
+Retention period
+Secure deletion
+Access controls
+Audit logs
+Restricted HR access
+Evidence retention policies
+Do not retain high-resolution selfie/location evidence indefinitely by default.
+Make retention configurable.
+
+36. PHOTO STORAGE
+Do not store attendance selfies directly in a publicly accessible folder.
+Use secure object storage.
+Use:
+tenant/
+  employee/
+    attendance/
+      YYYY/
+        MM/
+          DD/
+Generate controlled access URLs.
+Prefer short-lived signed URLs for viewing evidence.
+
+37. IMAGE PROCESSING
+Do not blindly trust client-submitted metadata.
+The system should independently record:
+Server timestamp
+Received timestamp
+File hash
+Evidence ID
+Employee ID
+Attendance event ID
+The overlay may be generated server-side or through a controlled processing pipeline.
+Preserve the original image separately if organizational policy requires forensic/audit capability.
+
+38. MOBILE UI REQUIREMENTS
+The mobile attendance interface should be:
+One-handed
+Large buttons
+Fast
+High contrast
+Accessible
+Usable in sunlight
+Usable on inexpensive Android phones
+Responsive
+Low bandwidth friendly
+Avoid complex animations.
+The punch action should ideally take only a few seconds under normal conditions.
+
+39. CAMERA UX
+When selfie is required:
+Show:
+Position your face inside the circle.
+
+Good lighting helps verification.
+
+[ Capture ]
+Do not require professional camera quality.
+Implement basic quality checks:
+Image exists
+Reasonable resolution
+Not completely dark
+Not completely blank
+Face likely present if face detection is enabled
+File size acceptable
+Do not reject legitimate users simply because the camera image isn't perfect.
+
+40. GPS UX
+Display a simple status:
+Finding your location...
+Then:
+Location verified Γ£ô
+Accuracy: 12m
+or:
+Location accuracy is low.
+Try moving near a window/open area.
+
+[Retry]
+Do not expose raw technical errors to ordinary employees.
+
+41. TECHNOLOGY ABSTRACTION
+Create interfaces such as:
+LocationProvider
+CameraProvider
+DeviceProvider
+NetworkProvider
+AttendanceEvidenceProvider
+This allows:
+CapacitorLocationProvider
+NativeAndroidLocationProvider
+ReactNativeLocationProvider
+to implement the same contract.
+The backend should not know or care which mobile framework is used.
+This is essential because the final mobile technology has not yet been selected.
+
+42. CAPACITOR-FIRST COMPATIBILITY
+If implementing the first mobile version using Capacitor:
+Do NOT assume browser APIs are sufficient for:
+camera
+GPS
+device identification
+background behavior
+secure storage
+Use appropriate native bridges/plugins where required.
+However:
+Do not make the business logic dependent on a Capacitor plugin.
+Create a service abstraction.
+Example:
+AttendanceCaptureService
+
+    getLocation()
+    captureSelfie()
+    getDeviceInfo()
+    getNetworkInfo()
+    submitAttendance()
+The implementation can later be replaced without changing attendance business logic.
+
+43. NATIVE ANDROID MIGRATION
+The backend API and attendance business rules MUST remain unchanged if we later replace:
+Capacitor
+with:
+Native Android
+The only layer that should change significantly is the mobile presentation/device capability layer.
+
+44. API DESIGN
+Design REST or equivalent APIs such as:
+GET /attendance/today
+GET /attendance/policy
+GET /attendance/shift
+POST /attendance/punch-in
+POST /attendance/punch-out
+POST /attendance/correction-request
+GET /attendance/history
+GET /attendance/exceptions
+POST /attendance/device/register
+POST /attendance/device/change
+The exact API design may be improved.
+Every attendance mutation must have:
+authentication
+authorization
+tenant validation
+employee validation
+idempotency
+server timestamp
+policy validation
+audit logging
+
+45. BUSINESS RULE ENGINE
+Do not scatter attendance rules throughout controllers/components.
+Create a dedicated service:
+AttendancePolicyEngine
+Example:
+validatePunchIn()
+validatePunchOut()
+validateShiftWindow()
+validateNetwork()
+validateLocation()
+validateDevice()
+validateEvidence()
+calculateAttendanceStatus()
+calculateExceptions()
+This makes the system maintainable.
+
+46. ATTENDANCE STATE MACHINE
+Implement a formal state machine.
+Example:
+NOT_STARTED
+     Γåô
+PUNCH_IN_REQUESTED
+     Γåô
+VALIDATING
+     Γåô
+PUNCHED_IN
+     Γåô
+PUNCH_OUT_REQUESTED
+     Γåô
+VALIDATING
+     Γåô
+COMPLETED
+Exception states:
+VALIDATION_WARNING
+PENDING_APPROVAL
+CORRECTION_REQUIRED
+Ensure race conditions cannot produce:
+two simultaneous punch-ins
+two punch-outs
+punch-out without punch-in
+duplicate attendance sessions
+Use database transactions/locking where required.
+
+47. TESTING REQUIREMENTS
+Create extensive tests.
+Functional
+Normal punch in
+Normal punch out
+Late punch
+Early punch
+Early departure
+Missing punch
+Duplicate punch
+Invalid shift
+Employee inactive
+No assigned shift
+Desktop
+Trusted IP
+Untrusted IP
+Changing public IP
+VPN
+Multiple office networks
+Remote employee
+Mobile
+GPS available
+GPS unavailable
+Poor accuracy
+Approximate location
+Camera unavailable
+Camera permission denied
+GPS permission denied
+Network unavailable
+App interrupted
+App killed
+Old Android device
+New Android device
+Low-end device
+Different screen sizes
+Front camera unavailable
+Device time incorrect
+Security
+Replay attack
+Duplicate request
+Tampered timestamp
+Modified coordinates
+Unauthorized employee
+Cross-tenant access
+Evidence URL access
+API abuse
+File upload attack
+Reliability
+Network timeout
+Retry
+Duplicate retry
+Server timeout after successful transaction
+Offline queue
+Synchronization conflict
+
+48. OBSERVABILITY
+Every attendance transaction should be traceable.
+Use:
+Request ID
+Attendance Transaction ID
+Employee ID
+Tenant ID
+Device ID
+Timestamp
+Result
+Validation result
+Exception
+Create structured logs.
+Do not log unnecessary sensitive information such as raw selfie images.
+
+49. REPORTING
+Support reports:
+Daily attendance
+Monthly attendance
+Late arrivals
+Early departures
+Missing punches
+Manual corrections
+Attendance exceptions
+Mobile vs desktop punches
+Network verification
+Location verification
+Device changes
+Manager approvals
+Reports should be exportable to:
+CSV
+Excel
+PDF where appropriate
+
+50. PAYROLL READINESS
+Attendance should produce normalized data that can later be consumed by payroll.
+Example:
+Employee
+Date
+Scheduled Hours
+Worked Hours
+Regular Hours
+Overtime
+Late Minutes
+Early Departure Minutes
+Break Duration
+Attendance Status
+Approved Exceptions
+Do not hard-code payroll rules into the attendance capture UI.
+
+51. IMPORTANT PRODUCT DECISIONS
+Use these principles unless there is a strong architectural reason not to:
+Desktop
+NO GPS.
+Use:
+login
+shift
+server timestamp
+IP/CIDR
+device/session signals
+Mobile
+Use:
+GPS
+optional/required selfie
+server timestamp
+device information
+network information
+Security
+Prefer:
+Detect + record + review
+over:
+Block everything unusual
+unless the organization explicitly chooses strict enforcement.
+
+52. DO NOT IMPLEMENT THESE ANTI-PATTERNS
+Do NOT:
+Require GPS for desktop
+Pretend browsers can universally identify Wi-Fi SSIDs
+Trust phone time
+Trust browser time
+Store attendance only in frontend state
+Allow frontend-only validation
+Allow employees to edit attendance directly
+Require expensive hardware
+Require biometric recognition initially
+Make GPS accuracy a universal hard block
+Make camera quality a universal hard block
+Assume all Android devices behave identically
+Assume Capacitor APIs behave identically across devices
+Store selfies publicly
+Store unlimited location history
+Create duplicate attendance on retries
+Couple backend business logic to Capacitor
+
+53. DELIVERABLES
+Produce the following implementation package:
+A. Architecture
+Provide:
+System architecture
+Attendance architecture
+Mobile architecture
+Desktop architecture
+Data flow
+Security architecture
+B. Database
+Provide:
+ER diagram
+Tables
+Fields
+Relationships
+Indexes
+Constraints
+Tenant isolation strategy
+C. API
+Provide:
+Endpoint list
+Request schemas
+Response schemas
+Authentication
+Authorization
+Error responses
+Idempotency strategy
+D. Business Logic
+Provide:
+Shift engine
+Attendance state machine
+Policy engine
+Exception engine
+Validation engine
+E. Frontend
+Provide:
+Employee attendance screens
+Admin screens
+Policy configuration screens
+Exception screens
+Correction workflow
+F. Mobile
+Provide:
+Capability detection
+Permission flow
+GPS implementation abstraction
+Camera implementation abstraction
+Device information abstraction
+Offline/retry architecture
+Capacitor implementation guidance
+Future native Android migration strategy
+G. Security
+Provide:
+Threat model
+Abuse scenarios
+Attack mitigation
+Evidence protection
+Tenant isolation
+Audit strategy
+H. Testing
+Provide:
+Unit tests
+Integration tests
+API tests
+Browser tests
+Mobile tests
+Hardware compatibility matrix
+Failure scenarios
+Security tests
+I. Deployment
+Provide:
+Production deployment architecture
+Storage architecture
+Image processing
+Monitoring
+Logging
+Backup
+Disaster recovery
+
+54. IMPLEMENTATION PRIORITY
+Do not attempt to build every advanced feature simultaneously.
+Implement in this order:
+PHASE 1
+Core:
+Shift engine
+Attendance state machine
+Punch In/Out
+Server timestamp
+Duplicate prevention
+Audit log
+Correction workflow
+PHASE 2
+Desktop:
+Trusted IP/CIDR
+Network policy
+Device/session signals
+Exception engine
+PHASE 3
+Mobile:
+Capability detection
+GPS
+Camera/selfie
+Evidence capture
+Mobile API
+Device registration
+PHASE 4
+Reliability:
+Idempotency
+Retry
+Offline architecture
+Synchronization
+PHASE 5
+Advanced:
+Anomaly detection
+Advanced reporting
+Payroll integration
+Optional biometric verification
+Enterprise network integrations
+
+55. FINAL IMPLEMENTATION PRINCIPLE
+The finished product should feel like:
+"Press one button and you're done."
+while the backend behaves like:
+"Every attendance event is validated, contextualized, auditable and difficult to manipulate."
+The employee should NOT feel that they are using a surveillance system.
+The administrator should feel that the organization has:
+reliable attendance
+clear evidence
+configurable policy
+controlled exceptions
+auditability
+fraud/anomaly visibility
+payroll-ready records
+Build the system so that normal employees experience almost zero friction, while suspicious or exceptional attendance automatically receives additional scrutiny.
+Before writing implementation code, first produce:
+Architecture
+Data model
+Attendance state machine
+Policy engine
+API contracts
+Mobile capability abstraction
+Desktop network validation architecture
+Security/threat model
+Failure-mode strategy
+Test plan
+Then implement each phase incrementally.
+Do not make architectural assumptions that prevent a future migration from Capacitor to native Android.
+One addition I strongly recommend
+For your particular HRMS, I would make ΓÇ£network/IP verificationΓÇ¥ a policy attached to a workplace/site, rather than simply an HR-wide setting.
+For example:
+Company
+ Γö£ΓöÇΓöÇ Bengaluru HQ
+ Γöé     Γö£ΓöÇΓöÇ 203.x.x.x/24
+ Γöé     ΓööΓöÇΓöÇ 103.x.x.x/32
+ Γöé
+ Γö£ΓöÇΓöÇ Mumbai Office
+ Γöé     ΓööΓöÇΓöÇ 49.x.x.x/24
+ Γöé
+ ΓööΓöÇΓöÇ Remote
+       ΓööΓöÇΓöÇ No network restriction
+Then an employee's shift + work location + attendance channel determine what verification is expected.
+That will scale much better when your HRMS eventually supports multiple offices, factories, client sites, hybrid employees and remote work.
+Also, the most important technical decision in the prompt is the LocationProvider / CameraProvider / DeviceProvider abstraction. That means you can start with Capacitor to get the mobile product out quickly, while keeping the attendance engine completely independent of Capacitor. If hardware compatibility becomes a problem on particular Android devices, you replace the native capability layer rather than rewriting your HRMS attendance system.
+

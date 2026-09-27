@@ -59,5 +59,17 @@ export const updateCompanySettingsSchema = z.object({
     clearanceMode: z.enum(['SIMPLE', 'CHECKLIST']).nullable().optional(),
     geminiApiKey: z.string().nullable().optional(),
     currency: z.string().optional(),
+    // Attendance policy fields
+    attendancePunchWindowBefore: z.number().min(0).max(240).optional(),
+    attendancePunchWindowAfter: z.number().min(0).max(480).optional(),
+    attendanceEarlyDepartureGrace: z.number().min(0).max(120).optional(),
+    attendanceAllowManualCorrection: z.boolean().optional(),
+    attendanceCorrectionRequiresApproval: z.boolean().optional(),
+    attendanceTrustedNetworkEnabled: z.boolean().optional(),
+    attendanceTrustedNetworkPolicy: z.enum(['NONE', 'WARN', 'REQUIRE']).optional(),
+    attendanceMobileGpsPolicy: z.enum(['NONE', 'OPTIONAL', 'REQUIRE']).optional(),
+    attendanceMobileSelfiePolicy: z.enum(['NONE', 'OPTIONAL', 'REQUIRE']).optional(),
+    attendanceOvertimeEnabled: z.boolean().optional(),
+    attendanceMinWorkingHours: z.number().min(60).max(720).optional(),
   }),
 });

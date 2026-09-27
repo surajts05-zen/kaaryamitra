@@ -72,6 +72,7 @@ export const navItems: NavItem[] = [
   { icon: Briefcase, label: 'Designations',  path: 'designations',      allowedRoles: HR_ROLES, group: 'Organization' },
   
   { icon: Banknote,  label: 'Payroll',       path: 'payroll',           allowedRoles: HR_ROLES, group: 'Management' },
+  { icon: Clock,         label: 'Attendance',    path: 'attendance',        allowedRoles: HR_ROLES, group: 'Management' },
   { icon: Laptop,        label: 'Assets',        path: 'assets',            allowedRoles: HR_ROLES, group: 'Management' },
   { icon: UserMinus, label: 'Resignations',  path: 'resignations',      allowedRoles: HR_ROLES, group: 'Management' },
   { icon: Headset,       label: 'Helpdesk',      path: 'helpdesk',          allowedRoles: HR_ROLES, group: 'Management' },
@@ -125,12 +126,12 @@ export function AppShell() {
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const userMenuRef = React.useRef<HTMLDivElement>(null);
   const [expandedGroups, setExpandedGroups] = React.useState<Record<string, boolean>>({
-    'My Workspace': true,
+    'My Workspace': false,
     'Organization': true,
-    'Management': true,
-    'Data & Analytics': true,
+    'Management': false,
+    'Data & Analytics': false,
     'Settings': false,
-    'Help & Resources': true,
+    'Help & Resources': false,
   });
   const { theme, setTheme } = useTheme();
   const location = useLocation();

@@ -26,7 +26,7 @@ import { leaveRouter, essLeaveRouter, leaveApprovalsRouter } from './modules/lea
 import { workflowRouter } from './modules/workflows/workflow.router.js';
 import { rolesRouter } from './modules/roles/roles.router.js';
 import { notificationsRouter } from './modules/notifications/notification.router.js';
-import { meAttendanceRouter } from './modules/attendance/attendance.router.js';
+import { meAttendanceRouter, adminAttendanceRouter } from './modules/attendance/attendance.router.js';
 import { aiRouter } from './modules/ai/ai.router.js';
 import { shiftsRouter } from './modules/shifts/shifts.router.js';
 import { shiftSwapsRouter } from './modules/shifts/shift-swaps.router.js';
@@ -163,6 +163,10 @@ export function createApp() {
 
   app.use('/api/v1/me/attendance', requireAuth, resolveTenant, meAttendanceRouter);
   app.use('/api/v1/t/:slug/me/attendance', requireAuth, resolveTenant, meAttendanceRouter);
+
+  // Tenant-scoped Admin Attendance routes
+  app.use('/api/v1/attendance', requireAuth, resolveTenant, adminAttendanceRouter);
+  app.use('/api/v1/t/:slug/attendance', requireAuth, resolveTenant, adminAttendanceRouter);
 
   app.use('/api/v1/me/timesheets', requireAuth, resolveTenant, timesheetsRouter);
   app.use('/api/v1/t/:slug/me/timesheets', requireAuth, resolveTenant, timesheetsRouter);

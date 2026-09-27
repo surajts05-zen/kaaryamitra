@@ -73,8 +73,35 @@ enum AttendanceCaptureSource {
   WEB_QR
   WEB_BUTTON
   MOBILE_QR
+  MOBILE_BUTTON
   API_PUSH
   BIOMETRIC
+}
+
+enum AttendanceChannel {
+  DESKTOP
+  MOBILE
+  API
+  BIOMETRIC_DEVICE
+}
+
+enum AttendanceExceptionType {
+  EARLY_PUNCH
+  LATE_PUNCH
+  EARLY_DEPARTURE
+  OUTSIDE_TRUSTED_NETWORK
+  MISSING_PUNCH
+  CLIENT_SERVER_TIME_MISMATCH
+  SUSPICIOUS_DEVICE
+  MANUAL_CORRECTION
+}
+
+enum AttendanceTrustLevel {
+  VERIFIED
+  ACCEPTED
+  FLAGGED
+  PENDING_APPROVAL
+  BLOCKED
 }
 
 enum NotificationChannel {
@@ -399,6 +426,7 @@ model Tenant {
   holidays               Holiday[]
   companySettings        CompanySettings?
   shifts                 Shift[]
+  trustedNetworks        TrustedNetwork[]
   documentCategories     DocumentCategory[]
   documents              Document[]
   assetCategories        AssetCategory[]
@@ -712,6 +740,23 @@ model CompanySettings {
   isTimesheetEnabled    Boolean       @default(true)
   clearanceMode         ClearanceMode @default(SIMPLE)
   currency              String        @default("USD")
+
+  // ── Attendance Policy ──────────────────────────────────────────────────────
+  // Punch window: how many minutes before/after shift start/end punching is allowed
+  attendancePunchWindowBefore  Int     @default(30)  // mins before shift start
+  attendancePunchWindowAfter   Int     @default(120) // mins after shift start (late punch limit)
+  attendanceEarlyDepartureGrace Int    @default(15)  // mins before shift end that counts as early departure
+  attendanceAllowManualCorrection Boolean @default(true)
+  attendanceCorrectionRequiresApproval Boolean @default(true)
+  // Trusted network policy
+  attendanceTrustedNetworkEnabled Boolean @default(false)
+  attendanceTrustedNetworkPolicy  String  @default("NONE") // NONE | WARN | REQUIRE
+  // Mobile policy
+  attendanceMobileGpsPolicy       String  @default("OPTIONAL") // OPTIONAL | REQUIRE | NONE
+  attendanceMobileSelfiePolicy    String  @default("OPTIONAL") // OPTIONAL | REQUIRE | NONE
+  // Overtime
+  attendanceOvertimeEnabled       Boolean @default(false)
+  attendanceMinWorkingHours       Int     @default(480) // mins per day (default 8h)
 
   updatedAt DateTime @updatedAt
 
@@ -1129,6 +1174,23 @@ model LeaveBalance {
 // ATTENDANCE
 // ─────────────────────────────────────────────────────────────────────────────
 
+model TrustedNetwork {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String   // e.g. "Bengaluru HQ"
+  cidr        String   // e.g. "203.0.113.0/24" or "203.0.113.10/32"
+  description String?
+  isActive    Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@map("trusted_networks")
+}
+
 model AttendanceQrCode {
   id         String    @id @default(cuid())
   locationId String
@@ -1157,40 +1219,78 @@ model AttendanceRecord {
   date          DateTime                @db.Date
   captureSource AttendanceCaptureSource @default(WEB_BUTTON)
 
+  // Shift reference (resolved at punch-in time)
+  shiftId       String?
+
   status AttendanceStatus @default(PRESENT)
 
-  punchInTime       DateTime?
-  punchInLat        Float?
-  punchInLon        Float?
-  punchInIp         String?
-  punchInImageUrl   String?
-  punchInLocationId String?
+  // Punch In
+  punchInTime            DateTime?
+  punchInServerTime      DateTime? // authoritative server timestamp
+  punchInClientTime      DateTime? // client-reported time (diagnostic only)
+  punchInLat             Float?
+  punchInLon             Float?
+  punchInLocationAccuracy Float?
+  punchInIp              String?
+  punchInImageUrl        String?
+  punchInLocationId      String?
+  punchInChannel         AttendanceChannel?
+  punchInDeviceId        String?
+  punchInPlatform        String?
+  punchInNetworkStatus   String? // TRUSTED | UNTRUSTED | NO_POLICY
+  punchInTransactionId   String? @unique // idempotency key
+  punchInTrustLevel      AttendanceTrustLevel?
 
-  punchOutTime       DateTime?
-  punchOutLat        Float?
-  punchOutLon        Float?
-  punchOutIp         String?
-  punchOutImageUrl   String?
-  punchOutLocationId String?
+  // Punch Out
+  punchOutTime            DateTime?
+  punchOutServerTime      DateTime?
+  punchOutClientTime      DateTime?
+  punchOutLat             Float?
+  punchOutLon             Float?
+  punchOutLocationAccuracy Float?
+  punchOutIp              String?
+  punchOutImageUrl        String?
+  punchOutLocationId      String?
+  punchOutChannel         AttendanceChannel?
+  punchOutDeviceId        String?
+  punchOutPlatform        String?
+  punchOutNetworkStatus   String?
+  punchOutTransactionId   String? @unique // idempotency key
+  punchOutTrustLevel      AttendanceTrustLevel?
 
-  totalMinutes      Int?
-  totalBreakMinutes Int  @default(0)
+  // Computed work metrics
+  totalMinutes         Int?
+  regularMinutes       Int?
+  overtimeMinutes      Int?
+  totalBreakMinutes    Int  @default(0)
+  lateMinutes          Int  @default(0)
+  earlyExitMinutes     Int  @default(0)
 
-  isWfh       Boolean @default(false)
-  isOnDuty    Boolean @default(false)
-  isLate      Boolean @default(false)
-  isEarlyExit Boolean @default(false)
-  notes       String?
+  // Status flags
+  isWfh          Boolean @default(false)
+  isOnDuty       Boolean @default(false)
+  isLate         Boolean @default(false)
+  isEarlyExit    Boolean @default(false)
+  isOvertime     Boolean @default(false)
+  isMissingPunch Boolean @default(false)
+  notes          String?
+
+  // Exception tracking
+  exceptions      Json? // Array of AttendanceExceptionType strings
+  overallTrustLevel AttendanceTrustLevel?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   employee    Employee               @relation(fields: [employeeId], references: [id])
+  shift       Shift?                 @relation(fields: [shiftId], references: [id])
   breaks      AttendanceBreak[]
   corrections AttendanceCorrection[]
 
   @@unique([tenantId, employeeId, date])
   @@index([tenantId, date])
+  @@index([tenantId, employeeId])
+  @@index([shiftId])
   @@map("attendance_records")
 }
 
@@ -1379,8 +1479,9 @@ model Shift {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tenant         Tenant          @relation(fields: [tenantId], references: [id])
-  employeeShifts EmployeeShift[]
+  tenant            Tenant             @relation(fields: [tenantId], references: [id])
+  employeeShifts    EmployeeShift[]
+  attendanceRecords AttendanceRecord[]
 
   @@unique([tenantId, name])
   @@map("shifts")

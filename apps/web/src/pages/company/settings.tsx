@@ -25,6 +25,7 @@ import {
   Sparkles,
   Landmark,
   Wallet,
+  Clock,
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CURRENCIES } from '@/lib/currency';
@@ -201,6 +202,20 @@ export function CompanySettingsPage() {
                   <CardTitle className="text-lg">Shifts Config</CardTitle>
                   <CardDescription className="text-xs">
                     Define shift timings, night rosters, rotating schedules, and attendance rules.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+
+            <Link to="attendance">
+              <Card className="hover:border-primary/50 hover:shadow-md transition-all cursor-pointer h-full border-border/60">
+                <CardHeader>
+                  <div className="p-2.5 w-fit rounded-lg bg-sky-500/10 text-sky-600 mb-2">
+                    <Clock className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-lg">Attendance Policy</CardTitle>
+                  <CardDescription className="text-xs">
+                    Configure punch windows, trusted networks, overtime, and regularization workflows.
                   </CardDescription>
                 </CardHeader>
               </Card>

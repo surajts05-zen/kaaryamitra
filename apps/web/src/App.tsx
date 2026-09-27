@@ -17,6 +17,8 @@ import { LocationsPage } from '@/pages/company/locations';
 import { DesignationsPage } from '@/pages/company/designations';
 import { CompanySettingsPage } from '@/pages/company/settings';
 import { AdminShiftsPage } from '@/pages/company/settings/shifts';
+import { AdminAttendancePage } from '@/pages/company/attendance/index';
+import { AttendancePolicyPage } from '@/pages/company/settings/attendance';
 
 // Phase 5 - Core HR (Employee Management)
 import { DirectoryPage } from '@/pages/company/employees/directory';
@@ -166,6 +168,7 @@ export function App() {
             <Route path="settings/billing" element={<CompanyBillingPage />} />
             <Route path="settings/billing/compare" element={<CompanyPlanComparePage />} />
             <Route path="settings/leave" element={<LeaveTypesPage />} />
+            <Route path="settings/attendance" element={<AttendancePolicyPage />} />
             <Route path="settings/shifts" element={<AdminShiftsPage />} />
             <Route path="settings/workflows" element={<WorkflowsPage />} />
             <Route path="settings/roles" element={<RolesPage />} />
@@ -217,6 +220,9 @@ export function App() {
 
             {/* Phase 8 - Workflow Engine */}
             <Route path="approvals" element={<ApprovalsInboxPage />} />
+
+            {/* Attendance Management */}
+            <Route path="attendance" element={<AdminAttendancePage />} />
 
             {/* Phase 13 - Resignations */}
             <Route path="resignations" element={<ResignationsPage />} />
