@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,13 +8,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Save, Mail, Phone, Building2, MapPin, Briefcase, DoorOpen, AlertTriangle } from 'lucide-react';
+import { Save, Mail, Phone, Building2, MapPin, Briefcase, DoorOpen, AlertTriangle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link, useParams } from 'react-router-dom';
+import { apiClient } from '@/lib/api-client';
 
 const schema = z.object({
   personalEmail: z.string().email('Invalid email').optional().nullable().or(z.literal('')),
   phone: z.string().optional().nullable().or(z.literal('')),
+  
+  // Banking
+  bankAccountName: z.string().optional().nullable(),
+  bankAccountNumber: z.string().optional().nullable(),
+  bankIfscCode: z.string().optional().nullable(),
+  bankName: z.string().optional().nullable(),
+  bankBranch: z.string().optional().nullable(),
+
+  // Identity
+  aadharNumber: z.string().optional().nullable(),
+  panNumber: z.string().optional().nullable(),
+  uanNumber: z.string().optional().nullable(),
+  pfNumber: z.string().optional().nullable(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -30,15 +44,50 @@ export function EssProfilePage() {
     ['Company Admin', 'HR Manager'].includes(r)
   ) ?? false;
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
   });
+
+  const [isFetchingIfsc, setIsFetchingIfsc] = useState(false);
+  const ifscCode = watch('bankIfscCode');
+  
+  useEffect(() => {
+    const cleanIfsc = ifscCode ? ifscCode.trim().toUpperCase() : '';
+    if (cleanIfsc.length === 11) {
+      setIsFetchingIfsc(true);
+      apiClient.get(`utils/ifsc/${cleanIfsc}`)
+        .then((res) => {
+          const resData = res.data;
+          if (resData.success && resData.data && resData.data.BANK) {
+            setValue('bankName', resData.data.BANK, { shouldDirty: true, shouldValidate: true });
+            setValue('bankBranch', resData.data.BRANCH, { shouldDirty: true, shouldValidate: true });
+          } else {
+            toast.error('Could not fetch bank details. Please enter manually.');
+          }
+        })
+        .catch(() => {
+          toast.error('Could not fetch bank details. Please enter manually.');
+        })
+        .finally(() => {
+          setIsFetchingIfsc(false);
+        });
+    }
+  }, [ifscCode, setValue]);
 
   useEffect(() => {
     if (profile) {
       reset({
         personalEmail: profile.personalEmail || '',
         phone: profile.phone || '',
+        bankAccountName: profile.bankAccountName || '',
+        bankAccountNumber: profile.bankAccountNumber || '',
+        bankIfscCode: profile.bankIfscCode || '',
+        bankName: profile.bankName || '',
+        bankBranch: profile.bankBranch || '',
+        aadharNumber: profile.aadharNumber || '',
+        panNumber: profile.panNumber || '',
+        uanNumber: profile.uanNumber || '',
+        pfNumber: profile.pfNumber || '',
       });
     }
   }, [profile, reset]);
@@ -138,15 +187,72 @@ export function EssProfilePage() {
                     {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
                   </div>
                 </div>
-                
-                <div className="flex justify-end pt-4">
-                  <Button type="submit" disabled={updateMutation.isPending}>
-                    <Save className="mr-2 h-4 w-4" />
-                    {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
-                  </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Banking Details</CardTitle>
+                <CardDescription>Update your salary account and banking information for payroll.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Bank Account Name</Label>
+                  <Input placeholder="Name as per bank records" {...register('bankAccountName')} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Account Number</Label>
+                  <Input placeholder="Account number" {...register('bankAccountNumber')} />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label>IFSC Code</Label>
+                    {isFetchingIfsc && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+                  </div>
+                  <Input placeholder="IFSC code" {...register('bankIfscCode')} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Bank Name</Label>
+                  <Input placeholder="e.g. HDFC Bank" {...register('bankName')} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Bank Branch</Label>
+                  <Input placeholder="Branch location" {...register('bankBranch')} />
                 </div>
               </CardContent>
             </Card>
+
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Identity & Compliance</CardTitle>
+                <CardDescription>Update your national IDs and compliance identifiers.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Aadhar Number</Label>
+                  <Input placeholder="12-digit Aadhar number" {...register('aadharNumber')} />
+                </div>
+                <div className="space-y-2">
+                  <Label>PAN Number</Label>
+                  <Input placeholder="10-character PAN" {...register('panNumber')} />
+                </div>
+                <div className="space-y-2">
+                  <Label>UAN Number</Label>
+                  <Input placeholder="Universal Account Number (EPFO)" {...register('uanNumber')} />
+                </div>
+                <div className="space-y-2">
+                  <Label>PF Number</Label>
+                  <Input placeholder="Provident Fund Number" {...register('pfNumber')} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-end pt-6">
+              <Button type="submit" disabled={updateMutation.isPending}>
+                <Save className="mr-2 h-4 w-4" />
+                {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
           </form>
         </div>
 

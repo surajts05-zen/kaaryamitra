@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, Mail, Phone, Building2, MapPin, Briefcase, Calendar, CheckCircle2, UserCircle } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Building2, MapPin, Briefcase, Calendar, CheckCircle2, UserCircle, Landmark, Fingerprint } from 'lucide-react';
 import { format } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EmployeeDocumentsTab } from './employee-documents-tab';
@@ -245,6 +245,78 @@ export function EmployeeProfilePage() {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Banking Details</CardTitle>
+              <CardDescription>Salary and reimbursement bank account.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
+                  <Landmark className="h-4 w-4" /> Bank Name
+                </div>
+                <p>{employee.bankName || 'Not added'}</p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
+                  <Landmark className="h-4 w-4" /> Account Name
+                </div>
+                <p>{employee.bankAccountName || 'Not added'}</p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
+                  <Landmark className="h-4 w-4" /> Account Number
+                </div>
+                <p>{employee.bankAccountNumber || 'Not added'}</p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
+                  <Landmark className="h-4 w-4" /> IFSC Code
+                </div>
+                <p>{employee.bankIfscCode || 'Not added'}</p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
+                  <Landmark className="h-4 w-4" /> Branch
+                </div>
+                <p>{employee.bankBranch || 'Not added'}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Identity & Compliance</CardTitle>
+              <CardDescription>National IDs and compliance identifiers.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
+                  <Fingerprint className="h-4 w-4" /> Aadhar Number
+                </div>
+                <p>{employee.aadharNumber || 'Not added'}</p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
+                  <Fingerprint className="h-4 w-4" /> PAN Number
+                </div>
+                <p>{employee.panNumber || 'Not added'}</p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
+                  <Fingerprint className="h-4 w-4" /> UAN Number (EPFO)
+                </div>
+                <p>{employee.uanNumber || 'Not added'}</p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
+                  <Fingerprint className="h-4 w-4" /> PF Number
+                </div>
+                <p>{employee.pfNumber || 'Not added'}</p>
+              </div>
             </CardContent>
           </Card>
         </div>

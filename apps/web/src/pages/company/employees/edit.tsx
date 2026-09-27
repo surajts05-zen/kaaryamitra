@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, Save, Camera, User } from 'lucide-react';
+import { ArrowLeft, Save, Camera, User, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuthStore } from '@/store/auth.store';
+import { apiClient } from '@/lib/api-client';
 
 const schema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -28,6 +29,19 @@ const schema = z.object({
   joiningDate: z.string().min(1, 'Joining date is required'),
   employmentType: z.string().optional(),
   employmentStatus: z.string().optional(),
+  
+  // Banking
+  bankAccountName: z.string().optional().nullable(),
+  bankAccountNumber: z.string().optional().nullable(),
+  bankIfscCode: z.string().optional().nullable(),
+  bankName: z.string().optional().nullable(),
+  bankBranch: z.string().optional().nullable(),
+
+  // Identity
+  aadharNumber: z.string().optional().nullable(),
+  panNumber: z.string().optional().nullable(),
+  uanNumber: z.string().optional().nullable(),
+  pfNumber: z.string().optional().nullable(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -49,9 +63,35 @@ export function EditEmployeePage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarBase64, setAvatarBase64] = useState<string | null>(null);
 
-  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, setValue, reset, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
   });
+
+  const [isFetchingIfsc, setIsFetchingIfsc] = useState(false);
+  const ifscCode = watch('bankIfscCode');
+  
+  useEffect(() => {
+    const cleanIfsc = ifscCode ? ifscCode.trim().toUpperCase() : '';
+    if (cleanIfsc.length === 11) {
+      setIsFetchingIfsc(true);
+      apiClient.get(`utils/ifsc/${cleanIfsc}`)
+        .then((res) => {
+          const resData = res.data;
+          if (resData.success && resData.data && resData.data.BANK) {
+            setValue('bankName', resData.data.BANK, { shouldDirty: true, shouldValidate: true });
+            setValue('bankBranch', resData.data.BRANCH, { shouldDirty: true, shouldValidate: true });
+          } else {
+            toast.error('Could not fetch bank details. Please enter manually.');
+          }
+        })
+        .catch(() => {
+          toast.error('Could not fetch bank details. Please enter manually.');
+        })
+        .finally(() => {
+          setIsFetchingIfsc(false);
+        });
+    }
+  }, [ifscCode, setValue]);
 
   useEffect(() => {
     if (employee) {
@@ -69,6 +109,15 @@ export function EditEmployeePage() {
         joiningDate: (employee.joiningDate ? new Date(employee.joiningDate).toISOString().split('T')[0] : '') as string,
         employmentType: employee.employmentType || 'FULL_TIME',
         employmentStatus: employee.employmentStatus || 'ACTIVE',
+        bankAccountName: employee.bankAccountName || '',
+        bankAccountNumber: employee.bankAccountNumber || '',
+        bankIfscCode: employee.bankIfscCode || '',
+        bankName: employee.bankName || '',
+        bankBranch: employee.bankBranch || '',
+        aadharNumber: employee.aadharNumber || '',
+        panNumber: employee.panNumber || '',
+        uanNumber: employee.uanNumber || '',
+        pfNumber: employee.pfNumber || '',
       } as Partial<FormValues>);
       setAvatarPreview(employee.avatarUrl || null);
     }
@@ -109,8 +158,6 @@ export function EditEmployeePage() {
     updateMutation.mutate({ id: id as string, data: payload }, {
       onSuccess: async () => {
         toast.success('Employee updated successfully');
-        // Refresh auth store so dashboard name/avatar reflects any changes
-        // to the currently logged-in user's own record
         if (user?.id === id || user?.id === employee?.userId) {
           await refreshUser();
         }
@@ -335,6 +382,65 @@ export function EditEmployeePage() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">Shown as a coloured tag on the employee card.</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Banking Information ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Banking Details</CardTitle>
+            <CardDescription>Salary account and banking information for payroll.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2 md:col-span-2">
+              <Label>Bank Account Name</Label>
+              <Input placeholder="Name as per bank records" {...register('bankAccountName')} />
+            </div>
+            <div className="space-y-2">
+              <Label>Account Number</Label>
+              <Input placeholder="Account number" {...register('bankAccountNumber')} />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label>IFSC Code</Label>
+                {isFetchingIfsc && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+              </div>
+              <Input placeholder="IFSC code" {...register('bankIfscCode')} />
+            </div>
+            <div className="space-y-2">
+              <Label>Bank Name</Label>
+              <Input placeholder="e.g. HDFC Bank" {...register('bankName')} />
+            </div>
+            <div className="space-y-2">
+              <Label>Bank Branch</Label>
+              <Input placeholder="Branch location" {...register('bankBranch')} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Identity & Compliance ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Identity & Compliance</CardTitle>
+            <CardDescription>National IDs and compliance identifiers.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Aadhar Number</Label>
+              <Input placeholder="12-digit Aadhar number" {...register('aadharNumber')} />
+            </div>
+            <div className="space-y-2">
+              <Label>PAN Number</Label>
+              <Input placeholder="10-character PAN" {...register('panNumber')} />
+            </div>
+            <div className="space-y-2">
+              <Label>UAN Number</Label>
+              <Input placeholder="Universal Account Number (EPFO)" {...register('uanNumber')} />
+            </div>
+            <div className="space-y-2">
+              <Label>PF Number</Label>
+              <Input placeholder="Provident Fund Number" {...register('pfNumber')} />
             </div>
           </CardContent>
         </Card>

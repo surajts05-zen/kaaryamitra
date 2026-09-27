@@ -133,6 +133,21 @@ export function createApp() {
   // OpenAPI Docs
   app.use('/api/v1/docs', openapiRouter);
 
+  // Generic Utility routes (no auth required for basic lookups)
+  app.get('/api/v1/utils/ifsc/:code', async (req, res) => {
+    try {
+      const code = req.params.code.toUpperCase();
+      const response = await fetch(`https://ifsc.razorpay.com/${code}`);
+      if (!response.ok) {
+        return res.status(200).json({ success: false, error: 'IFSC not found' });
+      }
+      const data = await response.json();
+      res.status(200).json({ success: true, data });
+    } catch (err) {
+      res.status(200).json({ success: false, error: 'Failed to fetch IFSC' });
+    }
+  });
+
   // Tenant-scoped Org routes
   app.use('/api/v1/org', requireAuth, resolveTenant, orgRouter);
   app.use('/api/v1/t/:slug/org', requireAuth, resolveTenant, orgRouter);

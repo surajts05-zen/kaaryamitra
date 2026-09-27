@@ -27,6 +27,19 @@ export const createEmployeeSchema = z.object({
     confirmationDate: z.string().optional().nullable(),
     probationEndDate: z.string().optional().nullable(),
     roleId: z.string().optional().nullable(),
+
+    // Banking
+    bankAccountName: z.string().optional().nullable(),
+    bankAccountNumber: z.string().optional().nullable(),
+    bankIfscCode: z.string().optional().nullable(),
+    bankName: z.string().optional().nullable(),
+    bankBranch: z.string().optional().nullable(),
+
+    // Identity & Compliance
+    aadharNumber: z.string().optional().nullable(),
+    panNumber: z.string().optional().nullable(),
+    uanNumber: z.string().optional().nullable(),
+    pfNumber: z.string().optional().nullable(),
   }),
 });
 
