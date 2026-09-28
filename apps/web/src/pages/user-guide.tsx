@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   LayoutDashboard,
@@ -9,7 +9,10 @@ import {
   Image as ImageIcon,
   Target,
   ArrowUp,
-  ShieldCheck
+  ShieldCheck,
+  Clock,
+  Calendar,
+  Wifi
 } from 'lucide-react';
 
 export function UserGuidePage() {
@@ -85,6 +88,12 @@ export function UserGuidePage() {
             </button>
             <button onClick={() => scrollToSection('resignations')} className="text-left text-sm text-muted-foreground hover:text-primary transition-colors">
               14. Resignations & Offboarding
+            </button>
+            <button onClick={() => scrollToSection('attendance')} className="text-left text-sm text-muted-foreground hover:text-primary transition-colors">
+              15. Attendance Tracking
+            </button>
+            <button onClick={() => scrollToSection('meetings')} className="text-left text-sm text-muted-foreground hover:text-primary transition-colors">
+              16. Meetings &amp; Calendar
             </button>
           </nav>
         </div>
@@ -363,7 +372,7 @@ export function UserGuidePage() {
                       <strong>Key Capabilities:</strong> Multi-tenant workspace creation, global platform settings, system subscription management, database diagnostics, and cross-tenant maintenance.
                     </p>
                     <p className="text-xs text-foreground/80 font-medium">
-                      👉 <strong>When to use:</strong> When onboarding a brand new company onto KaaryaMitra or modifying global system architecture.
+                      ðŸ‘‰ <strong>When to use:</strong> When onboarding a brand new company onto KaaryaMitra or modifying global system architecture.
                     </p>
                   </div>
 
@@ -380,7 +389,7 @@ export function UserGuidePage() {
                       <strong>Key Capabilities:</strong> Full access to company configuration including Departments, Locations, Designations, Workflows, Custom Roles, and Security Settings.
                     </p>
                     <p className="text-xs text-foreground/80 font-medium">
-                      👉 <strong>When to use:</strong> Initial company setup, establishing approval hierarchies, configuring custom workflows, or assigning roles to HR staff.
+                      ðŸ‘‰ <strong>When to use:</strong> Initial company setup, establishing approval hierarchies, configuring custom workflows, or assigning roles to HR staff.
                     </p>
                   </div>
 
@@ -397,7 +406,7 @@ export function UserGuidePage() {
                       <strong>Key Capabilities:</strong> Employee Directory management, onboarding new hires, asset allocation, resignation processing, company helpdesk oversight, and appraisal cycle management.
                     </p>
                     <p className="text-xs text-foreground/80 font-medium">
-                      👉 <strong>When to use:</strong> For day-to-day workforce management, maintaining employee profiles, managing company assets, and launching annual review cycles.
+                      ðŸ‘‰ <strong>When to use:</strong> For day-to-day workforce management, maintaining employee profiles, managing company assets, and launching annual review cycles.
                     </p>
                   </div>
 
@@ -414,7 +423,7 @@ export function UserGuidePage() {
                       <strong>Key Capabilities:</strong> Reviewing and approving direct reports' leave requests, weekly timesheets, shift changes, and resignation requests via the Approvals Inbox. Conducting manager performance reviews.
                     </p>
                     <p className="text-xs text-foreground/80 font-medium">
-                      👉 <strong>When to use:</strong> When managing direct reports, reviewing team attendance/timesheets, and completing team performance assessments.
+                      ðŸ‘‰ <strong>When to use:</strong> When managing direct reports, reviewing team attendance/timesheets, and completing team performance assessments.
                     </p>
                   </div>
 
@@ -431,7 +440,7 @@ export function UserGuidePage() {
                       <strong>Key Capabilities:</strong> Employee Self-Service (ESS) features: applying for leave, logging project timesheets, viewing shift schedules, raising helpdesk tickets, managing personal documents, and setting performance goals.
                     </p>
                     <p className="text-xs text-foreground/80 font-medium">
-                      👉 <strong>When to use:</strong> Daily work activities, requesting time off, logging weekly work hours, and self-evaluations.
+                      ðŸ‘‰ <strong>When to use:</strong> Daily work activities, requesting time off, logging weekly work hours, and self-evaluations.
                     </p>
                   </div>
                 </div>
@@ -598,7 +607,7 @@ export function UserGuidePage() {
               <h3 className="text-2xl font-semibold tracking-tight">Workflow Engine & Approvals</h3>
             </div>
             <p className="text-muted-foreground ml-11">
-              A highly configurable routing engine that centralizes approvals for all company-wide requests—eliminating email chains and ensuring compliance.
+              A highly configurable routing engine that centralizes approvals for all company-wide requestsâ€”eliminating email chains and ensuring compliance.
             </p>
             <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
               <CardContent className="p-6 bg-card">
@@ -756,6 +765,108 @@ export function UserGuidePage() {
                       <li className="pl-2">HR schedules and logs notes from the Exit Interview.</li>
                       <li className="pl-2">On the last working day, HR finalizes the <strong>Full and Final (F&F) Settlement</strong>, which integrates with the Payroll Engine to disburse remaining leave encashments and deduct outstanding loans.</li>
                       <li className="pl-2">The employee's KaaryaMitra account is automatically deactivated upon completion of the F&F workflow.</li>
+                    </ol>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Section 15: Attendance Tracking */}
+          <section id="attendance" className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">15</div>
+              <h3 className="text-2xl font-semibold tracking-tight">Attendance Tracking</h3>
+            </div>
+            <p className="text-muted-foreground ml-11">
+              KaaryaMitra's real-time attendance system supports web-based punch-in/out, break management, regularization requests, and a powerful admin oversight dashboard.
+            </p>
+            <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
+              <CardContent className="p-6 bg-card">
+                <h4 className="font-semibold flex items-center gap-2 text-lg mb-4">
+                  <Clock className="h-5 w-5 text-primary" />
+                  Step-by-Step: Using the Attendance Module
+                </h4>
+                <div className="space-y-6">
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">For Employees: How to Check In &amp; Out</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Navigate to <strong>My Workspace {'>'}  My Attendance</strong>.</li>
+                      <li className="pl-2">Use the <strong>Attendance Widget</strong> on the left panel. Click <strong>Check In</strong> to start your work session. The system records your network status (Trusted/Untrusted) and GPS coordinates if permitted.</li>
+                      <li className="pl-2">To take a break, click <strong>Start Break</strong>. Click <strong>End Break</strong> when you resume. Multiple breaks per day are supported.</li>
+                      <li className="pl-2">At end of day, click <strong>Check Out</strong>. Your total working hours, late minutes, and early exit minutes are auto-calculated and displayed in the attendance log.</li>
+                    </ol>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">For Employees: How to Request Regularization</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">In <strong>My Attendance</strong>, find the date with a missing or incorrect punch.</li>
+                      <li className="pl-2">Click the <strong>Fix</strong> button next to that record. If a correction is already pending, a <em>Request Pending</em> badge will appear instead.</li>
+                      <li className="pl-2">Enter the corrected Check-In and/or Check-Out time and provide a reason (minimum 5 characters).</li>
+                      <li className="pl-2">Click <strong>Submit Request</strong>. Your request is routed to HR for approval.</li>
+                    </ol>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">For HR Admins: Attendance Dashboard</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Navigate to <strong>Attendance</strong> in the sidebar.</li>
+                      <li className="pl-2">The <strong>Today</strong> tab shows a live grid of Present, Absent, Late, and On Break counts â€” plus a real-time table of all employee records.</li>
+                      <li className="pl-2">The <strong>Records</strong> tab lets you filter by date range, attendance status, and punctuality (Late / On Time). All records are paginated for large teams.</li>
+                      <li className="pl-2">The <strong>Corrections</strong> tab shows pending regularization requests. Click <strong>Approve</strong> or <strong>Reject</strong> to action them instantly.</li>
+                    </ol>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">Trusted Network Configuration</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Navigate to <strong>Settings {'>'} Attendance Settings</strong> and add your office IP ranges in CIDR format (e.g., <code className="text-xs bg-muted px-1 rounded">203.0.113.0/24</code>).</li>
+                      <li className="pl-2">Punches from these trusted networks are stamped <em className="text-emerald-600">Verified Network</em>; all others show <em className="text-amber-600">Untrusted Network</em> â€” maintaining audit integrity even for remote workers.</li>
+                    </ol>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Section 16: Meetings & Calendar */}
+          <section id="meetings" className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">16</div>
+              <h3 className="text-2xl font-semibold tracking-tight">Meetings &amp; Calendar</h3>
+            </div>
+            <p className="text-muted-foreground ml-11">
+              Schedule meetings, assign rooms or virtual links, manage agendas and minutes, and optionally sync everything to Google Calendar.
+            </p>
+            <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
+              <CardContent className="p-6 bg-card">
+                <h4 className="font-semibold flex items-center gap-2 text-lg mb-4">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  Step-by-Step: Scheduling &amp; Managing Meetings
+                </h4>
+                <div className="space-y-6">
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">How to Schedule a Meeting</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Navigate to <strong>Meetings &amp; Calendar</strong> in the sidebar.</li>
+                      <li className="pl-2">Click <strong>New Meeting</strong> and provide: Title, Date, Start/End Time, and Meeting Type.</li>
+                      <li className="pl-2">Choose a <strong>Room</strong> for a physical meeting, or enter a <strong>Meeting Link</strong> (e.g., Zoom / Google Meet) for a virtual one.</li>
+                      <li className="pl-2">Search and add participants from the employee directory.</li>
+                      <li className="pl-2">Click <strong>Create</strong>. The meeting appears in the list and all participants are notified.</li>
+                    </ol>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">How to Connect Google Calendar</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">On the Meetings page, click the <strong>Connect Calendar</strong> button in the top-right corner.</li>
+                      <li className="pl-2">Sign in with your Google account and grant the necessary Calendar permissions.</li>
+                      <li className="pl-2">On successful connection, a green confirmation banner is shown. Future meetings will automatically sync to your connected Google Calendar.</li>
+                    </ol>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">Using the Meeting Workspace</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Click any meeting card and select <strong>Enter Workspace</strong>.</li>
+                      <li className="pl-2">Use the workspace to set the agenda before the meeting, capture live notes during the session, and write the final minutes of meeting (MOM) after.</li>
+                      <li className="pl-2">Update the meeting status to <strong>IN_PROGRESS</strong> when the meeting starts and <strong>COMPLETED</strong> when it ends. All history is preserved.</li>
                     </ol>
                   </div>
                 </div>

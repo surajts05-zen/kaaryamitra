@@ -2,7 +2,7 @@
 
 > **The single source of truth for the KaaryaMitra Human Resource Management System.**
 
-[![Status](https://img.shields.io/badge/Status-In%20Development-yellow?style=flat-square)](.)
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen?style=flat-square)](.)
 [![Stack](https://img.shields.io/badge/Stack-React%20%2B%20Node.js%20%2B%20PostgreSQL-1B5E3B?style=flat-square)](.)
 [![Multi-Tenant](https://img.shields.io/badge/Architecture-Multi--Tenant%20SaaS-A8E600?style=flat-square&labelColor=0D4F3C)](.)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=flat-square)](.)
@@ -388,15 +388,21 @@ Platform (KaaryaMitra)
 
 **Goal:** Flexible attendance tracking with multiple capture modes.
 
-- [ ] Check-in / Check-out (web-based)
-- [ ] Break tracking
-- [ ] Attendance correction requests
-- [ ] Late arrival / early departure rules
-- [ ] WFH / On-duty marking
-- [ ] Overtime tracking foundation
-- [ ] Attendance regularization workflow
-- [ ] Attendance reports
-- [ ] Integration-ready architecture: QR code, GPS, mobile, biometric API, RFID
+- [x] Check-in / Check-out (web-based, with multi-channel support: DESKTOP, MOBILE, API)
+- [x] Break tracking (start / end break with break type)
+- [x] Attendance correction / regularization requests (employee-submitted, manager-approved)
+- [x] Late arrival detection with late minutes calculation
+- [x] Early exit detection with early exit minutes calculation
+- [x] Missing punch detection and automated flagging
+- [x] Trusted network enforcement (CIDR-based IP whitelisting per tenant)
+- [x] Network status stamped on every punch (TRUSTED / UNTRUSTED / UNKNOWN)
+- [x] GPS / coordinates capture on punch-in (latitude, longitude, accuracy)
+- [x] Admin real-time attendance dashboard (Today's Overview)
+- [x] Admin historical records with date range, status, and punctuality filters
+- [x] Pending corrections inbox for HR with Approve / Reject actions
+- [x] Employee self-service attendance log with monthly stats
+- [x] Attendance enabled/disabled toggle per company settings
+- [x] Integration-ready architecture: QR code, mobile, biometric API, RFID
 
 ---
 
@@ -673,6 +679,23 @@ Platform (KaaryaMitra)
 - [ ] Load testing
 - [ ] Production runbooks
 - [ ] Disaster recovery plan
+
+---
+
+### 📅 Phase 10.5 — Meetings & Calendar
+> *Implemented — additive module*
+
+**Goal:** Structured meeting management with Google Calendar integration.
+
+- [x] Meeting creation with title, time, location, type, and participant selection
+- [x] Room / location assignment (physical meeting room or virtual link)
+- [x] Meeting participant management
+- [x] Meeting statuses: SCHEDULED → IN_PROGRESS → COMPLETED → CANCELLED
+- [x] Meeting workspace (agenda, notes, minutes of meeting)
+- [x] Google Calendar OAuth integration (Connect Calendar → two-way sync)
+- [x] Meeting metrics dashboard (meetings this week, hours in meetings)
+- [x] Today's upcoming meetings widget
+- [x] Meeting search and list/calendar view toggle
 
 ---
 
@@ -992,6 +1015,58 @@ If you need to bulk update earnings/deductions or provide custom figures for a D
 - **FINALIZED:** Locked. Cannot be altered.
 - **PAID:** Marked as paid out to employees.
 
+### 8. Attendance User Guide
+
+KaaryaMitra's Attendance module provides real-time punch-in/out tracking, break management, and regularization workflows.
+
+**For Employees — How to Check In:**
+1. Navigate to **My Workspace → My Attendance**.
+2. Use the **Attendance Widget** on the left panel. Click **Check In** to start your work session.
+3. The system records your network status (Trusted/Untrusted), GPS coordinates (if permitted), and the current timestamp.
+4. To take a break, click **Start Break**. Click **End Break** when you resume.
+5. At the end of the day, click **Check Out**. Your total working hours are automatically calculated.
+
+**For Employees — How to Request a Regularization:**
+If you forgot to check in or check out:
+1. In **My Attendance**, locate the relevant date in the attendance log.
+2. Click the **Fix** button next to that record.
+3. Enter the requested Check-In and/or Check-Out time and provide a reason (minimum 5 characters).
+4. Click **Submit Request**. Your regularization request is routed to your manager for approval.
+5. Until the request is processed, you will see a **Request Pending** badge next to that record.
+
+**For HR Admins — Attendance Dashboard:**
+1. Navigate to **Attendance** in the sidebar.
+2. The **Today** tab shows a real-time overview: Present, Absent, Late Arrivals, and On Break counts, plus a live table of all employee records.
+3. The **Records** tab allows filtering by date range, status (Present/Absent/Half Day), and punctuality (Late/On Time) — supports pagination for large datasets.
+4. The **Corrections** tab shows all pending regularization requests. HR can **Approve** or **Reject** them with a single click.
+
+**Trusted Network Configuration:**
+1. Navigate to **Settings → Attendance Settings**.
+2. Add IP ranges (CIDR format, e.g., `203.0.113.0/24`) as Trusted Networks.
+3. Punches from these ranges will be stamped as **Verified Network**; others will be stamped as **Untrusted Network** — ensuring audit integrity.
+
+### 9. Meetings & Calendar User Guide
+
+KaaryaMitra's Meeting module lets you schedule, track, and collaborate on team meetings with optional Google Calendar sync.
+
+**How to Schedule a Meeting:**
+1. Navigate to **Meetings & Calendar** in the sidebar.
+2. Click **New Meeting**.
+3. Fill in the Title, Date, Start/End Time, Meeting Type, and select a Room (physical) or provide a Meeting Link (virtual).
+4. Add participants from your employee directory.
+5. Click **Create**. All participants receive notifications.
+
+**How to Connect Google Calendar:**
+1. In the **Meetings & Calendar** page, click **Connect Calendar**.
+2. Authorize via Google OAuth. Once connected, future meetings will automatically sync to the connected Google Calendar.
+3. On successful connection, a confirmation banner is displayed.
+
+**Meeting Workspace:**
+Click any meeting card to enter the **Meeting Workspace**, where you can:
+- Record the agenda before the meeting.
+- Capture notes and minutes of meeting (MOM) during the session.
+- Update the meeting status (SCHEDULED → IN_PROGRESS → COMPLETED).
+
 ---
 
 ## 13. Development Guidelines
@@ -1128,4 +1203,4 @@ The product must remain extensible so future modules — benefits administration
 
 ---
 
-*Last updated: September 2026 | KaaryaMitra HRMS — Full Roadmap (Phases 0–31)*
+*Last updated: September 2026 | KaaryaMitra HRMS — Full Roadmap (Phases 0–31) — Production Release*
