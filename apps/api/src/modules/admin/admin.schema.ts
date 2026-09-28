@@ -29,6 +29,8 @@ export const updatePlatformSettingsSchema = z.object({
     smtpUser: z.string().optional().nullable(),
     smtpPass: z.string().optional().nullable(),
     smtpFrom: z.string().optional().nullable(),
+    enableGoogleSso: z.boolean().optional(),
+    enableZohoSso: z.boolean().optional(),
   }),
 });
 

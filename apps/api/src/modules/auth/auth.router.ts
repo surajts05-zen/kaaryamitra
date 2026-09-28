@@ -9,13 +9,19 @@ import {
   updatePresenceHandler,
   updatePinnedColleaguesHandler,
   getBulkPresenceHandler,
+  getSsoOptionsHandler,
   googleOAuthRedirect,
   googleOAuthCallback,
+  zohoOAuthRedirect,
+  zohoOAuthCallback,
   completeSetupHandler
 } from './auth.controller.js';
 import { requireAuth } from '../../middleware/auth.js';
 
 export const authRouter = Router();
+
+// Public SSO options
+authRouter.get('/sso-options', asyncHandler(getSsoOptionsHandler));
 
 // Local auth
 authRouter.post('/register', asyncHandler(registerHandler));
@@ -35,3 +41,7 @@ authRouter.post('/complete-setup', requireAuth, asyncHandler(completeSetupHandle
 // Google OAuth
 authRouter.get('/google', googleOAuthRedirect);
 authRouter.get('/google/callback', asyncHandler(googleOAuthCallback));
+
+// Zoho OAuth
+authRouter.get('/zoho', zohoOAuthRedirect);
+authRouter.get('/zoho/callback', asyncHandler(zohoOAuthCallback));

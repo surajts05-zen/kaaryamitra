@@ -341,6 +341,8 @@ export class AdminService {
       smtpUser: null,
       smtpPass: null,
       smtpFrom: null,
+      enableGoogleSso: true,
+      enableZohoSso: false,
     };
   }
 

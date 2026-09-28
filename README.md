@@ -961,6 +961,20 @@ cp apps/web/.env.example apps/web/.env
 # SESSION_SECRET, S3_* variables, etc.
 ```
 
+### 3.1 Zoho SSO Configuration
+
+To enable Zoho Single Sign-On:
+1. Create a Server-based Client in the [Zoho API Console](https://api-console.zoho.in/).
+2. Set the Authorized Redirect URI to `http://localhost:3000/api/v1/auth/zoho/callback` (or your production API URL).
+3. Update `apps/api/.env` with your Zoho credentials:
+   ```env
+   ZOHO_CLIENT_ID=your_client_id
+   ZOHO_CLIENT_SECRET=your_client_secret
+   ZOHO_CALLBACK_URL=http://localhost:3000/api/v1/auth/zoho/callback
+   ZOHO_ACCOUNTS_URL=https://accounts.zoho.in # Or .com depending on your data center
+   ```
+4. Platform Admins can toggle Zoho SSO on or off globally from the KaaryaMitra **Admin Settings > Single Sign-On** page.
+
 ### 4. Database Setup
 
 ```bash

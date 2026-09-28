@@ -144,6 +144,18 @@ export class AuthService {
       });
   }
 
+  // ── Public Options ────────────────────────────────────────────────────────
+  static async getSsoOptions() {
+    let settings = await prisma.platformSettings.findUnique({
+      where: { id: 'global' },
+      select: { enableGoogleSso: true, enableZohoSso: true },
+    });
+    if (!settings) {
+      settings = { enableGoogleSso: true, enableZohoSso: false };
+    }
+    return settings;
+  }
+
   // ── Google SSO ─────────────────────────────────────────────────────────────
 
   static async googleLoginOrRegister(
@@ -194,6 +206,58 @@ export class AuthService {
 
     return { user: AuthService.sanitizeUser(user), accessToken, refreshToken, requiresSetup: !user.tenantId && !user.isSuperAdmin };
   }
+
+  // ── Zoho SSO ───────────────────────────────────────────────────────────────
+
+  static async zohoLoginOrRegister(
+    email: string,
+    firstName: string,
+    lastName: string,
+    meta?: { ipAddress?: string; userAgent?: string }
+  ) {
+    const normalizedEmail = email.toLowerCase().trim();
+    let user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      include: {
+        tenant: { select: { slug: true } },
+        userRoles: { include: { role: true } },
+      },
+    });
+
+    if (user) {
+      if (user.status === 'INACTIVE') throw AppError.forbidden('Account is deactivated');
+      
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
+      });
+    } else {
+      // User doesn't exist, create an orphan user for "Complete Setup" flow
+      user = await prisma.user.create({
+        data: {
+          email: normalizedEmail,
+          firstName,
+          lastName,
+          authProvider: 'ZOHO',
+          status: 'ACTIVE',
+        },
+        include: {
+          tenant: { select: { slug: true } },
+          userRoles: { include: { role: true } },
+        },
+      });
+    }
+
+    const sessionId = generateSessionId();
+    const { accessToken, refreshToken } = await AuthService.createSession(
+      user.id,
+      sessionId,
+      meta,
+    );
+
+    return { user: AuthService.sanitizeUser(user), accessToken, refreshToken, requiresSetup: !user.tenantId && !user.isSuperAdmin };
+  }
+
 
   static async completeSetup(userId: string, companyName: string) {
     const user = await prisma.user.findUnique({ where: { id: userId } });

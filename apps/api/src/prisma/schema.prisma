@@ -37,6 +37,7 @@ enum UserStatus {
 enum AuthProvider {
   LOCAL
   GOOGLE
+  ZOHO
 }
 
 enum EmploymentType {
@@ -1737,6 +1738,10 @@ model PlatformSettings {
   smtpPass     String?
   smtpFrom     String?
   geminiApiKey String?
+
+  // SSO Configuration
+  enableGoogleSso Boolean @default(true)
+  enableZohoSso   Boolean @default(false)
 
   // Razorpay (Phase 24)
   razorpayKeyId         String?

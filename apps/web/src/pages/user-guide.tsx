@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   LayoutDashboard,
@@ -94,6 +94,9 @@ export function UserGuidePage() {
             </button>
             <button onClick={() => scrollToSection('meetings')} className="text-left text-sm text-muted-foreground hover:text-primary transition-colors">
               16. Meetings &amp; Calendar
+            </button>
+            <button onClick={() => scrollToSection('sso')} className="text-left text-sm text-muted-foreground hover:text-primary transition-colors">
+              17. Single Sign-On (SSO)
             </button>
           </nav>
         </div>
@@ -867,6 +870,43 @@ export function UserGuidePage() {
                       <li className="pl-2">Click any meeting card and select <strong>Enter Workspace</strong>.</li>
                       <li className="pl-2">Use the workspace to set the agenda before the meeting, capture live notes during the session, and write the final minutes of meeting (MOM) after.</li>
                       <li className="pl-2">Update the meeting status to <strong>IN_PROGRESS</strong> when the meeting starts and <strong>COMPLETED</strong> when it ends. All history is preserved.</li>
+                    </ol>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+          {/* Section 17: Single Sign-On (SSO) */}
+          <section id="sso" className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">17</div>
+              <h3 className="text-2xl font-semibold tracking-tight">Single Sign-On (SSO) Configuration</h3>
+            </div>
+            <p className="text-muted-foreground ml-11">
+              Super Admins can globally enable or disable Google and Zoho Single Sign-On to streamline employee access.
+            </p>
+            <Card className="ml-11 overflow-hidden border-muted/60 shadow-sm">
+              <CardContent className="p-6 bg-card">
+                <h4 className="font-semibold flex items-center gap-2 text-lg mb-4">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                  Step-by-Step: Enabling Google and Zoho SSO
+                </h4>
+                <div className="space-y-6">
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">How to Enable Google or Zoho SSO</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Log in as a <strong>Platform / Super Admin</strong> and navigate to <strong>Settings {'>'} System Settings</strong> (or <strong>Platform Billing</strong> depending on the menu layout) where global SSO options are located. Alternatively, find it under <strong>Admin {'>'} Settings</strong>.</li>
+                      <li className="pl-2">Scroll to the <strong>Single Sign-On (SSO)</strong> section.</li>
+                      <li className="pl-2">Toggle the switch for <strong>Google SSO</strong> or <strong>Zoho SSO</strong> on or off.</li>
+                      <li className="pl-2">Click <strong>Save SSO Settings</strong>. Changes will instantly reflect on the main login screen.</li>
+                    </ol>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-foreground text-sm mb-2">Technical Setup (for System Operators)</h5>
+                    <ol className="space-y-2 list-decimal list-inside text-sm text-muted-foreground">
+                      <li className="pl-2">Before toggling Zoho SSO, ensure that your Zoho Server-based Client is configured in the <a href="https://api-console.zoho.in/" target="_blank" rel="noreferrer" className="text-primary hover:underline">Zoho API Console</a>.</li>
+                      <li className="pl-2">Set the Authorized Redirect URI to match your backend environment (e.g., <code className="text-xs bg-muted px-1 rounded">http://localhost:3000/api/v1/auth/zoho/callback</code>).</li>
+                      <li className="pl-2">Update your backend <code className="text-xs bg-muted px-1 rounded">.env</code> file with <code className="text-xs bg-muted px-1 rounded">ZOHO_CLIENT_ID</code>, <code className="text-xs bg-muted px-1 rounded">ZOHO_CLIENT_SECRET</code>, <code className="text-xs bg-muted px-1 rounded">ZOHO_CALLBACK_URL</code>, and <code className="text-xs bg-muted px-1 rounded">ZOHO_ACCOUNTS_URL</code>.</li>
                     </ol>
                   </div>
                 </div>

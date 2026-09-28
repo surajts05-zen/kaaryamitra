@@ -76,6 +76,8 @@ export type PlatformSettings = {
   s3Region: string | null;
   s3AccessKey: string | null;
   s3SecretKey: string | null;
+  enableGoogleSso?: boolean;
+  enableZohoSso?: boolean;
 };
 
 export function usePlatformSettings() {

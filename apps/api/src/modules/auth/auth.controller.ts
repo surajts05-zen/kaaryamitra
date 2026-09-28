@@ -11,6 +11,11 @@ const REFRESH_COOKIE_OPTIONS = {
   path: '/api/v1/auth',
 };
 
+export async function getSsoOptionsHandler(req: Request, res: Response) {
+  const options = await AuthService.getSsoOptions();
+  res.json({ success: true, data: options });
+}
+
 export async function registerHandler(req: Request, res: Response) {
   const { body } = registerSchema.parse({ body: req.body });
   const result = await AuthService.register(body);
@@ -153,11 +158,82 @@ export async function googleOAuthCallback(req: Request, res: Response) {
     res.cookie('km_refresh', result.refreshToken, REFRESH_COOKIE_OPTIONS);
 
     const frontendUrl = process.env['FRONTEND_URL'] || 'http://localhost:5173';
-    
     res.redirect(`${frontendUrl}/login?accessToken=${result.accessToken}&requiresSetup=${result.requiresSetup}&tenantSlug=${result.user.tenantSlug || ''}`);
   } catch (error) {
     console.error('Google OAuth Error:', error);
-    res.redirect(`${process.env['FRONTEND_URL'] || 'http://localhost:5173'}/login?error=Google_OAuth_Failed`);
+    const frontendUrl = process.env['FRONTEND_URL'] || 'http://localhost:5173';
+    res.redirect(`${frontendUrl}/login?error=Google_OAuth_Failed`);
+  }
+}
+
+export async function zohoOAuthRedirect(req: Request, res: Response) {
+  const accountsUrl = process.env['ZOHO_ACCOUNTS_URL'] || 'https://accounts.zoho.in';
+  const clientId = process.env['ZOHO_CLIENT_ID'];
+  const redirectUri = encodeURIComponent(process.env['ZOHO_CALLBACK_URL'] || '');
+  const scope = 'AaaServer.profile.READ';
+
+  const authUrl = `${accountsUrl}/oauth/v2/auth?response_type=code&client_id=${clientId}&scope=${scope}&redirect_uri=${redirectUri}&access_type=offline&prompt=consent`;
+  res.redirect(authUrl);
+}
+
+export async function zohoOAuthCallback(req: Request, res: Response) {
+  const code = req.query['code'] as string;
+  const frontendUrl = process.env['FRONTEND_URL'] || 'http://localhost:5173';
+
+  if (!code) {
+    res.redirect(`${frontendUrl}/login?error=Zoho_OAuth_Failed`);
+    return;
+  }
+
+  try {
+    const accountsUrl = process.env['ZOHO_ACCOUNTS_URL'] || 'https://accounts.zoho.in';
+    
+    // 1. Exchange auth code for access token
+    const tokenRes = await fetch(`${accountsUrl}/oauth/v2/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: process.env['ZOHO_CLIENT_ID'] || '',
+        client_secret: process.env['ZOHO_CLIENT_SECRET'] || '',
+        redirect_uri: process.env['ZOHO_CALLBACK_URL'] || '',
+        grant_type: 'authorization_code'
+      })
+    });
+
+    const tokenData = (await tokenRes.json()) as any;
+    if (!tokenData.access_token) {
+      throw new Error(tokenData.error || 'Failed to obtain access token from Zoho');
+    }
+
+    // 2. Fetch User Profile from Zoho
+    const userRes = await fetch(`${accountsUrl}/oauth/user/info`, {
+      headers: { Authorization: `Zoho-oauthtoken ${tokenData.access_token}` }
+    });
+    const userData = (await userRes.json()) as any;
+
+    const email = userData.Email || userData.email;
+    const firstName = userData.First_Name || userData.first_name || 'User';
+    const lastName = userData.Last_Name || userData.last_name || '';
+
+    const ipAddress = req.ip;
+    const userAgent = req.headers['user-agent'];
+    const meta: { ipAddress?: string; userAgent?: string } = {};
+    if (ipAddress !== undefined) meta.ipAddress = ipAddress;
+    if (userAgent !== undefined) meta.userAgent = userAgent;
+
+    // 3. Login or register user in KaaryaMitra
+    const result = await AuthService.zohoLoginOrRegister(email, firstName, lastName, meta);
+
+    // 4. Set Refresh Token HTTP-only Cookie
+    res.cookie('km_refresh', result.refreshToken, REFRESH_COOKIE_OPTIONS);
+
+    res.redirect(
+      `${frontendUrl}/login?accessToken=${result.accessToken}&requiresSetup=${result.requiresSetup}&tenantSlug=${result.user.tenantSlug || ''}`
+    );
+  } catch (error) {
+    console.error('Zoho OAuth Error:', error);
+    res.redirect(`${frontendUrl}/login?error=Zoho_OAuth_Failed`);
   }
 }
 

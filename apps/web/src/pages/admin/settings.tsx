@@ -22,6 +22,8 @@ const settingsSchema = z.object({
   smtpUser: z.string().optional().or(z.literal('')),
   smtpPass: z.string().optional().or(z.literal('')),
   smtpFrom: z.string().optional().or(z.literal('')),
+  enableGoogleSso: z.boolean().default(true),
+  enableZohoSso: z.boolean().default(false),
 });
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
@@ -48,6 +50,8 @@ export function AdminSettingsPage() {
         smtpUser: settings.smtpUser || '',
         smtpPass: settings.smtpPass || '',
         smtpFrom: settings.smtpFrom || '',
+        enableGoogleSso: settings.enableGoogleSso ?? true,
+        enableZohoSso: settings.enableZohoSso ?? false,
       });
     }
   }, [settings, reset]);
@@ -158,6 +162,46 @@ export function AdminSettingsPage() {
               <p className="text-xs text-muted-foreground">
                 Leave blank to fall back to the SMTP Username.
               </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* SSO Settings */}
+        <Card className="border-border/60">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-md bg-primary/10 text-primary">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle>Single Sign-On (SSO)</CardTitle>
+                <CardDescription>
+                  Enable or disable global SSO providers for all workspaces.
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-0.5">
+                <Label>Google Workspace SSO</Label>
+                <p className="text-sm text-muted-foreground">Allow users to sign in with their Google accounts</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" className="sr-only peer" {...register('enableGoogleSso')} />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary"></div>
+              </label>
+            </div>
+            
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-0.5">
+                <Label>Zoho Accounts SSO</Label>
+                <p className="text-sm text-muted-foreground">Allow users to sign in with their Zoho Mail/Workplace accounts</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" className="sr-only peer" {...register('enableZohoSso')} />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary"></div>
+              </label>
             </div>
           </CardContent>
         </Card>
