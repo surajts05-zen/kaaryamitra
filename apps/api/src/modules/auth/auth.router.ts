@@ -27,7 +27,7 @@ authRouter.get('/sso-options', asyncHandler(getSsoOptionsHandler));
 authRouter.post('/register', asyncHandler(registerHandler));
 authRouter.post('/login', asyncHandler(loginHandler));
 authRouter.post('/refresh', asyncHandler(refreshHandler));
-authRouter.post('/logout', requireAuth, asyncHandler(logoutHandler));
+authRouter.post('/logout', asyncHandler(logoutHandler));
 
 // Current user
 authRouter.get('/me', requireAuth, asyncHandler(getMeHandler));

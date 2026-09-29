@@ -123,6 +123,18 @@ async function main() {
   console.log(`   Email: ${adminEmail}`);
   console.log(`   Password: ${adminPassword}`);
   console.log(`\n⚠️  Change the Super Admin password immediately after first login!\n`);
+
+  // ── Platform Settings (SSO defaults) ─────────────────────────────────────────
+  await (prisma as any).platformSettings.upsert({
+    where: { id: 'global' },
+    update: {},
+    create: {
+      id: 'global',
+      enableGoogleSso: true,
+      enableZohoSso: true,
+    },
+  });
+  console.log('   ✓ Platform settings seeded (Zoho SSO enabled)');
 }
 
 main()

@@ -41,6 +41,13 @@ apiClient.interceptors.response.use(
 
     // If 401, check if we already retried after a refresh
     if (status === 401 && originalRequest) {
+      // Don't intercept 401s on auth endpoints themselves — prevents infinite loops
+      const url = originalRequest.url ?? '';
+      const isAuthEndpoint = url.includes('/auth/refresh') || url.includes('/auth/logout') || url.includes('/auth/login') || url.includes('/auth/sso-options');
+      if (isAuthEndpoint) {
+        return Promise.reject(error);
+      }
+
       if ((originalRequest as { _retry?: boolean })._retry) {
         // Token was already refreshed once but request still failed with 401 — session is invalid
         localStorage.removeItem('km_access_token');
