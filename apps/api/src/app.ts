@@ -71,8 +71,8 @@ export function createApp() {
   // Initialize BullMQ jobs
   initBillingMeterJob();
 
-  // ── Trust proxy (required for correct IP behind Dokploy/Nginx reverse proxy) ─
-  app.set('trust proxy', 1);
+  // ── Trust proxy (required for correct IP behind multiple Dokploy/Nginx reverse proxies) ─
+  app.set('trust proxy', true);
 
   // ── Security headers ────────────────────────────────────────────────────────
   app.use(
