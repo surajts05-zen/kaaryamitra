@@ -128,8 +128,8 @@ export function createApp() {
   // Health check (no auth required)
   app.use('/health', healthRouter);
 
-  // Auth routes (strict rate limit: 10 req/15min per IP)
-  app.use('/api/v1/auth', authRateLimiter, authRouter);
+  // Auth routes (rate limits are applied individually inside the router)
+  app.use('/api/v1/auth', authRouter);
 
   // OpenAPI Docs
   app.use('/api/v1/docs', openapiRouter);
