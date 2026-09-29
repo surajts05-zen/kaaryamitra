@@ -46,6 +46,7 @@ export function verifyAccessToken(token: string): AuthTokenPayload {
       audience: 'kaaryamitra-app',
     }) as AuthTokenPayload;
   } catch (err) {
+    console.error('[verifyAccessToken] Failed to verify token:', err);
     if (err instanceof jwt.TokenExpiredError) {
       throw AppError.tokenExpired();
     }

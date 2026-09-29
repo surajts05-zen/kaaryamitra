@@ -67,8 +67,9 @@ export function CompleteSetupPage() {
       };
       fetchUser();
     } else if (!user) {
-      // If no token in URL and no user in store, they shouldn't be here
-      navigate('/login');
+      // Temporarily disabling the aggressive redirect to debug the logout issue
+      console.log('[CompleteSetup] No user in store and no token in URL, normally would redirect to login');
+      // navigate('/login');
     } else if (user.tenantId || user.isSuperAdmin) {
       // If user is already set up, redirect them
       navigate(user.isSuperAdmin ? '/admin' : `/t/${user.tenantSlug}/dashboard`);
