@@ -12,7 +12,7 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pg_data_v2:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-kaaryamitra}']
       interval: 10s
@@ -69,5 +69,5 @@ services:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000}
 
 volumes:
-  postgres_data:
+  pg_data_v2:
   redis_data:
