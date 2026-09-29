@@ -121,11 +121,21 @@ export const aiRateLimiter = makeLimiter('ai', {
 });
 
 /**
- * Per-tenant rate limiter — 200 requests per 15 minutes keyed on tenantId.
+ * Per-tenant rate limiter — keyed on tenantId.
+ * Dynamic limit based on tenant's plan.
  */
 export const tenantRateLimiter = makeLimiter('tenant', {
   windowMs: 15 * 60 * 1000,
-  limit: 200,
+  limit: async (req, _res) => {
+    const plan = (req as any).tenantPlan?.toUpperCase() || 'FREE';
+    switch (plan) {
+      case 'ENTERPRISE': return 5000;
+      case 'GROWTH': return 1000;
+      case 'STARTER': return 300;
+      case 'FREE':
+      default: return 100;
+    }
+  },
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   keyGenerator: (req) => (req as any).tenantId || req.ip || 'unknown',

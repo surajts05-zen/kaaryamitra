@@ -83,9 +83,14 @@ export class BillingService {
    * Defaults to FREE plan + TRIALING status.
    */
   static async initializeTenantSubscription(tenantId: string) {
-    const freePlan = await (prisma as any).planDefinition.findUnique({
+    let freePlan = await (prisma as any).planDefinition.findUnique({
       where: { slug: 'FREE' },
     });
+    if (!freePlan) {
+      freePlan = await (prisma as any).planDefinition.findFirst({
+        orderBy: { monthlyPriceInr: 'asc' },
+      });
+    }
     if (!freePlan) {
       // Graceful fail — billing not seeded yet
       return null;

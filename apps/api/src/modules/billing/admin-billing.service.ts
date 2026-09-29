@@ -112,16 +112,31 @@ export class AdminBillingService {
     tenantId: string,
     planSlug: string,
     status?: string,
+    extendTrialMonths?: number,
   ) {
     const plan = await (prisma as any).planDefinition.findUnique({ where: { slug: planSlug } });
     if (!plan) throw AppError.notFound('Plan');
 
+    const sub = await (prisma as any).tenantSubscription.findUnique({ where: { tenantId } });
+
+    const updateData: any = {
+      planId: plan.id,
+      status: status ?? 'ACTIVE',
+    };
+
+    if (extendTrialMonths && extendTrialMonths >= 1) {
+      const now = new Date();
+      const baseDate = sub?.trialEnd && sub.trialEnd > now ? new Date(sub.trialEnd) : now;
+      baseDate.setMonth(baseDate.getMonth() + extendTrialMonths);
+      
+      updateData.status = 'TRIALING';
+      updateData.trialEnd = baseDate;
+      updateData.currentPeriodEnd = baseDate;
+    }
+
     await (prisma as any).tenantSubscription.update({
       where: { tenantId },
-      data: {
-        planId: plan.id,
-        status: status ?? 'ACTIVE',
-      },
+      data: updateData,
     });
 
     await prisma.tenant.update({ where: { id: tenantId }, data: { plan: planSlug as any } });

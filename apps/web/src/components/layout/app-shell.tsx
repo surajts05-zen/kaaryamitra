@@ -58,36 +58,49 @@ export interface NavItem {
   /** If omitted, item is visible to ALL authenticated tenant users */
   allowedRoles?: string[];
   group?: string;
+  moduleKey?: string;
 }
 
 export const navItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', path: 'dashboard' },
   { icon: Inbox,     label: 'Approvals Inbox', path: 'approvals',       allowedRoles: APPROVER_ROLES },
 
+  // My Workspace (ESS)
+  { icon: FileText, label: 'Company Policies', path: 'my-policies', group: 'My Workspace', moduleKey: 'library' },
+  { icon: Clock, label: 'My Attendance', path: 'me/attendance', group: 'My Workspace', moduleKey: 'attendance' },
+  { icon: CalendarDays, label: 'My Leaves', path: 'me/leave', group: 'My Workspace', moduleKey: 'leave' },
+  { icon: CalendarClock, label: 'My Shifts', path: 'me/shifts', group: 'My Workspace', moduleKey: 'attendance' },
+  { icon: Timer, label: 'My Timesheets', path: 'me/timesheets', group: 'My Workspace', moduleKey: 'attendance' },
+  { icon: Laptop, label: 'My Assets', path: 'me/assets', group: 'My Workspace', moduleKey: 'assets' },
+  { icon: Wallet, label: 'My Compensation', path: 'me/compensation', group: 'My Workspace', moduleKey: 'payroll' },
+  { icon: CreditCard, label: 'My Payslips', path: 'me/payslips', group: 'My Workspace', moduleKey: 'payroll' },
+  { icon: Headset, label: 'My Helpdesk', path: 'me/helpdesk', group: 'My Workspace', moduleKey: 'helpdesk' },
+  { icon: Target, label: 'My Goals', path: 'me/performance/goals', group: 'My Workspace', moduleKey: 'performance' },
+  { icon: Target, label: 'My Reviews', path: 'me/performance/reviews', group: 'My Workspace', moduleKey: 'performance' },
 
   // HR / Admin
-  { icon: Users,     label: 'Emp Directory',     path: 'directory',         allowedRoles: HR_ROLES, group: 'Organization' },
-  { icon: Building2, label: 'Departments',   path: 'departments',       allowedRoles: HR_ROLES, group: 'Organization' },
-  { icon: MapPin,    label: 'Locations',     path: 'locations',         allowedRoles: HR_ROLES, group: 'Organization' },
-  { icon: Briefcase, label: 'Designations',  path: 'designations',      allowedRoles: HR_ROLES, group: 'Organization' },
+  { icon: Users,     label: 'Emp Directory',     path: 'directory',         allowedRoles: HR_ROLES, group: 'Organization', moduleKey: 'core_hr' },
+  { icon: Building2, label: 'Departments',   path: 'departments',       allowedRoles: HR_ROLES, group: 'Organization', moduleKey: 'core_hr' },
+  { icon: MapPin,    label: 'Locations',     path: 'locations',         allowedRoles: HR_ROLES, group: 'Organization', moduleKey: 'core_hr' },
+  { icon: Briefcase, label: 'Designations',  path: 'designations',      allowedRoles: HR_ROLES, group: 'Organization', moduleKey: 'core_hr' },
   
-  { icon: Banknote,  label: 'Payroll',       path: 'payroll',           allowedRoles: HR_ROLES, group: 'Management' },
-  { icon: Clock,         label: 'Attendance',    path: 'attendance',        allowedRoles: HR_ROLES, group: 'Management' },
-  { icon: Laptop,        label: 'Assets',        path: 'assets',            allowedRoles: HR_ROLES, group: 'Management' },
-  { icon: UserMinus, label: 'Resignations',  path: 'resignations',      allowedRoles: HR_ROLES, group: 'Management' },
-  { icon: Headset,       label: 'Helpdesk',      path: 'helpdesk',          allowedRoles: HR_ROLES, group: 'Management' },
-  { icon: Target,        label: 'Goals',         path: 'performance/goals', allowedRoles: HR_ROLES, group: 'Management' },
-  { icon: Target,        label: 'Review Cycles', path: 'performance/reviews', allowedRoles: HR_ROLES, group: 'Management' },
-  { icon: FolderGit2,    label: 'Projects',      path: 'projects',          allowedRoles: FINANCE_ROLES, group: 'Management' },
-  { icon: CalendarDays,  label: 'Meetings',      path: 'meetings',          group: 'Management' },
-  { icon: Landmark,      label: 'Budgets',       path: 'budgets',           allowedRoles: FINANCE_ROLES, group: 'Management' },
+  { icon: Banknote,  label: 'Payroll',       path: 'payroll',           allowedRoles: HR_ROLES, group: 'Management', moduleKey: 'payroll' },
+  { icon: Clock,         label: 'Attendance',    path: 'attendance',        allowedRoles: HR_ROLES, group: 'Management', moduleKey: 'attendance' },
+  { icon: Laptop,        label: 'Assets',        path: 'assets',            allowedRoles: HR_ROLES, group: 'Management', moduleKey: 'assets' },
+  { icon: UserMinus, label: 'Resignations',  path: 'resignations',      allowedRoles: HR_ROLES, group: 'Management', moduleKey: 'core_hr' },
+  { icon: Headset,       label: 'Helpdesk',      path: 'helpdesk',          allowedRoles: HR_ROLES, group: 'Management', moduleKey: 'helpdesk' },
+  { icon: Target,        label: 'Goals',         path: 'performance/goals', allowedRoles: HR_ROLES, group: 'Management', moduleKey: 'performance' },
+  { icon: Target,        label: 'Review Cycles', path: 'performance/reviews', allowedRoles: HR_ROLES, group: 'Management', moduleKey: 'performance' },
+  { icon: FolderGit2,    label: 'Projects',      path: 'projects',          allowedRoles: FINANCE_ROLES, group: 'Management', moduleKey: 'projects' },
+  { icon: CalendarDays,  label: 'Meetings',      path: 'meetings',          group: 'Management', moduleKey: 'core_hr' },
+  { icon: Landmark,      label: 'Budgets',       path: 'budgets',           allowedRoles: FINANCE_ROLES, group: 'Management', moduleKey: 'projects' },
 
-  { icon: LayoutDashboard, label: 'Reports', path: 'reports', allowedRoles: HR_ROLES, group: 'Data & Analytics' },
+  { icon: LayoutDashboard, label: 'Reports', path: 'reports', allowedRoles: HR_ROLES, group: 'Data & Analytics', moduleKey: 'reports' },
 
-  { icon: FileText,      label: 'Content Library', path: 'library', allowedRoles: ADMIN_ROLES, group: 'Settings' },
-  { icon: GitBranch, label: 'Workflows',        path: 'settings/workflows', allowedRoles: ADMIN_ROLES, group: 'Settings' },
-  { icon: FileText,  label: 'Policies & Content', path: 'settings/policies', allowedRoles: ADMIN_ROLES, group: 'Settings' },
-  { icon: Shield,    label: 'Roles & Permissions', path: 'settings/roles', allowedRoles: ADMIN_ROLES, group: 'Settings' },
+  { icon: FileText,      label: 'Content Library', path: 'library', allowedRoles: ADMIN_ROLES, group: 'Settings', moduleKey: 'library' },
+  { icon: GitBranch, label: 'Workflows',        path: 'settings/workflows', allowedRoles: ADMIN_ROLES, group: 'Settings', moduleKey: 'core_hr' },
+  { icon: FileText,  label: 'Policies & Content', path: 'settings/policies', allowedRoles: ADMIN_ROLES, group: 'Settings', moduleKey: 'library' },
+  { icon: Shield,    label: 'Roles & Permissions', path: 'settings/roles', allowedRoles: ADMIN_ROLES, group: 'Settings', moduleKey: 'core_hr' },
   { icon: CreditCard,label: 'Billing & Plans', path: 'settings/billing', allowedRoles: ADMIN_ROLES, group: 'Settings' },
   { icon: Settings,  label: 'Settings',      path: 'settings',          allowedRoles: ADMIN_ROLES, group: 'Settings' },
   
@@ -102,20 +115,6 @@ export const adminNavItems: NavItem[] = [
   { icon: FileText,        label: 'Plans & Add-ons',    path: '/admin/billing/plans', group: 'Platform Billing' },
   { icon: Wallet,          label: 'Razorpay Settings',  path: '/admin/billing/settings', group: 'Platform Billing' },
   { icon: Settings,        label: 'Platform Config',    path: '/admin/settings', group: 'Platform' },
-];
-
-export const essNavItems: NavItem[] = [
-  { icon: FileText, label: 'Company Policies', path: 'my-policies' },
-  { icon: Clock, label: 'My Attendance', path: 'me/attendance' },
-  { icon: CalendarDays, label: 'My Leaves', path: 'me/leave' },
-  { icon: CalendarClock, label: 'My Shifts', path: 'me/shifts' },
-  { icon: Timer, label: 'My Timesheets', path: 'me/timesheets' },
-  { icon: Laptop, label: 'My Assets', path: 'me/assets' },
-  { icon: Wallet, label: 'My Compensation', path: 'me/compensation' },
-  { icon: CreditCard, label: 'My Payslips', path: 'me/payslips' },
-  { icon: Headset, label: 'My Helpdesk', path: 'me/helpdesk' },
-  { icon: Target, label: 'My Goals', path: 'me/performance/goals' },
-  { icon: Target, label: 'My Reviews', path: 'me/performance/reviews' },
 ];
 
 import { CommandPalette } from '@/components/layout/command-palette';
@@ -144,19 +143,25 @@ export function AppShell() {
   const userRoles = user?.roles ?? [];
 
   // For super-admins use the platform nav
-  // For tenant users, filter by allowedRoles — if a user has no roles assigned yet
-  // (e.g. a brand-new Tenant Admin), show everything so they're never locked out.
+  // For tenant users, filter by allowedRoles and featureFlags
   const currentNavItems = React.useMemo(() => {
     if (user?.isSuperAdmin) return adminNavItems;
 
     const hasNoRoles = userRoles.length === 0;
+    const featureFlags = (user as any)?.featureFlags as Record<string, boolean> | undefined;
 
     return navItems.filter((item) => {
+      // 1. Billing Feature Gate
+      if (item.moduleKey && featureFlags && featureFlags[item.moduleKey] === false) {
+        return false;
+      }
+      
+      // 2. Role Gate
       if (!item.allowedRoles) return true; // visible to all
       if (hasNoRoles) return true;         // no roles assigned yet → show everything
       return item.allowedRoles.some((r) => userRoles.includes(r));
     });
-  }, [user?.isSuperAdmin, userRoles]);
+  }, [user, userRoles]);
 
   const initials = user ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() : 'U';
 

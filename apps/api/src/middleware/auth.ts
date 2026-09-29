@@ -11,6 +11,7 @@ declare global {
     interface Request {
       auth?: AuthTokenPayload;
       tenantId?: string;
+      tenantPlan?: string;
       permissions?: string[];
     }
   }
@@ -134,6 +135,7 @@ export async function resolveTenant(
       if (tenant.status === 'SUSPENDED') return next(AppError.tenantSuspended());
 
       req.tenantId = tenant.id;
+      req.tenantPlan = tenant.plan;
 
       if (req.auth && req.auth.tenantId && req.auth.tenantId !== tenant.id && !req.auth.isSuperAdmin) {
         return next(AppError.forbidden('You do not belong to this workspace'));

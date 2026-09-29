@@ -88,8 +88,13 @@ adminBillingRouter.get('/subscriptions/:tenantId', async (req, res, next) => {
 // Admin override plan
 adminBillingRouter.post('/subscriptions/:tenantId/override', async (req, res, next) => {
   try {
-    const { planSlug, status } = req.body;
-    const result = await AdminBillingService.adminChangeTenantPlan(req.params.tenantId, planSlug, status);
+    const { planSlug, status, extendTrialMonths } = req.body;
+    const result = await AdminBillingService.adminChangeTenantPlan(
+      req.params.tenantId,
+      planSlug,
+      status,
+      extendTrialMonths
+    );
     res.json({ success: true, data: result });
   } catch (error) {
     next(error);
