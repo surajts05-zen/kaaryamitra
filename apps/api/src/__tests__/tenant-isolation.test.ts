@@ -87,7 +87,7 @@ vi.mock('../lib/logger.js', () => ({
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeToken(payload: object): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '1h', issuer: 'kaaryamitra', audience: 'kaaryamitra-app' });
 }
 
 function authHeader(token: string) {
@@ -103,8 +103,8 @@ beforeAll(async () => {
   const { prisma } = await import('../lib/prisma.js');
   mockPrisma = prisma;
 
-  // Build a minimal express app with just the tenant resolution middleware
   const { requireAuth, resolveTenant } = await import('../middleware/auth.js');
+  const { errorHandler } = await import('../middleware/errorHandler.js');
 
   app = express();
   app.use(express.json());
@@ -128,6 +128,8 @@ beforeAll(async () => {
       res.json({ success: true, tenantId: req.tenantId });
     },
   );
+
+  app.use(errorHandler);
 });
 
 afterAll(() => {

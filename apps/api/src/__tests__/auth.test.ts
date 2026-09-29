@@ -66,7 +66,7 @@ describe('Auth Middleware', () => {
   it('rejects request with no Authorization header', async () => {
     const res = await request(app).get('/protected');
     expect(res.status).toBe(401);
-    expect(res.body.error.code).toBe('UNAUTHORIZED');
+    expect(res.body.error.code).toBe('AUTHENTICATION_REQUIRED');
   });
 
   it('rejects request with non-Bearer Authorization header', async () => {
@@ -87,7 +87,7 @@ describe('Auth Middleware', () => {
     const expiredToken = jwt.sign(
       { userId: 'user-1', tenantId: 'tenant-1', isSuperAdmin: false },
       JWT_SECRET,
-      { expiresIn: -1 }, // already expired
+      { expiresIn: -1, issuer: 'kaaryamitra', audience: 'kaaryamitra-app' }, // already expired
     );
 
     const res = await request(app)
@@ -100,7 +100,7 @@ describe('Auth Middleware', () => {
     const wrongToken = jwt.sign(
       { userId: 'user-1', tenantId: 'tenant-1', isSuperAdmin: false },
       'wrong-secret-key-that-is-not-the-real-one',
-      { expiresIn: '1h' },
+      { expiresIn: '1h', issuer: 'kaaryamitra', audience: 'kaaryamitra-app' },
     );
 
     const res = await request(app)
@@ -113,7 +113,7 @@ describe('Auth Middleware', () => {
     const token = jwt.sign(
       { userId: 'user-1', tenantId: 'tenant-1', isSuperAdmin: false },
       JWT_SECRET,
-      { expiresIn: '1h' },
+      { expiresIn: '1h', issuer: 'kaaryamitra', audience: 'kaaryamitra-app' },
     );
 
     const res = await request(app)

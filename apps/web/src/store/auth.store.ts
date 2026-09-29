@@ -15,6 +15,8 @@ export type User = {
   roles: string[];
   presenceStatus?: string;
   pinnedEmployeeIds?: string[];
+  tenantPlan?: string | null;
+  tenantTrialEndsAt?: string | null;
 };
 
 interface AuthState {

@@ -16,6 +16,7 @@ export type Tenant = {
   status: string;
   createdAt: string;
   _count: { users: number };
+  users?: { email: string; firstName: string; lastName: string }[];
 };
 
 export function useAdminStats() {
@@ -60,6 +61,23 @@ export function useResetTenantPassword() {
         `/admin/tenants/${tenantId}/reset-password`,
       );
       return res.data.data;
+    },
+  });
+}
+
+export function useAdminOverridePlan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ tenantId, planSlug, status, extendTrialMonths }: { tenantId: string, planSlug: string, status?: string, extendTrialMonths?: number }) => {
+      const res = await apiClient.post(`/admin/billing/subscriptions/${tenantId}/override`, {
+        planSlug,
+        status,
+        extendTrialMonths
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-tenants'] });
     },
   });
 }

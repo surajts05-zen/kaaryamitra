@@ -22,6 +22,7 @@ declare global {
 export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
   const authHeader = req.headers['authorization'];
   if (!authHeader?.startsWith('Bearer ')) {
+    console.error('401 NO HEADER AT:', req.originalUrl);
     return next(AppError.unauthorized());
   }
 
@@ -30,7 +31,8 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction): v
     const payload = verifyAccessToken(token);
     req.auth = payload;
     next();
-  } catch (err) {
+  } catch (err: any) {
+    console.error('401 VERIFY FAILED AT:', req.originalUrl, err?.message);
     next(err);
   }
 }

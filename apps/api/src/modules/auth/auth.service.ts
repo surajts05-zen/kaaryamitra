@@ -72,7 +72,13 @@ export class AuthService {
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
       include: {
-        tenant: { select: { slug: true } },
+        tenant: { 
+          select: { 
+            slug: true,
+            plan: true,
+            subscription: { select: { trialEnd: true } }
+          } 
+        },
         userRoles: { include: { role: true } },
       },
     });
@@ -116,19 +122,22 @@ export class AuthService {
       throw AppError.unauthorized('Token mismatch');
     }
 
-    // Rotate: revoke old session, create new one
+    // Extend existing session instead of rotating to prevent race conditions with concurrent requests
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await prisma.session.update({
       where: { id: session.id },
-      data: { revokedAt: new Date() },
+      data: { expiresAt },
     });
 
-    const newSessionId = generateSessionId();
-    const { accessToken, refreshToken } = await AuthService.createSession(
-      session.userId,
-      newSessionId,
-    );
+    const accessToken = signAccessToken({
+      userId: session.user.id,
+      tenantId: session.user.tenantId,
+      email: session.user.email,
+      isSuperAdmin: session.user.isSuperAdmin,
+      sessionId: session.id,
+    });
 
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken: incomingRefreshToken };
   }
 
   // ── Logout ──────────────────────────────────────────────────────────────────
@@ -168,7 +177,13 @@ export class AuthService {
     let user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
       include: {
-        tenant: { select: { slug: true } },
+        tenant: { 
+          select: { 
+            slug: true,
+            plan: true,
+            subscription: { select: { trialEnd: true } }
+          } 
+        },
         userRoles: { include: { role: true } },
       },
     });
@@ -191,7 +206,13 @@ export class AuthService {
           status: 'ACTIVE',
         },
         include: {
-          tenant: { select: { slug: true } },
+          tenant: { 
+            select: { 
+              slug: true,
+              plan: true,
+              subscription: { select: { trialEnd: true } }
+            } 
+          },
           userRoles: { include: { role: true } },
         },
       });
@@ -219,7 +240,13 @@ export class AuthService {
     let user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
       include: {
-        tenant: { select: { slug: true } },
+        tenant: { 
+          select: { 
+            slug: true,
+            plan: true,
+            subscription: { select: { trialEnd: true } }
+          } 
+        },
         userRoles: { include: { role: true } },
       },
     });
@@ -242,7 +269,13 @@ export class AuthService {
           status: 'ACTIVE',
         },
         include: {
-          tenant: { select: { slug: true } },
+          tenant: { 
+            select: { 
+              slug: true,
+              plan: true,
+              subscription: { select: { trialEnd: true } }
+            } 
+          },
           userRoles: { include: { role: true } },
         },
       });
@@ -299,7 +332,13 @@ export class AuthService {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        tenant: { select: { slug: true } },
+        tenant: { 
+          select: { 
+            slug: true, 
+            plan: true,
+            subscription: { select: { trialEnd: true } }
+          } 
+        },
         userRoles: {
           include: {
             role: {
@@ -392,6 +431,8 @@ export class AuthService {
       isSuperAdmin: user.isSuperAdmin,
       tenantId: user.tenantId,
       tenantSlug: user.tenant?.slug ?? null,
+      tenantPlan: user.tenant?.plan ?? null,
+      tenantTrialEndsAt: user.tenant?.subscription?.trialEnd ?? null,
       roles,
       presenceStatus: user.presenceStatus,
       pinnedEmployeeIds: user.pinnedEmployeeIds,

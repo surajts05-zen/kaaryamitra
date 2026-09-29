@@ -17,6 +17,11 @@ export class AdminService {
         _count: {
           select: { users: true },
         },
+        users: {
+          orderBy: { createdAt: 'asc' },
+          take: 1,
+          select: { email: true, firstName: true, lastName: true },
+        },
       },
     });
     return tenants;

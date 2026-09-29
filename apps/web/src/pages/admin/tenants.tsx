@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useAdminTenants, useCreateTenant, useResetTenantPassword } from '@/features/admin/hooks/use-admin-queries';
+import { useAdminTenants, useCreateTenant, useResetTenantPassword, useAdminOverridePlan, Tenant } from '@/features/admin/hooks/use-admin-queries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { KeyRound, Copy, Check } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { KeyRound, Copy, Check, MoreHorizontal, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 
 const createTenantSchema = z.object({
@@ -29,9 +30,14 @@ export function AdminTenantsPage() {
   const { data: tenants, isLoading } = useAdminTenants();
   const createTenant = useCreateTenant();
   const resetPasswordMutation = useResetTenantPassword();
+  const overridePlanMutation = useAdminOverridePlan();
+  
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newCredentials, setNewCredentials] = useState<{ email: string; password: string } | null>(null);
   const [resetCredentials, setResetCredentials] = useState<{ tenantName: string; email: string; generatedPassword: string } | null>(null);
+  const [editPlanTenant, setEditPlanTenant] = useState<Tenant | null>(null);
+  const [selectedPlanSlug, setSelectedPlanSlug] = useState<string>('FREE');
+  const [extendTrialMonths, setExtendTrialMonths] = useState<number>(0);
 
   const copyToClipboard = (email: string, password: string) => {
     const text = `Admin Email: ${email}\nPassword: ${password}`;
@@ -188,6 +194,7 @@ export function AdminTenantsPage() {
               <TableRow>
                 <TableHead>Tenant</TableHead>
                 <TableHead>Slug</TableHead>
+                <TableHead>Admin Contact</TableHead>
                 <TableHead>Plan</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Users</TableHead>
@@ -198,17 +205,27 @@ export function AdminTenantsPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center h-24">Loading...</TableCell>
+                  <TableCell colSpan={7} className="text-center h-24">Loading...</TableCell>
                 </TableRow>
               ) : !tenants?.length ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">No tenants found.</TableCell>
+                  <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">No tenants found.</TableCell>
                 </TableRow>
               ) : (
                 tenants.map((tenant) => (
                   <TableRow key={tenant.id}>
                     <TableCell className="font-medium">{tenant.name}</TableCell>
                     <TableCell><code className="bg-muted px-1 py-0.5 rounded text-xs">{tenant.slug}</code></TableCell>
+                    <TableCell>
+                      {tenant.users?.[0] ? (
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">{tenant.users[0].firstName} {tenant.users[0].lastName}</span>
+                          <span className="text-xs text-muted-foreground">{tenant.users[0].email}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">No admin found</span>
+                      )}
+                    </TableCell>
                     <TableCell><Badge variant="outline">{tenant.plan}</Badge></TableCell>
                     <TableCell>
                       <Badge variant={tenant.status === 'ACTIVE' ? 'default' : 'destructive'}>
@@ -220,24 +237,42 @@ export function AdminTenantsPage() {
                       {new Date(tenant.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          resetPasswordMutation.mutate(tenant.id, {
-                            onSuccess: (data) => {
-                              setResetCredentials({ tenantName: tenant.name, ...data });
-                            },
-                            onError: (err: any) => {
-                              toast.error(err.response?.data?.error?.message || 'Failed to reset password');
-                            },
-                          });
-                        }}
-                        disabled={resetPasswordMutation.isPending}
-                      >
-                        <KeyRound className="h-3.5 w-3.5 mr-1" />
-                        Reset Password
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedPlanSlug(tenant.plan);
+                              setExtendTrialMonths(0);
+                              setEditPlanTenant(tenant);
+                            }}
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit Plan
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              resetPasswordMutation.mutate(tenant.id, {
+                                onSuccess: (data) => {
+                                  setResetCredentials({ tenantName: tenant.name, ...data });
+                                },
+                                onError: (err: any) => {
+                                  toast.error(err.response?.data?.error?.message || 'Failed to reset password');
+                                },
+                              });
+                            }}
+                            disabled={resetPasswordMutation.isPending}
+                          >
+                            <KeyRound className="mr-2 h-4 w-4" />
+                            Reset Password
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))
@@ -290,6 +325,77 @@ export function AdminTenantsPage() {
               Copy Credentials
             </Button>
             <Button onClick={() => setResetCredentials(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Plan Modal */}
+      <Dialog open={!!editPlanTenant} onOpenChange={(open) => !open && setEditPlanTenant(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Plan</DialogTitle>
+            <DialogDescription>
+              Modify the billing plan or extend the trial period for {editPlanTenant?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="plan">Plan</Label>
+              <Select value={selectedPlanSlug} onValueChange={setSelectedPlanSlug}>
+                <SelectTrigger id="plan">
+                  <SelectValue placeholder="Select a plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="FREE">Free</SelectItem>
+                  <SelectItem value="STARTER">Starter</SelectItem>
+                  <SelectItem value="GROWTH">Growth</SelectItem>
+                  <SelectItem value="ENTERPRISE">Enterprise</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="trial">Extend Trial (Months)</Label>
+              <Input
+                id="trial"
+                type="number"
+                min="0"
+                value={extendTrialMonths}
+                onChange={(e) => setExtendTrialMonths(parseInt(e.target.value) || 0)}
+              />
+              <p className="text-xs text-muted-foreground">Set to 0 if not extending the trial.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditPlanTenant(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (!editPlanTenant) return;
+                const payload: any = {
+                  tenantId: editPlanTenant.id,
+                  planSlug: selectedPlanSlug,
+                };
+                if (extendTrialMonths > 0) {
+                  payload.extendTrialMonths = extendTrialMonths;
+                }
+                overridePlanMutation.mutate(
+                  payload,
+                  {
+                    onSuccess: () => {
+                      toast.success(`Plan updated for ${editPlanTenant.name}`);
+                      setEditPlanTenant(null);
+                    },
+                    onError: (err: any) => {
+                      toast.error(err.response?.data?.error?.message || 'Failed to update plan');
+                    },
+                  }
+                );
+              }}
+              disabled={overridePlanMutation.isPending}
+            >
+              {overridePlanMutation.isPending ? 'Saving...' : 'Save Changes'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -2,13 +2,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
 // ── Settings ───────────────────────────────────────────────────────────────
-export function useCompanySettings() {
+export function useCompanySettings(enabled: boolean = true) {
   return useQuery({
     queryKey: ['org', 'settings'],
     queryFn: async () => {
       const res = await apiClient.get('/org/settings');
       return res.data.data;
     },
+    enabled,
   });
 }
 

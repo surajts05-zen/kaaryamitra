@@ -137,9 +137,9 @@ export function AppShell() {
   const { slug: pathSlug } = useParams();
   const { user, logout } = useAuthStore();
   const startPolling = useNotificationStore((s) => s.startPolling);
-  const { data: companySettings } = useCompanySettings();
-  
   const slug = pathSlug || user?.tenantSlug;
+  const { data: companySettings } = useCompanySettings(!!slug);
+  
   const userRoles = user?.roles ?? [];
 
   // For super-admins use the platform nav
@@ -341,6 +341,17 @@ export function AppShell() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Show Plan Badge to Admins */}
+            {(userRoles.includes('Company Admin') || user?.isSuperAdmin) && user?.tenantPlan && (
+              <div className="hidden md:flex items-center gap-2 mr-2 border rounded-full px-3 py-1 bg-muted/50">
+                <span className="text-xs text-muted-foreground">Plan:</span>
+                <span className="text-xs font-bold text-km-lime">{user.tenantPlan}</span>
+                {user.tenantTrialEndsAt && new Date(user.tenantTrialEndsAt) > new Date() && (
+                  <span className="text-[10px] bg-km-lime text-black px-1.5 py-0.5 rounded ml-1">Trial</span>
+                )}
+              </div>
+            )}
+
             <Button
               variant="ghost"
               size="icon"
