@@ -22,11 +22,13 @@ function getS3Client() {
   if (s3Client) return s3Client;
   if (env.S3_REGION && env.S3_ACCESS_KEY_ID && env.S3_SECRET_ACCESS_KEY) {
     s3Client = new S3Client({
+      ...(env.S3_ENDPOINT ? { endpoint: env.S3_ENDPOINT } : {}),
       region: env.S3_REGION,
       credentials: {
         accessKeyId: env.S3_ACCESS_KEY_ID,
         secretAccessKey: env.S3_SECRET_ACCESS_KEY,
       },
+      forcePathStyle: env.S3_FORCE_PATH_STYLE !== undefined ? env.S3_FORCE_PATH_STYLE : true,
     });
   }
   return s3Client;

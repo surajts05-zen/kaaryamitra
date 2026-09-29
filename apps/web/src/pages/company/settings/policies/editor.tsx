@@ -288,7 +288,7 @@ export function PolicyEditor() {
   if (!policy) return <div>Policy not found</div>;
 
   return (
-    <div className="max-w-4xl mx-auto pb-20">
+    <div className="w-full pb-20">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur pt-4 pb-4 mb-6 border-b flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate(`/t/${slug}/settings/policies`)}>

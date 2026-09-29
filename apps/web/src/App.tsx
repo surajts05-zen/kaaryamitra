@@ -1,5 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AppShell } from '@/components/layout/app-shell';
+import { MobileAppShell } from '@/components/layout/mobile-app-shell';
+import { DesktopGuardLayout, DesktopOnlyGuard } from '@/components/auth/desktop-only-route';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { UiDemoPage } from '@/pages/ui-demo';
 import { LoginPage } from '@/pages/login';
 import { ContactPage } from '@/pages/contact';
@@ -30,9 +33,12 @@ import { LeaveApprovalsPage } from '@/pages/company/approvals/leave';
 // Phase 6 - Employee Self Service
 import { LeaveTypesPage } from '@/pages/company/leave-types';
 import { EssDashboardPage } from '@/pages/ess/dashboard';
+import { MobileEssDashboard } from '@/pages/ess/mobile/dashboard';
 import { EssProfilePage } from '@/pages/ess/my-profile';
 import { EssLeavePage } from '@/pages/ess/leave';
+import { MobileEssLeave } from '@/pages/ess/mobile/leave';
 import { MyAttendancePage } from '@/pages/ess/attendance';
+import { MobileMyAttendance } from '@/pages/ess/mobile/attendance';
 import { MyShiftsPage } from '@/pages/ess/shifts';
 import { MyTimesheetsPage } from '@/pages/ess/timesheets';
 
@@ -54,6 +60,7 @@ import { MyResignationPage } from '@/pages/ess/resignation';
 
 // Phase 14 - Helpdesk
 import { EssHelpdeskPage } from '@/pages/ess/helpdesk';
+import { MobileEssHelpdesk } from '@/pages/ess/mobile/helpdesk';
 import { EssHelpdeskThreadPage } from '@/pages/ess/helpdesk-thread';
 import { AdminHelpdeskPage } from '@/pages/company/helpdesk';
 import { AdminHelpdeskThreadPage } from '@/pages/company/helpdesk/thread';
@@ -68,6 +75,7 @@ import { EssMyReviewsPage } from '@/pages/ess/performance/my-reviews';
 import AssetDirectory from '@/pages/company/assets';
 import AssetDetails from '@/pages/company/assets/asset-details';
 import MyAssets from '@/pages/ess/assets';
+import { MobileMyAssets } from '@/pages/ess/mobile/assets';
 
 // Phase 28 - Compensation
 import SalaryComponentsPage from '@/pages/company/compensation/salary-components';
@@ -75,6 +83,7 @@ import SalaryStructuresPage from '@/pages/company/compensation/salary-structures
 import { SalarySettingsHubPage } from '@/pages/company/compensation/salary-settings-hub';
 import MyCompensationPage from '@/pages/ess/compensation';
 import MyPayslipsPage from '@/pages/ess/payslips';
+import { MobileMyPayslips } from '@/pages/ess/mobile/payslips';
 
 // Phase 29 - Payroll
 import PayrollRunsPage from '@/pages/company/payroll/payroll-runs';
@@ -131,6 +140,8 @@ import { CompleteSetupPage } from '@/pages/complete-setup';
  * KaaryaMitra App Router
  */
 export function App() {
+  const isMobile = useIsMobile();
+
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
@@ -143,24 +154,28 @@ export function App() {
 
       <Route element={<ProtectedRoute />}>
         {/* Super Admin Routes */}
-        <Route path="/admin" element={<AppShell />}>
-          <Route index element={<AdminDashboardPage />} />
-          <Route path="tenants" element={<AdminTenantsPage />} />
-          <Route path="settings" element={<AdminSettingsPage />} />
-          <Route path="billing">
-            <Route index element={<AdminBillingDashboard />} />
-            <Route path="plans" element={<AdminBillingPlans />} />
-            <Route path="settings" element={<AdminBillingSettings />} />
+        <Route path="/admin" element={<DesktopGuardLayout />}>
+          <Route element={<AppShell />}>
+            <Route index element={<AdminDashboardPage />} />
+            <Route path="tenants" element={<AdminTenantsPage />} />
+            <Route path="settings" element={<AdminSettingsPage />} />
+            <Route path="billing">
+              <Route index element={<AdminBillingDashboard />} />
+              <Route path="plans" element={<AdminBillingPlans />} />
+              <Route path="settings" element={<AdminBillingSettings />} />
+            </Route>
           </Route>
         </Route>
 
         {/* Workspace Routes */}
         <Route path="/t/:slug" element={<TenantResolver />}>
-          <Route element={<AppShell />}>
+          <Route element={isMobile ? <MobileAppShell /> : <AppShell />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
             
-            {/* Phase 4 - Company Administration */}
+            {/* Desktop Only Routes */}
+            <Route element={<DesktopGuardLayout />}>
+              {/* Phase 4 - Company Administration */}
             <Route path="departments" element={<DepartmentsPage />} />
             <Route path="locations" element={<LocationsPage />} />
             <Route path="designations" element={<DesignationsPage />} />
@@ -251,31 +266,32 @@ export function App() {
             <Route path="directory/new" element={<AddEmployeePage />} />
             <Route path="directory/:id" element={<EmployeeProfilePage />} />
             <Route path="directory/:id/edit" element={<EditEmployeePage />} />
+            </Route>
 
             {/* Phase 6 - ESS */}
             <Route path="me">
-              <Route index element={<EssDashboardPage />} />
-              <Route path="profile" element={<EssProfilePage />} />
-              <Route path="attendance" element={<MyAttendancePage />} />
-              <Route path="leave" element={<EssLeavePage />} />
-              <Route path="shifts" element={<MyShiftsPage />} />
-              <Route path="timesheets" element={<MyTimesheetsPage />} />
-              <Route path="resignation" element={<MyResignationPage />} />
-              <Route path="helpdesk" element={<EssHelpdeskPage />} />
-              <Route path="helpdesk/:id" element={<EssHelpdeskThreadPage />} />
-              <Route path="assets" element={<MyAssets />} />
-              <Route path="compensation" element={<MyCompensationPage />} />
-              <Route path="payslips" element={<MyPayslipsPage />} />
+              <Route index element={isMobile ? <MobileEssDashboard /> : <EssDashboardPage />} />
+              <Route path="profile" element={<DesktopOnlyGuard><EssProfilePage /></DesktopOnlyGuard>} />
+              <Route path="attendance" element={isMobile ? <MobileMyAttendance /> : <MyAttendancePage />} />
+              <Route path="leave" element={isMobile ? <MobileEssLeave /> : <EssLeavePage />} />
+              <Route path="shifts" element={<DesktopOnlyGuard><MyShiftsPage /></DesktopOnlyGuard>} />
+              <Route path="timesheets" element={<DesktopOnlyGuard><MyTimesheetsPage /></DesktopOnlyGuard>} />
+              <Route path="resignation" element={<DesktopOnlyGuard><MyResignationPage /></DesktopOnlyGuard>} />
+              <Route path="helpdesk" element={isMobile ? <MobileEssHelpdesk /> : <EssHelpdeskPage />} />
+              <Route path="helpdesk/:id" element={<DesktopOnlyGuard><EssHelpdeskThreadPage /></DesktopOnlyGuard>} />
+              <Route path="assets" element={isMobile ? <MobileMyAssets /> : <MyAssets />} />
+              <Route path="compensation" element={<DesktopOnlyGuard><MyCompensationPage /></DesktopOnlyGuard>} />
+              <Route path="payslips" element={isMobile ? <MobileMyPayslips /> : <MyPayslipsPage />} />
 
               {/* Phase 16 - Performance */}
-              <Route path="performance/goals" element={<EssMyGoalsPage />} />
-              <Route path="performance/reviews" element={<EssMyReviewsPage />} />
+              <Route path="performance/goals" element={<DesktopOnlyGuard><EssMyGoalsPage /></DesktopOnlyGuard>} />
+              <Route path="performance/reviews" element={<DesktopOnlyGuard><EssMyReviewsPage /></DesktopOnlyGuard>} />
             </Route>
 
             {/* Phase 26 - Policies (ESS) */}
             <Route path="my-policies">
-              <Route index element={<ESSPoliciesList />} />
-              <Route path=":versionId" element={<ESSPolicyViewer />} />
+              <Route index element={<DesktopOnlyGuard><ESSPoliciesList /></DesktopOnlyGuard>} />
+              <Route path=":versionId" element={<DesktopOnlyGuard><ESSPolicyViewer /></DesktopOnlyGuard>} />
             </Route>
           </Route>
         </Route>

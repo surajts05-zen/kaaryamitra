@@ -4,13 +4,13 @@ import { logger } from './logger.js';
 import { env } from '../config/env.js';
 
 const s3Client = new S3Client({
-  endpoint: process.env.S3_ENDPOINT || 'http://localhost:9000',
-  region: process.env.S3_REGION || 'ap-south-1',
+  endpoint: env.S3_ENDPOINT || process.env.S3_ENDPOINT || 'http://localhost:9000',
+  region: env.S3_REGION || process.env.S3_REGION || 'ap-south-1',
   credentials: {
-    accessKeyId: process.env.S3_ACCESS_KEY_ID || 'minioadmin',
-    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || 'minioadmin',
+    accessKeyId: env.S3_ACCESS_KEY_ID || process.env.S3_ACCESS_KEY_ID || 'minioadmin',
+    secretAccessKey: env.S3_SECRET_ACCESS_KEY || process.env.S3_SECRET_ACCESS_KEY || 'minioadmin',
   },
-  forcePathStyle: true, // Required for MinIO
+  forcePathStyle: env.S3_FORCE_PATH_STYLE !== undefined ? env.S3_FORCE_PATH_STYLE : true,
 });
 
 const BUCKET = process.env.S3_BUCKET || 'kaaryamitra-dev';

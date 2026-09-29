@@ -45,7 +45,7 @@ export function ESSPolicyViewer() {
   const blocks = Array.isArray(version.blocks) ? version.blocks : [];
 
   return (
-    <div className="max-w-3xl mx-auto pb-20">
+    <div className="w-full pb-20">
       <div className="mb-6 flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/t/${slug}/my-policies`)}>
           <ArrowLeft className="w-4 h-4" />
