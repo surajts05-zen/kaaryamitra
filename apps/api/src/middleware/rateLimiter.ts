@@ -52,7 +52,20 @@ function makeStore(prefix: string): Store | undefined {
 
 function makeLimiter(prefix: string, opts: Omit<Partial<Options>, 'store'>): ReturnType<typeof rateLimit> {
   const store = makeStore(prefix);
-  const config: Partial<Options> = { ...opts, validate: { xForwardedForHeader: false, default: false } };
+  const config: Partial<Options> = {
+    ...opts,
+    validate: { xForwardedForHeader: false, default: false },
+    handler: (req, res, next, options) => {
+      // If the client expects HTML (like a browser hitting an OAuth callback), redirect to frontend
+      if (req.accepts('html') && !req.accepts('json')) {
+        const frontendUrl = env.FRONTEND_URL || 'http://localhost:5173';
+        const code = (options.message as any)?.error?.code || 'RATE_LIMITED';
+        res.redirect(`${frontendUrl}/login?error=${code}`);
+        return;
+      }
+      res.status(options.statusCode || 429).json(options.message);
+    }
+  };
   if (store) config.store = store;
   return rateLimit(config as Partial<Options>);
 }
@@ -77,12 +90,12 @@ export const globalRateLimiter = makeLimiter('global', {
 });
 
 /**
- * Auth endpoints — 10 requests per 15 minutes per IP.
+ * Auth endpoints — 50 requests per 15 minutes per IP.
  * Protects login, register, forgot-password from brute force.
  */
 export const authRateLimiter = makeLimiter('auth', {
   windowMs: 15 * 60 * 1000,
-  limit: 10,
+  limit: 50,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: rateLimitResponse(

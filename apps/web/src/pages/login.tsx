@@ -38,7 +38,15 @@ export function LoginPage() {
     const error = searchParams.get('error');
 
     if (error) {
-      toast.error('Google authentication failed');
+      if (error === 'AUTH_RATE_LIMITED') {
+        toast.error('Too many login attempts. Please try again in 15 minutes.');
+      } else if (error === 'Zoho_OAuth_Failed') {
+        toast.error('Zoho authentication failed or was cancelled.');
+      } else if (error === 'Google_OAuth_Failed') {
+        toast.error('Google authentication failed or was cancelled.');
+      } else {
+        toast.error(`Authentication failed: ${error}`);
+      }
     } else if (accessToken) {
       localStorage.setItem('km_access_token', accessToken);
       refreshUser().then(() => {
