@@ -6,7 +6,7 @@ import { useCommandStore } from '@/store/command.store';
 import { useAuthStore } from '@/store/auth.store';
 import { useEmployees } from '@/features/company/hooks/use-employee-queries';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { navItems, adminNavItems, essNavItems, NavItem, ADMIN_ROLES } from './app-shell';
+import { navItems, adminNavItems, NavItem, ADMIN_ROLES } from './app-shell';
 
 export function CommandPalette() {
   const navigate = useNavigate();
@@ -60,7 +60,7 @@ export function CommandPalette() {
       { icon: Settings, label: 'Salary Settings', path: 'settings/salary', allowedRoles: ADMIN_ROLES },
       { icon: Settings, label: 'Finance Config', path: 'settings/finance', allowedRoles: ADMIN_ROLES },
       { icon: Settings, label: 'Developer Hub', path: 'settings/developer', allowedRoles: ADMIN_ROLES },
-    ].filter(item => {
+    ].filter((item: NavItem) => {
       if (user?.isSuperAdmin) return false;
       if (!item.allowedRoles) return true;
       return item.allowedRoles.some(r => userRoles.includes(r));
@@ -114,28 +114,6 @@ export function CommandPalette() {
               })}
             </Command.Group>
 
-            <Command.Group heading="My Apps (ESS)" className="px-2 py-1.5 text-xs font-medium text-muted-foreground mt-2">
-              {essNavItems.map((item) => {
-                const to = item.path.startsWith('/')
-                  ? item.path
-                  : slug
-                  ? `/t/${slug}/${item.path}`
-                  : item.path;
-
-                return (
-                  <Command.Item
-                    key={item.path}
-                    value={item.label}
-                    onSelect={() => runCommand(() => navigate(to))}
-                    onClick={() => runCommand(() => navigate(to))}
-                    className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2.5 text-sm text-foreground outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                  >
-                    <item.icon className="mr-2 h-4 w-4" />
-                    <span>{item.label}</span>
-                  </Command.Item>
-                );
-              })}
-            </Command.Group>
 
             {employees && employees.length > 0 && (
               <Command.Group heading="Employees" className="px-2 py-1.5 text-xs font-medium text-muted-foreground mt-2">
