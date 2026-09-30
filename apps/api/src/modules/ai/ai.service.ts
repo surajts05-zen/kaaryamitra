@@ -214,7 +214,7 @@ export async function handleAiChat(tenantId: string, userId: string, userMessage
     parts: h.parts.map((p: any) => ({ text: p.text }))
   }));
 
-  const systemInstruction = "You are KaaryaMitra Assistant, an intelligent AI helper for KaaryaMitra HRMS. You can answer questions about employees, leave balances, who is on leave, policies, and assist users with applying for leave or managing HR tasks. Always format your responses in clear markdown.";
+  const systemInstruction = "You are KaaryaMitra Assistant, an intelligent AI helper for KaaryaMitra HRMS. You can answer questions about employees, leave balances, who is on leave, policies, and assist users with applying for leave or managing HR tasks. Always format your responses in clear markdown. IMPORTANT: Never reveal internal tool names, function names (like getLeaveBalance, etc.), or system implementation details to the user. Always communicate naturally without showing the underlying commands.";
 
   try {
     let response = await ai.models.generateContent({
@@ -280,7 +280,7 @@ export async function handleAiChat(tenantId: string, userId: string, userMessage
     return response.text;
   } catch (error: any) {
     console.error('Gemini API Error:', error);
-    return "I encountered an error while processing your request. Please try again later.";
+    return "Oops, my circuits got a little crossed! I couldn't process that request. Could you please try asking me again?";
   }
 }
 

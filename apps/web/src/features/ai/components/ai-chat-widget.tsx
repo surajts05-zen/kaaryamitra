@@ -24,21 +24,28 @@ export function AiChatWidget() {
     }
   }, [history, isOpen]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isPending) return;
+  const starterPrompts = [
+    "What is my leave balance?",
+    "Who is on leave today?",
+    "I want to apply for sick leave",
+    "Find an employee"
+  ];
+
+  const handleSend = async (overrideInput?: string) => {
+    const textToSend = overrideInput ?? input.trim();
+    if (!textToSend || isPending) return;
     
-    const userMsg = input.trim();
-    setInput('');
+    if (!overrideInput) setInput('');
     
     // Optimistically add user message
     const currentHistory = [...history];
-    setHistory((prev) => [...prev, { role: 'user', parts: [{ text: userMsg }] }]);
+    setHistory((prev) => [...prev, { role: 'user', parts: [{ text: textToSend }] }]);
     
     try {
-      const responseText = await sendMessage({ message: userMsg, history: currentHistory });
+      const responseText = await sendMessage({ message: textToSend, history: currentHistory });
       setHistory((prev) => [...prev, { role: 'model', parts: [{ text: responseText }] }]);
     } catch (error) {
-      setHistory((prev) => [...prev, { role: 'model', parts: [{ text: 'Oops! Something went wrong while communicating with the AI server.' }] }]);
+      setHistory((prev) => [...prev, { role: 'model', parts: [{ text: 'Oops, my circuits got a little crossed! Could you please try asking me again?' }] }]);
     }
   };
 
@@ -95,6 +102,20 @@ export function AiChatWidget() {
             </div>
           </div>
         ))}
+        {history.length === 1 && (
+          <div className="flex flex-wrap gap-2 ml-11">
+            {starterPrompts.map((prompt, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSend(prompt)}
+                disabled={isPending}
+                className="text-xs text-left bg-background hover:bg-muted text-foreground px-3 py-2 rounded-xl border border-border shadow-sm transition-colors"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        )}
         {isPending && (
           <div className="flex gap-3 flex-row">
             <div className="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-km-forest text-km-lime">
