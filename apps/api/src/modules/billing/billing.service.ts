@@ -437,13 +437,7 @@ export class BillingService {
     }
 
     // Fallback: check subscription directly
-    const sub = await (prisma as any).tenantSubscription.findUnique({
-      where: { tenantId },
-      include: {
-        plan: true,
-        addons: { include: { addon: true } },
-      },
-    });
+    const sub = await BillingService.getTenantSubscription(tenantId);
 
     if (!sub) return false;
 

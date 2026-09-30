@@ -35,12 +35,15 @@ import { LeaveTypesPage } from '@/pages/company/leave-types';
 import { EssDashboardPage } from '@/pages/ess/dashboard';
 import { MobileEssDashboard } from '@/pages/ess/mobile/dashboard';
 import { EssProfilePage } from '@/pages/ess/my-profile';
+import { MobileEssProfile } from '@/pages/ess/mobile/my-profile';
 import { EssLeavePage } from '@/pages/ess/leave';
 import { MobileEssLeave } from '@/pages/ess/mobile/leave';
 import { MyAttendancePage } from '@/pages/ess/attendance';
 import { MobileMyAttendance } from '@/pages/ess/mobile/attendance';
 import { MyShiftsPage } from '@/pages/ess/shifts';
+import { MobileMyShifts } from '@/pages/ess/mobile/shifts';
 import { MyTimesheetsPage } from '@/pages/ess/timesheets';
+import { MobileMyTimesheets } from '@/pages/ess/mobile/timesheets';
 
 // Phase 8 - Workflow Engine
 import { WorkflowsPage } from '@/pages/company/settings/workflows';
@@ -98,7 +101,9 @@ import { UserGuidePage } from '@/pages/user-guide';
 import { PoliciesAdminList } from '@/pages/company/settings/policies/index';
 import { PolicyEditor } from '@/pages/company/settings/policies/editor';
 import { ESSPoliciesList } from '@/pages/ess/policies/index';
+import { MobileESSPoliciesList } from '@/pages/ess/mobile/policies';
 import { ESSPolicyViewer } from '@/pages/ess/policies/viewer';
+import { MobileESSPolicyViewer } from '@/pages/ess/mobile/policy-viewer';
 
 // Phase 30 - Content Library
 import { LibraryExplorerPage } from '@/pages/company/library';
@@ -271,11 +276,11 @@ export function App() {
             {/* Phase 6 - ESS */}
             <Route path="me">
               <Route index element={isMobile ? <MobileEssDashboard /> : <EssDashboardPage />} />
-              <Route path="profile" element={<DesktopOnlyGuard><EssProfilePage /></DesktopOnlyGuard>} />
+              <Route path="profile" element={isMobile ? <MobileEssProfile /> : <EssProfilePage />} />
               <Route path="attendance" element={isMobile ? <MobileMyAttendance /> : <MyAttendancePage />} />
               <Route path="leave" element={isMobile ? <MobileEssLeave /> : <EssLeavePage />} />
-              <Route path="shifts" element={<DesktopOnlyGuard><MyShiftsPage /></DesktopOnlyGuard>} />
-              <Route path="timesheets" element={<DesktopOnlyGuard><MyTimesheetsPage /></DesktopOnlyGuard>} />
+              <Route path="shifts" element={isMobile ? <MobileMyShifts /> : <MyShiftsPage />} />
+              <Route path="timesheets" element={isMobile ? <MobileMyTimesheets /> : <MyTimesheetsPage />} />
               <Route path="resignation" element={<DesktopOnlyGuard><MyResignationPage /></DesktopOnlyGuard>} />
               <Route path="helpdesk" element={isMobile ? <MobileEssHelpdesk /> : <EssHelpdeskPage />} />
               <Route path="helpdesk/:id" element={<DesktopOnlyGuard><EssHelpdeskThreadPage /></DesktopOnlyGuard>} />
@@ -290,8 +295,8 @@ export function App() {
 
             {/* Phase 26 - Policies (ESS) */}
             <Route path="my-policies">
-              <Route index element={<DesktopOnlyGuard><ESSPoliciesList /></DesktopOnlyGuard>} />
-              <Route path=":versionId" element={<DesktopOnlyGuard><ESSPolicyViewer /></DesktopOnlyGuard>} />
+              <Route index element={isMobile ? <MobileESSPoliciesList /> : <ESSPoliciesList />} />
+              <Route path=":versionId" element={isMobile ? <MobileESSPolicyViewer /> : <ESSPolicyViewer />} />
             </Route>
           </Route>
         </Route>
