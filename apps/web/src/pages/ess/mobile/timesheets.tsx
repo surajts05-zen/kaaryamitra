@@ -228,8 +228,8 @@ export function MobileMyTimesheets() {
           </div>
 
           {isEditable && (
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t z-10 pb-6">
-              <Button onClick={handleSubmit} disabled={submitTimesheet.isPending} className="w-full">
+            <div className="pt-2 pb-2">
+              <Button onClick={handleSubmit} disabled={submitTimesheet.isPending} className="w-full h-12 rounded-xl text-sm font-bold shadow-md">
                 {submitTimesheet.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                 Submit Timesheet
               </Button>

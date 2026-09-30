@@ -241,8 +241,8 @@ export function MobileEssProfile() {
           </CardContent>
         </Card>
 
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t z-10 pb-6">
-          <Button type="submit" disabled={updateMutation.isPending} className="w-full h-11">
+        <div className="pt-2 pb-2">
+          <Button type="submit" disabled={updateMutation.isPending} className="w-full h-12 rounded-xl text-sm font-bold shadow-md">
             <Save className="mr-2 h-4 w-4" />
             {updateMutation.isPending ? 'Saving...' : 'Save Profile'}
           </Button>
