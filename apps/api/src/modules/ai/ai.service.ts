@@ -218,7 +218,7 @@ export async function handleAiChat(tenantId: string, userId: string, userMessage
 
   try {
     let response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: [...chatHistory, { role: 'user', parts: [{ text: userMessage }] }],
       config: {
         systemInstruction,
@@ -263,7 +263,7 @@ export async function handleAiChat(tenantId: string, userId: string, userMessage
       }
       
       response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.6-flash',
         contents: [
           ...chatHistory, 
           { role: 'user', parts: [{ text: userMessage }] },
@@ -307,7 +307,7 @@ Data:
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: prompt
     });
     return response.text;
@@ -323,7 +323,7 @@ export async function extractDocumentData(tenantId: string, fileBuffer: Buffer, 
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: [
         {
           role: 'user',
@@ -380,7 +380,7 @@ IMPORTANT: Return ONLY raw valid JSON. Do not include markdown code block format
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: userPrompt,
       config: {
         systemInstruction,
@@ -405,7 +405,7 @@ export async function refinePolicyText(tenantId: string, text: string, instructi
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: prompt
     });
     return response.text?.trim() || null;
@@ -424,7 +424,7 @@ export async function summarizePolicy(tenantId: string, blocks: any[]) {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: prompt
     });
     return response.text?.trim() || null;
@@ -443,7 +443,7 @@ export async function generatePolicyFAQ(tenantId: string, blocks: any[]) {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: prompt,
       config: { responseMimeType: 'application/json' }
     });
@@ -464,7 +464,7 @@ export async function comparePolicyVersions(tenantId: string, oldBlocks: any[], 
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: prompt
     });
     return response.text?.trim() || null;
@@ -482,7 +482,7 @@ export async function draftEmployeeCommunication(tenantId: string, policyName: s
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: prompt
     });
     return response.text?.trim() || null;
