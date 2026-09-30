@@ -6,12 +6,21 @@ import { startWebhookRetryJob } from './jobs/webhook-retry.job.js';
 import { initDocumentExpiryJob } from './jobs/document-expiry.job.js';
 import { closeAllQueues } from './lib/queue.js';
 import { loadRazorpaySettings } from './modules/billing/razorpay.service.js';
+import { runStartupMigrations } from './lib/startup-migrations.js';
 
 async function main() {
   logger.info(`🚀 Starting KaaryaMitra API (${env.NODE_ENV})`);
 
   // Connect to database
   await connectDatabase();
+
+  // Self-heal: seed billing plans & initialize any tenant subscriptions missing on this DB
+  try {
+    await runStartupMigrations();
+    logger.info('✅ Startup migrations complete');
+  } catch (err) {
+    logger.warn({ err }, '⚠️  Startup migrations failed (non-fatal)');
+  }
 
   // Load Platform Settings
   try {

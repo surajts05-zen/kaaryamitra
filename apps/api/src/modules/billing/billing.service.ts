@@ -99,19 +99,30 @@ export class BillingService {
     const trialEnd = new Date(now);
     trialEnd.setDate(trialEnd.getDate() + (freePlan.trialDays ?? 14));
 
-    const sub = await (prisma as any).tenantSubscription.create({
-      data: {
-        tenantId,
-        planId: freePlan.id,
-        status: freePlan.trialDays > 0 ? 'TRIALING' : 'ACTIVE',
-        billingCycle: 'MONTHLY',
-        currency: 'INR',
-        currentPeriodStart: now,
-        currentPeriodEnd: trialEnd,
-        trialStart: freePlan.trialDays > 0 ? now : null,
-        trialEnd: freePlan.trialDays > 0 ? trialEnd : null,
-      },
-    });
+    let sub;
+    try {
+      sub = await (prisma as any).tenantSubscription.create({
+        data: {
+          tenantId,
+          planId: freePlan.id,
+          status: freePlan.trialDays > 0 ? 'TRIALING' : 'ACTIVE',
+          billingCycle: 'MONTHLY',
+          currency: 'INR',
+          currentPeriodStart: now,
+          currentPeriodEnd: trialEnd,
+          trialStart: freePlan.trialDays > 0 ? now : null,
+          trialEnd: freePlan.trialDays > 0 ? trialEnd : null,
+        },
+      });
+    } catch (err: any) {
+      if (err.code === 'P2002') {
+        // Race condition: another request already initialized it
+        sub = await (prisma as any).tenantSubscription.findUnique({ where: { tenantId } });
+        if (!sub) return null;
+      } else {
+        throw err;
+      }
+    }
 
     await BillingService.syncFeatureFlags(tenantId);
     return sub;
