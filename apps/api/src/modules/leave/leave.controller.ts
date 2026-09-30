@@ -44,7 +44,10 @@ export async function listMyLeaveBalancesHandler(req: Request, res: Response) {
   const userId = req.auth!.userId;
   
   const employee = await prisma.employee.findUnique({ where: { userId } });
-  if (!employee) throw new AppError(404, 'NOT_FOUND', 'Employee profile not found');
+  if (!employee) {
+    res.json({ data: [] });
+    return;
+  }
 
   const balances = await getMyLeaveBalances(tenantId, employee.id);
   res.json({ data: balances });
@@ -55,7 +58,10 @@ export async function listMyLeaveApplicationsHandler(req: Request, res: Response
   const userId = req.auth!.userId;
   
   const employee = await prisma.employee.findUnique({ where: { userId } });
-  if (!employee) throw new AppError(404, 'NOT_FOUND', 'Employee profile not found');
+  if (!employee) {
+    res.json({ data: [] });
+    return;
+  }
 
   const applications = await getMyLeaveApplications(tenantId, employee.id);
   res.json({ data: applications });

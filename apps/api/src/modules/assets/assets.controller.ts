@@ -74,7 +74,10 @@ export class AssetsController {
 
   static async getMyAssets(req: Request, res: Response) {
     const me = await prisma.employee.findUnique({ where: { userId: req.auth!.userId } });
-    if (!me) throw AppError.notFound('Employee profile not found');
+    if (!me) {
+      res.json({ data: [] });
+      return;
+    }
 
     const assets = await AssetsService.getEmployeeAssets(req.tenantId!, me.id);
     res.json({ data: assets });

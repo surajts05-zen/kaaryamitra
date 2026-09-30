@@ -109,7 +109,7 @@ export class PoliciesController {
   static async getMyPolicies(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const employee = await prisma.employee.findUnique({ where: { userId } });
-    if (!employee) throw AppError.notFound('Employee profile not found');
+    if (!employee) return res.json([]);
     const policies = await PoliciesService.getMyPolicies(req.tenantId!, employee.id);
     res.json(policies);
   }

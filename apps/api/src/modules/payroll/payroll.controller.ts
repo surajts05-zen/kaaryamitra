@@ -38,7 +38,7 @@ export class PayrollController {
   // ESS Ends
   static async getMyPayslips(req: Request, res: Response) {
     const me = await prisma.employee.findUnique({ where: { userId: req.auth!.userId } });
-    if (!me) return res.status(404).json({ message: 'Employee record not found' });
+    if (!me) return res.json([]);
     const payslips = await PayrollService.getEmployeePayslips(req.tenantId!, me.id);
     res.json(payslips);
   }
