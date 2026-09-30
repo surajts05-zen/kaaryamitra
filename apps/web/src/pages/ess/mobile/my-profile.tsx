@@ -111,7 +111,7 @@ export function MobileEssProfile() {
   }
 
   return (
-    <div className="flex flex-col pb-20 space-y-4">
+    <div className="flex flex-col pb-32 space-y-4">
       <div className="flex items-center gap-3">
         <Link to=".." relative="path" className="p-2 -ml-2 rounded-full hover:bg-muted text-muted-foreground">
           <ArrowLeft className="h-5 w-5" />

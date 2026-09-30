@@ -32,8 +32,30 @@ export class AuthService {
     }
 
     const { user, tenant } = await prisma.$transaction(async (tx) => {
-      const tenant = await AdminService.createTenantWithDefaults(tx, input.companyName, slug, 'FREE');
+      // Create a 14-day trial on the ENTERPRISE plan
+      const tenant = await AdminService.createTenantWithDefaults(tx, input.companyName, slug, 'ENTERPRISE', 'TRIAL');
 
+      const now = new Date();
+      const trialEnd = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+      const enterprisePlan = await (tx as any).planDefinition.findUnique({
+        where: { slug: 'ENTERPRISE' }
+      });
+      const planId = enterprisePlan ? enterprisePlan.id : 'enterprise-monthly';
+
+      await tx.tenantSubscription.create({
+        data: {
+          tenantId: tenant.id,
+          planId: planId,
+          billingCycle: 'MONTHLY',
+          status: 'TRIALING',
+          currency: 'INR',
+          currentPeriodStart: now,
+          currentPeriodEnd: trialEnd,
+          trialStart: now,
+          trialEnd: trialEnd,
+        },
+      });
       const user = await tx.user.create({
         data: {
           tenantId: tenant.id,
@@ -306,7 +328,29 @@ export class AuthService {
     }
 
     const tenant = await prisma.$transaction(async (tx) => {
-      const newTenant = await AdminService.createTenantWithDefaults(tx, companyName, slug, 'FREE');
+      const newTenant = await AdminService.createTenantWithDefaults(tx, companyName, slug, 'ENTERPRISE', 'TRIAL');
+      
+      const now = new Date();
+      const trialEnd = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+      const enterprisePlan = await (tx as any).planDefinition.findUnique({
+        where: { slug: 'ENTERPRISE' }
+      });
+      const planId = enterprisePlan ? enterprisePlan.id : 'enterprise-monthly';
+
+      await tx.tenantSubscription.create({
+        data: {
+          tenantId: newTenant.id,
+          planId: planId,
+          billingCycle: 'MONTHLY',
+          status: 'TRIALING',
+          currency: 'INR',
+          currentPeriodStart: now,
+          currentPeriodEnd: trialEnd,
+          trialStart: now,
+          trialEnd: trialEnd,
+        },
+      });
       
       await tx.user.update({
         where: { id: user.id },

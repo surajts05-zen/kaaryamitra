@@ -40,13 +40,13 @@ export class AdminService {
     };
   }
 
-  static async createTenantWithDefaults(tx: any, name: string, slug: string, plan: any) {
+  static async createTenantWithDefaults(tx: any, name: string, slug: string, plan: any, status: any = 'TRIAL') {
     return tx.tenant.create({
       data: {
         name,
         slug,
         plan,
-        status: 'ACTIVE',
+        status,
         documentCategories: {
           create: [
             { name: 'Id Proof', description: 'Government issued ID card', isRequired: true },
@@ -158,7 +158,29 @@ export class AdminService {
     // Wrap in transaction to ensure tenant and initial admin user are created together
     const { tenant, adminUser, generatedUsers } = await prisma.$transaction(async (tx) => {
       // 1. Create Tenant and default roles
-      const tenant = await AdminService.createTenantWithDefaults(tx, input.name, input.slug, input.plan);
+      const tenant = await AdminService.createTenantWithDefaults(tx, input.name, input.slug, input.plan, 'ACTIVE');
+
+      // 1.1 Create Tenant Subscription if not FREE
+      if (input.plan !== 'FREE') {
+        const selectedPlan = await (tx as any).planDefinition.findUnique({
+          where: { slug: input.plan }
+        });
+        const planId = selectedPlan ? selectedPlan.id : `${input.plan.toLowerCase()}-monthly`;
+
+        const now = new Date();
+        const nextMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        await tx.tenantSubscription.create({
+          data: {
+            tenantId: tenant.id,
+            planId: planId,
+            billingCycle: 'MONTHLY',
+            status: 'ACTIVE',
+            currency: 'INR',
+            currentPeriodStart: now,
+            currentPeriodEnd: nextMonth,
+          },
+        });
+      }
 
       // 2. Generate random password for the new tenant admin
       const adminPassword = crypto.randomBytes(8).toString('hex');
