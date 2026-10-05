@@ -17,7 +17,10 @@ export class AuthService {
   // ── Register ────────────────────────────────────────────────────────────────
 
   static async register(input: RegisterInput) {
-    const existing = await prisma.user.findUnique({ where: { email: input.email } });
+    const normalizedEmail = input.email.toLowerCase().trim();
+    const existing = await prisma.user.findFirst({ 
+      where: { email: { equals: normalizedEmail, mode: 'insensitive' } } 
+    });
     if (existing) throw AppError.conflict('An account with this email already exists');
 
     const passwordHash = await hashPassword(input.password);
@@ -59,7 +62,7 @@ export class AuthService {
       const user = await tx.user.create({
         data: {
           tenantId: tenant.id,
-          email: input.email,
+          email: normalizedEmail,
           firstName: input.firstName,
           lastName: input.lastName,
           passwordHash,
@@ -91,8 +94,8 @@ export class AuthService {
     meta: { ipAddress?: string; userAgent?: string },
   ) {
     const normalizedEmail = input.email.toLowerCase().trim();
-    const user = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
       include: {
         tenant: { 
           select: { 
@@ -196,8 +199,8 @@ export class AuthService {
     meta?: { ipAddress?: string; userAgent?: string }
   ) {
     const normalizedEmail = email.toLowerCase().trim();
-    let user = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
+    let user = await prisma.user.findFirst({
+      where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
       include: {
         tenant: { 
           select: { 
@@ -259,8 +262,8 @@ export class AuthService {
     meta?: { ipAddress?: string; userAgent?: string }
   ) {
     const normalizedEmail = email.toLowerCase().trim();
-    let user = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
+    let user = await prisma.user.findFirst({
+      where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
       include: {
         tenant: { 
           select: { 
